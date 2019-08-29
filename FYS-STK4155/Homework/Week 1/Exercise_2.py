@@ -1,3 +1,4 @@
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import mean_squared_error
 from sklearn import linear_model
@@ -93,13 +94,21 @@ def least_squares(x, y, fxn_list):
 
     return beta.T[0]
 
-x = np.random.rand(100)
-y = 5*x*x+0.1*np.random.randn(100)
+x = np.random.rand(100, 1)
+y = 5*x*x+0.1*np.random.randn(100, 1)
 
-beta_manual = least_squares(x,y, ["x", "x**2"])
+X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.33, random_state=42)
 
-X = PolynomialFeatures(degree = 2).fit_transform(np.array([x]).T)
-beta_sklearn = linear_model.LinearRegression().fit(X,y).coef_
+beta_manual = least_squares(X_train.T[0], y_train.T[0], ["x", "x**2"])
+
+X_train = PolynomialFeatures(degree = 2).fit_transform(X_train)
+linear_model_fit = linear_model.LinearRegression().fit(X_train, y_train)
+beta_sklearn = linear_model_fit.coef_[0]
+
+X_test_quad = PolynomialFeatures(degree = 2).fit_transform(X_test)
+y_predict = linear_model_fit.predict(X_test_quad)
+
+print(y_predict-y_test)
 
 print(beta_manual)
 print(beta_sklearn)
