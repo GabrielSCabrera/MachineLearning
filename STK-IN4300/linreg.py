@@ -14,7 +14,7 @@ Y2 = np.ones(N//2)
 X = np.concatenate([X1, X2])
 Y = np.concatenate([Y1, Y2])
 
-beta = np.matmul(np.linalg.inv(np.matmul(X.T, X)),np.matmul(X.T, Y))
+beta = np.matmul(np.matmul(np.linalg.inv(np.matmul(X.T, X)),X.T), Y)
 
 X_hat = np.random.normal(6, 10, (2, M))
 Y_hat = np.matmul(X_hat.T, beta)
