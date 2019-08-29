@@ -1,64 +1,11 @@
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.metrics import mean_squared_error
+from sklearn import linear_model
 import matplotlib.pyplot as plt
 import numpy as np
 import sympy as sp
 
-def least_squares_functions(points, functions, return_coefficients = False,
-include_one = True):
-    '''Uses the method of least squares to match a set of points
-
-    <points> should be an array of dimensions (n, 2), where n is the number of
-    points we are trying to match.  <functions> should be a string or array of
-    strings that can be numpy evaluated mathematically in terms of a variable
-    <x> - do not include coefficients. <return_coefficients> determines whether
-    or not the list of coefficients is returned - if false, simply returns the
-    function'''
-
-    points= np.array(points)
-
-    if len(points.shape) == 2 and points.shape[0] == 2 and points.shape[1] != 2:
-        points= points.transpose()
-    point_error_msg= 'Invalid format for argument <points>'
-    assert len(points.shape) == 2 and points.shape[1] == 2, point_error_msg
-
-    if isinstance(functions, str):
-        if include_one == True:
-            functions= ['1', functions]
-        else:
-            functions= [functions]
-    functions_error_msg= 'Invalid format for argument <functions>'
-    assert isinstance(functions, (list, tuple)), functions_error_msg
-    if isinstance(functions, tuple):
-        functions= list(functions)
-    if include_one == True and '1' not in functions:
-        functions= ['1'] + functions
-
-    math_error_msg= 'Non-evaluable function in list <functions>'
-
-    X, y= np.tile(points[:,0], reps= (len(functions),1)).transpose(), points[:,1]
-    A= np.zeros((len(X), len(functions)))
-    for n,f in enumerate(functions):
-        x= X[:,n]
-        try:
-            A[:,n]= eval(f)
-        except ValueError:
-            assert False, math_error_msg
-
-    A= np.asmatrix(A)
-    AT= A.transpose()
-    Y= AT*np.asmatrix(y).transpose()
-    coefficients= sp.Matrix(np.concatenate((AT*A, Y), axis= -1)).rref()[0][:,-1]
-    coefficients= np.array(coefficients)
-
-    if return_coefficients == False:
-        eval_string= ''
-        for n,(c,f) in enumerate(zip(coefficients, functions)):
-            eval_string+= '(%f*(%s))'%(c,f)
-            if n < len(functions) - 1:
-                eval_string+= '+'
-        def f(x):
-            return eval(eval_string)
-        return f
-    return coefficients
+np.random.seed(69420666)
 
 def least_squares(x, y, fxn_list):
     """
@@ -140,26 +87,32 @@ def least_squares(x, y, fxn_list):
         x = X[:,n]
         A[:,n] = eval(fxn)
 
-    Y = np.matmul(A.T, y.T)
-    beta = sp.Matrix(np.vstack([np.matmul(A.T,A), Y])).rref()[0][:,-1]
+    Y = np.array([np.matmul(A.T, y.T)]).T
+    beta = sp.Matrix(np.hstack([np.matmul(A.T,A), Y])).rref()[0][:,-1]
     beta = np.array(beta)
 
-    print(beta)
+    return beta.T[0]
 
-X = np.random.rand(100,1)
-Y = 5*X*X+0.1*np.random.randn(100,1)
+x = np.random.rand(100)
+y = 5*x*x+0.1*np.random.randn(100)
 
-x = X[:,0]
-y = Y[:,0]
+beta_manual = least_squares(x,y, ["x", "x**2"])
 
-beta = least_squares(x,y, ["1", "np.cos(x)", "x**2"])
-beta = least_squares_functions([x,y], ["x", "x**2"], True)
+X = PolynomialFeatures(degree = 2).fit_transform(np.array([x]).T)
+beta_sklearn = linear_model.LinearRegression().fit(X,y).coef_
 
-# print(beta)
+print(beta_manual)
+print(beta_sklearn)
 
 x2 = np.linspace(0, 1, 1E3)
-y2 = beta[0] + beta[1]*x2 + beta[2]*x2**2
+y2 = beta_manual[0] + beta_manual[1]*x2 + beta_manual[2]*x2**2
+y3 = beta_sklearn[0] + beta_sklearn[1]*x2 + beta_sklearn[2]*x2**2
 
-# plt.plot(x,y, "b.")
-# plt.plot(x2, y2)
-# plt.show()
+plt.plot(x2, y2)
+plt.plot(x2, y3)
+plt.plot(x,y, "r.", ms = 3)
+plt.legend(["Manual Quadratic Regression", "Scikit-Learn Quadratic Regression", "Datapoints"])
+plt.xlim([np.min(x), np.max(x)])
+plt.xlabel("Dimensionless $x$")
+plt.ylabel("Dimensionless $y$")
+plt.show()
