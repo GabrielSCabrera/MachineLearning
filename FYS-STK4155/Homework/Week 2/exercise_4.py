@@ -8,7 +8,7 @@ import sympy as sp
 
 np.random.seed(69420666)
 
-def ridge_method(x, y, L):
+def ridge_method(x, y, L, degree):
     """
         ---PURPOSE------------------------------------
 
@@ -20,6 +20,7 @@ def ridge_method(x, y, L):
         x           Array of shape (N,)
         y           Array of shape (N,)
         L           Number/Array of Numbers >= 0
+        degree      Integer greater than zero
 
         ---OUTPUT-------------------------------------
 
@@ -31,10 +32,12 @@ def ridge_method(x, y, L):
 
     """
 
-    x = np.array(x)
-    y = np.array(y)
+    X = np.array([x]).T
+    y = np.array([y]).T
 
-    if x.shape != y.shape:
+    N = X.shape[0]
+
+    if X.shape != y.shape:
         msg = "\n\nArguments <x> and <y> in function <ridge_method> must be of "
         msg += f"the same shape.  \n\n\tx.shape = {x.shape}\ny.shape = {y.shape}"
         raise Exception(msg)
@@ -43,8 +46,6 @@ def ridge_method(x, y, L):
         msg = "\n\nArguments <x> and <y> in function <ridge_method> must be "
         msg += f"one dimensional.  \n\n\tx.shape = {x.shape}\ny.shape = {y.shape}"
         raise Exception(msg)
-
-    N = x.shape[0]
 
     try:
         if np.less(L, 0).any():
@@ -56,6 +57,19 @@ def ridge_method(x, y, L):
         msg += f"number or array of numbers."
         raise Exception(msg)
 
+    try:
+        if degree == int(degree) and degree > 0:
+            degree = int(degree)
+        else:
+            msg = "\n\nArgument <degree> in function <least_squares_poly> must be an "
+            msg += f"integer greater than zero.  \ndegree = {degree}"
+            raise Exception(msg)
+    except ValueError:
+        msg = "\n\nArgument <degree> in function <least_squares_poly> must be a "
+        msg += f"number.  \n\n\ttype(degree) = {type(degree)}"
+        raise Exception(msg)
+
+    X = np.hstack([np.ones_like(X), X])
     M = degree+1
 
     X = np.tile(x, reps = (M,1)).T
@@ -65,17 +79,17 @@ def ridge_method(x, y, L):
         x = X[:,n]
         A[:,n] = x**n
 
-    Y = np.array([np.matmul(A.T, y.T)]).T
-    # beta = sp.Matrix(np.hstack([np.matmul(A.T,A), Y])).rref()[0][:,-1]
-    beta = np.matmul(X.T, X)
-    beta = np.matmul(np.linalg.inv(beta + L*np.identity(X.shape[0])), X.T)
-    beta = np.matmul(beta, Y)
-    beta = np.array(beta)
+    beta_ridge = np.matmul(A.T, A)
+    beta_ridge = np.linalg.inv(beta_ridge + L*np.identity(beta_ridge.shape[0]))
+    beta_ridge = np.matmul(beta_ridge, A.T)
+    beta_ridge = np.matmul(beta_ridge, y)
 
-    return beta
-    # return beta.T[0]
+    return beta_ridge.T[0]
 
 x = np.random.rand(100, 1)
 y = 5*x*x+0.1*np.random.randn(100, 1)
 
 X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.33, random_state=42)
+
+beta_ridge = ridge_method(X_train.T[0], y_train.T[0], 10, 2)
+print(beta_ridge)
