@@ -4,7 +4,6 @@ from sklearn.metrics import mean_squared_error
 from sklearn import linear_model
 import matplotlib.pyplot as plt
 import numpy as np
-import sympy as sp
 
 np.random.seed(69420666)
 
@@ -88,11 +87,10 @@ def least_squares(x, y, fxn_list):
         x = X[:,n]
         A[:,n] = eval(fxn)
 
-    Y = np.array([np.matmul(A.T, y.T)]).T
-    beta = sp.Matrix(np.hstack([np.matmul(A.T,A), Y])).rref()[0][:,-1]
-    beta = np.array(beta)
+    beta = np.matmul(np.linalg.inv(np.matmul(A.T, A)),A.T)
+    beta = np.matmul(beta, y)
 
-    return beta.T[0]
+    return beta
 
 x = np.random.rand(100, 1)
 y = 5*x*x+0.1*np.random.randn(100, 1)
@@ -108,7 +106,7 @@ beta_sklearn = linear_model_fit.coef_[0]
 X_test_quad = PolynomialFeatures(degree = 2).fit_transform(X_test)
 y_predict = linear_model_fit.predict(X_test_quad)
 
-print(y_predict-y_test)
+print(mean_squared_error(y_test, y_predict))
 
 print(beta_manual)
 print(beta_sklearn)
