@@ -1,0 +1,6 @@
+\contentsline {chapter}{\numberline {1}Introduction}{5}{chapter.1}
+\contentsline {section}{\numberline {1.1}Two Prediction Methods}{5}{section.1.1}
+\contentsline {subsection}{\numberline {1.1.1}Generalized Linear Models and Least Squares}{5}{subsection.1.1.1}
+\contentsline {subsubsection}{Quick Notation Reference}{6}{equation.1.1.2}
+\contentsline {subsection}{\numberline {1.1.2}Nearest-Neighbor Methods}{7}{subsection.1.1.2}
+\contentsline {chapter}{\numberline {2}Glossary}{9}{chapter.2}
