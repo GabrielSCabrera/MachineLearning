@@ -1,9 +1,9 @@
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from mpl_toolkits.mplot3d import Axes3D
 from itertools import permutations
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy as np
+import matplotlib
 
 class Regression():
 
@@ -183,12 +183,30 @@ class Regression():
         # Implementing the least-squares method
         if alpha is None:
             # If ridge regression is not implemented
-            self._beta = np.linalg.inv(A.T @ A) @ A.T @ self._Y
+            try:
+                self._beta = np.linalg.inv(A.T @ A) @ A.T @ self._Y
+            except np.linalg.LinAlgError:
+                error_msg = (f"\n\nThe design matrix product could not be "
+                             f"inverted because it is a singular matrix.\n\n\t"
+                             f"(XᵀX)⁻¹ = undefined\n\nTry setting parameter "
+                             f"<alpha> in <Regression.poly> to 1E-4; this "
+                             f"implements ridge regression, and may lead to an"
+                             f" approximate solution.")
+
+                raise np.linalg.LinAlgError(error_msg)
         else:
             # If ridge regression is implemented
             self._beta = A.T @ A
-            self._beta = np.linalg.inv(self._beta + alpha*\
-            np.identity((self._beta).shape[0])) @ A.T @ self._Y
+            try:
+                self._beta = np.linalg.inv(self._beta + alpha*\
+                np.identity((self._beta).shape[0])) @ A.T @ self._Y
+            except np.linalg.LinAlgError:
+                error_msg = (f"\n\nThe design matrix product could not be "
+                             f"inverted because it is a singular matrix.\n\n\t"
+                             f"(XᵀX + {alpha:g}*I)⁻¹ = undefined\n\nTry "
+                             f"increasing parameter <alpha> to find a "
+                             f"non-singular matrix.")
+                raise np.linalg.LinAlgError(error_msg)
 
         self._readable, self._terms = self._poly_str(exponents, self._beta)
         self._complete = True
@@ -307,7 +325,8 @@ class Regression():
         self._check_regr()
         return self._readable
 
-    def plot(self, detail = 0.5):
+    def plot(self, detail = 0.5, xlabel = None, ylabel = None, zlabel = None,
+    savename = None):
         """
             ---PURPOSE------------------------------------
 
@@ -317,6 +336,10 @@ class Regression():
             ---OPTIONAL-INPUT-----------------------------
 
             detail          Number in range [0,1]
+            xlabel          String or None
+            ylabel          String or None
+            zlabel          String or None
+            savename        String or None
 
             ---NOTES--------------------------------------
 
@@ -328,8 +351,39 @@ class Regression():
             the highest value 1 will yield a very smooth regression curve or
             surface.  Higher values may not run well on lower-end systems.
 
+            If creating a 2-D plot, passing a value to <zlabel> will raise a
+            ValueError.
+
         """
         self._check_regr()
+
+        if self._p not in [1,2]:
+            error_msg = (f"\n\nAttempting to call method <Regression.plot()> "
+                         f"on a {self._p+1}-D set of datapoints.\n\nOnly 2-D "
+                         f"and 3-D datasets are supported.")
+            raise ValueError(error_msg)
+
+        labels = [xlabel, ylabel, zlabel]
+        label_names = ["xlabel", "ylabel", "zlabel"]
+
+        if savename is not None and not isinstance(savename, str):
+            error_msg = (f"\n\nParameter <savename> in method "
+                         f"<Regression.plot> must be a string.\n\t"
+                         f"type(savename) = {type(savename)}")
+            raise TypeError(error_msg)
+
+        error_msg = " in method <Regression.plot> must be a string.\n\t"
+        for n,(label, name) in enumerate(zip(labels, label_names)):
+
+            if n == 2 and self._p != 2 and label is not None:
+                error_msg = (f"\n\nCannot use parameter <zlabel> in method "
+                             f"<Regression.plot> when the dataset is 2-D."
+                             f" Attempted to pass:\n\tzlabel = \"{label}\"")
+                raise TypeError(error_msg)
+
+            elif not isinstance(label, str) and label is not None:
+                error_msg += f"type({name}) = {type(label)}"
+                raise TypeError(f"\n\nParameter <{name}>{error_msg}")
 
         try:
             detail = float(detail)
@@ -348,43 +402,63 @@ class Regression():
 
         local_scope = locals()
 
+        if savename is None:
+            matplotlib.rcParams.update({'font.size': 22})
+
         if self._p == 1:
             N_max = 1E5
             N_points = int(N_max*np.log10(detail+1))+50
             x = np.linspace(np.min(self._X[:,0]), np.max(self._X[:,0]), N_points)
         elif self._p == 2:
-            N_max = 5E2
-            N_points = int(N_max*np.log10(detail+1))+50
+            N_max = 35
+            N_points = int((N_max*np.log10(detail+1))**2)+5
             x = np.linspace(np.min(self._X[:,0]), np.max(self._X[:,0]), N_points)
             y = np.linspace(np.min(self._X[:,1]), np.max(self._X[:,1]), N_points)
             x,y = np.meshgrid(x,y)
-        else:
-            error_msg = (f"\n\nAttempting to call method <Regression.plot()> "
-                         f"on a {self._p+1}-D set of datapoints.\n\nOnly 2-D "
-                         f"and 3-D datasets are supported.")
-            raise ValueError(error_msg)
 
         F = np.zeros_like(x)
         for term in self._terms:
             F = F + eval(term)
 
         if self._p == 1:
-            fig, ax = plt.subplots(2)
-            ax[0].plot(self._X[:,0], self._Y)
-            ax[1].plot(x, F)
-            plt.show()
+            plt.plot(self._X[:,0], self._Y, "x", ms = 10)
+            plt.plot(x, F, "r-")
+            plt.xlabel(xlabel)
+            plt.ylabel(ylabel)
+            plt.legend(["Training Data", "Regression Curve"])
+            plt.xlim(np.min(self._X[:,0]), np.max(self._X[:,0]))
+            figManager = plt.get_current_fig_manager()
+            figManager.full_screen_toggle()
+            if savename is not None:
+                plt.savefig(savename, dpi = 250)
+                plt.close()
+            else:
+                plt.show()
         elif self._p == 2:
             fig = plt.figure()
             ax = fig.gca(projection="3d")
-            surf = ax.plot_surface(x, y, F, cmap=cm.coolwarm,
-            linewidth=0, antialiased=False)
-            ax.zaxis.set_major_locator(LinearLocator(10))
-            ax.zaxis.set_major_formatter(FormatStrFormatter("%.02f"))
-            fig.colorbar(surf, shrink=0.5, aspect=5)
-            plt.show()
+            fig.set_size_inches(8, 6)
+            fig.tight_layout()
 
-if __name__ == "__main__":
-    r = Regression([[1.3, 1.4],[2.2, 2.7],[3, 2.8]], [8,7,4])
-    # r = Regression([[1.3,-0.4],[2.2,-0.47],[3,1]], [8,7,4])
-    r.poly(2)
-    r.plot(detail = 0.5)
+            surf = ax.scatter(self._X[:,0], self._X[:,1], self._Y, s = 100,
+            marker = "x")
+
+            surf = ax.plot_surface(x, y, F, cmap=cm.copper, alpha = 0.85,
+            linewidth=0, antialiased=False, rcount = 116, ccount = 116)
+
+            if xlabel is not None:
+                ax.set_xlabel("\n\n\n" + xlabel + "\n", linespacing = 3)
+            if ylabel is not None:
+                ax.set_ylabel("\n\n\n" + ylabel + "\n", linespacing = 3)
+            if zlabel is not None:
+                ax.set_zlabel("\n\n\n" + zlabel + "\n", linespacing = 3)
+
+            # fig.colorbar(surf, shrink=0.5, aspect=5)
+            figManager = plt.get_current_fig_manager()
+            figManager.full_screen_toggle()
+
+            if savename is not None:
+                plt.savefig(savename, dpi = 250)
+                plt.close()
+            else:
+                plt.show()
