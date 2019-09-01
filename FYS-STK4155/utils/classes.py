@@ -422,7 +422,9 @@ class Regression():
 
         if self._p == 1:
             plt.plot(self._X[:,0], self._Y, "x", ms = 10)
+            ymin, ymax = plt.ylim()
             plt.plot(x, F, "r-")
+            plt.ylim(ymin, ymax)
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)
             plt.legend(["Training Data", "Regression Curve"])
@@ -440,11 +442,15 @@ class Regression():
             fig.set_size_inches(8, 6)
             fig.tight_layout()
 
-            surf = ax.scatter(self._X[:,0], self._X[:,1], self._Y, s = 100,
-            marker = "x")
+            surf = ax.scatter(self._X[:,0], self._X[:,1], self._Y, s = 150,
+            marker = "^")
 
-            surf = ax.plot_surface(x, y, F, cmap=cm.copper, alpha = 0.85,
-            linewidth=0, antialiased=False, rcount = 116, ccount = 116)
+            zmin, zmax = ax.get_zlim()
+
+            surf = ax.plot_surface(x, y, F, cmap=cm.autumn, alpha = 0.5,
+            antialiased=True, rcount = 116, ccount = 116)
+
+            ax.set_zlim(zmin, zmax)
 
             if xlabel is not None:
                 ax.set_xlabel("\n\n\n" + xlabel + "\n", linespacing = 3)
