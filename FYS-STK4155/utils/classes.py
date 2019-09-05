@@ -160,6 +160,8 @@ class Regression():
             accessed via the <Regression.terms()> method.
         """
 
+        self._check_not_regr("poly")
+
         # Checking that <degree> is an integer greater than zero
         try:
             if degree == int(degree) and degree > 0:
@@ -316,22 +318,37 @@ class Regression():
         Y_hat = A @ self._beta
         return Y_hat
 
-    def variance(self):
+    def variance(self, sigma):
         """
             ---PURPOSE------------------------------------
 
             Assuming that a regression has taken place, will return the
             variance in the vector of coefficients beta.
 
+            ---INPUT--------------------------------------
+
+            sigma               Scalar value
+
             ---OUTPUT-------------------------------------
 
             var_beta            Array of shape (p,)
+
+            ---NOTES--------------------------------------
+
+            The parameter <sigma> is representative of the standard deviation
+            in a Gaussian noise that is expected to exist in the dataset.  It
+            is assumed that the dataset output is a function of the form:
+
+                        y = f(x_1, x_2, ..., x_p) + N(0, sigma)
+
+            Where N(mu, sigma) is a normal distribution with a mean value of mu
+            and a standard deviation of sigma.
         """
         self._check_regr("variance")
         self._check_split("variance")
-        return self._variance
+        return sigma**2*self._variance
 
-    def mse(self):
+    def mse(self, split = False):
         """
             ---PURPOSE------------------------------------
 
@@ -339,38 +356,73 @@ class Regression():
             error of the regression based on the testing data output and
             predicted values.
 
+            ---OPTIONAL-INPUT-----------------------------
+
+            split                   Boolean
+
             ---OUTPUT-------------------------------------
 
-            mean_squared_error          Number of type float
+            mean_squared_error      Number of type float
+
+            ---NOTES--------------------------------------
+
+            The parameter <split> determines whether or not R² should be
+            calculated for a split training-test set.  If True, it will use
+            a test set, if False it will use the entire <X> array for both
+            training and testing.
         """
 
         self._check_regr("mse")
-        self._check_split("mse")
-        Y_hat = self.predict(self._X_test)
-        mean_squared_error = (1/Y_hat.shape[0])*np.mean((self._Y_test - Y_hat)**2)
+        if split is True:
+            self._check_split("mse")
+            Y_hat = self.predict(self._X_test)
+            mean_squared_error = (1/Y_hat.shape[0])*\
+                                  np.mean((self._Y_test - Y_hat)**2)
+        else:
+            Y_hat = self.predict(self._X)
+            mean_squared_error = (1/Y_hat.shape[0])*\
+                                  np.mean((self._Y - Y_hat)**2)
 
         return mean_squared_error
 
-    def r_squared(self):
+    def r_squared(self, split = False):
         """
             ---PURPOSE------------------------------------
 
             Assuming that the dataset has been split, returns the R²
             score based on the testing data output and predicted values.
 
+            ---OPTIONAL-INPUT-----------------------------
+
+            split                   Boolean
+
             ---OUTPUT-------------------------------------
 
             r_squared               Number of type float
+
+            ---NOTES--------------------------------------
+
+            The parameter <split> determines whether or not R² should be
+            calculated for a split training-test set.  If True, it will use
+            a test set, if False it will use the entire <X> array for both
+            training and testing.
         """
 
         self._check_regr("r_squared")
         self._check_split("r_squared")
-        Y_hat = self.predict(self._X_test)
-        r_squared = 1 - (np.sum((self._Y_test - Y_hat)**2))/\
-                        (np.sum((self._Y_test - np.mean(self._Y_test))**2))
+        if split is True:
+            self._check_regr("mse")
+            Y_hat = self.predict(self._X_test)
+            r_squared = 1 - (np.sum((self._Y_test - Y_hat)**2))/\
+                            (np.sum((self._Y_test - np.mean(self._Y_test))**2))
+        else:
+            Y_hat = self.predict(self._X)
+            r_squared = 1 - (np.sum((self._Y - Y_hat)**2))/\
+                            (np.sum((self._Y - np.mean(self._Y))**2))
+
         return r_squared
 
-    def k_fold(self, k, degree, alpha = None):
+    def k_fold(self, k, degree, sigma, alpha = None):
         """
             ---PURPOSE------------------------------------
 
@@ -378,16 +430,30 @@ class Regression():
 
             ---INPUT--------------------------------------
 
-            k           Integer greater than 1
+            k               Integer greater than 1
             degree          Integer greater than zero
+            sigma           Scalar value
 
             ---OPTIONAL-INPUT-----------------------------
 
-            alpha       Real number greater than zero or None
+            alpha           Real number greater than zero or None
 
             ---OUTPUT-------------------------------------
 
+            R2              1-D array of shape (k,)
+            MSE             1-D array of shape (k,)
+            variance        Array
 
+            ---NOTES--------------------------------------
+
+            The parameter <sigma> is representative of the standard deviation
+            in a Gaussian noise that is expected to exist in the dataset.  It
+            is assumed that the dataset output is a function of the form:
+
+                        y = f(x_1, x_2, ..., x_p) + N(0, sigma)
+
+            Where N(mu, sigma) is a normal distribution with a mean value of mu
+            and a standard deviation of sigma.
         """
         try:
             if degree == int(degree) and degree > 0:
@@ -477,7 +543,7 @@ class Regression():
 
             MSE[i] = (1/Y_hat.shape[0])*np.mean((Y_test - Y_hat)**2)
 
-        variance = np.array(variance)
+        variance = sigma**2*np.array(variance)
         return R2, MSE, variance
 
     def plot(self, detail = 0.5, xlabel = None, ylabel = None, zlabel = None,
@@ -789,7 +855,7 @@ class Regression():
             for n,exponent in enumerate(exponents):
                 A[:,n] = X[:,0]**exponent
 
-        Y_hat = A @ self._beta
+        Y_hat = A @ beta
         return Y_hat
 
     def _poly_str(self, exponents, beta):
