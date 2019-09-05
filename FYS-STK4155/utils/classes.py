@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy as np
 import matplotlib
+import warnings
+
+np.random.seed(69420666)
 
 class Regression():
 
@@ -11,7 +14,7 @@ class Regression():
         """
             ---PURPOSE------------------------------------
 
-            Initialized a <Regression> object
+            Initializes a <Regression> object
 
             ---INPUT--------------------------------------
 
@@ -72,26 +75,63 @@ class Regression():
                          f"\n\n\tY.shape = {Y.shape}")
             raise ValueError(error_msg)
 
+        self._X_backup = X
+        self._Y_backup = Y
         self._X = X
         self._Y = Y
         self._dtype = dtype
         self._complete = False
-        self._N = X.shape[0]
-        self._p = X.shape[1]
+        self._split = False
+        self._N = self._X.shape[0]
+        self._p = self._X.shape[1]
 
-    def _check_regr(self):
+    def split(self, test_size):
         """
-            Helper method to inform user that the object instance has not yet
-            had regression applied to it in a situation where completion is
-            necessary.
+            ---PURPOSE------------------------------------
+
+            Takes the dataset given by X, Y in __init__ and splits it into
+            training data and testing data automatically.
+
+            ---OPTIONAL-INPUT-----------------------------
+
+            test_size           The percentage (0,100) of that data that
+                                should be allocated to the test input
         """
-        if self._complete is False:
-            error_msg = (f"\n\n<Regression> object cannot be displayed; must "
-                         f"first select a regression method.\n\nExample:\n\n"
-                         f"IN[1]\tfoo = Regression([[1],[2],[3]], [3,5,8])\n\t"
-                         f"foo.poly(degree = 2) # Selection of the regression"
-                         f" method")
+
+        self._check_not_regr("split")
+
+        if self._split is True:
+            error_msg = (f"\n\nInvalid usage of <Regression> object; cannot "
+                         f"split the dataset into training and testing data "
+                         f"multiple times with <Regression.split>.")
             raise Exception(error_msg)
+
+        # Attempting to convert X to a NumPy array
+        error_msg = (f"Parameter <test_size> in method <Regression.split> "
+                     f" must be a number between (and not including) 0 and 100"
+                     f".\n\t")
+        try:
+            test_size = float(test_size)
+            if test_size <= 0 or test_size >= 100:
+                raise ValueError()
+        except TypeError:
+            error_msg += f"type(test_size) = {type(test_size)}"
+            raise TypeError(error_msg)
+        except ValueError:
+            error_msg += (f"test_size = {test_size} --> suggest changing to "
+                          f"test_size = 33")
+            raise ValueError(error_msg)
+
+        N_test = int(round(self._N*test_size*0.01))
+        self._test_idx = np.random.choice(a = N_test, size = N_test, replace = False)
+        self._X_test = self._X[self._test_idx]
+        self._Y_test = self._Y[self._test_idx]
+        self._X = np.delete(self._X, self._test_idx, axis = 0)
+        self._Y = np.delete(self._Y, self._test_idx)
+        self._split = True
+
+        self._N = self._X.shape[0]
+        self._p = self._X.shape[1]
 
     def poly(self, degree, alpha = None):
         """
@@ -118,7 +158,6 @@ class Regression():
 
             After running this method, the corresponding order of terms can be
             accessed via the <Regression.terms()> method.
-
         """
 
         # Checking that <degree> is an integer greater than zero
@@ -184,7 +223,9 @@ class Regression():
         if alpha is None:
             # If ridge regression is not implemented
             try:
-                self._beta = np.linalg.inv(A.T @ A) @ A.T @ self._Y
+                self._beta = np.linalg.inv(A.T @ A)
+                self._variance = np.diagonal(self._beta)
+                self._beta = self._beta @ A.T @ self._Y
             except np.linalg.LinAlgError:
                 error_msg = (f"\n\nThe design matrix product could not be "
                              f"inverted because it is a singular matrix.\n\n\t"
@@ -199,7 +240,9 @@ class Regression():
             self._beta = A.T @ A
             try:
                 self._beta = np.linalg.inv(self._beta + alpha*\
-                np.identity((self._beta).shape[0])) @ A.T @ self._Y
+                np.identity((self._beta).shape[0]))
+                self._variance = np.diagonal(self._beta)
+                self._beta = self._beta @ A.T @ self._Y
             except np.linalg.LinAlgError:
                 error_msg = (f"\n\nThe design matrix product could not be "
                              f"inverted because it is a singular matrix.\n\n\t"
@@ -210,120 +253,232 @@ class Regression():
 
         self._readable, self._terms = self._poly_str(exponents, self._beta)
         self._complete = True
-
-    def _poly_str(self, exponents, beta):
-        """
-            ---PURPOSE------------------------------------
-
-            Takes a set of exponents and a vector of coefficients and
-            uses these to create a list of strings which are human-readable.
-
-            Should not be accessed by users.
-
-            ---INPUT--------------------------------------
-
-            exponents       2-D NumPy array of shape (N, d)
-            beta            1-D Numpy array of shape (N,)
-
-            ---OUTPUT-------------------------------------
-
-            readable        String containing human-readable polynomial
-            terms           List of evaluatable strings of length N
-
-            ---NOTES--------------------------------------
-
-            Uses variables:
-                                x, y, z, w, v, u
-
-            for up to six dimensional functions, in the given order.
-            For d > 6 dimensional functions, generalizes to:
-
-                            x_i; i = 1, 2, ... , d
-
-            Example:
-
-            IN[1]       foo = Regression._poly_str()
-                        foo.poly(1)
-                        print(foo)
-
-            OUT[1]      F(x, y) = -1.38*y - 1.22*x + 9.03
-
-        """
-
-        all_var_chars = ["x", "y", "z", "w", "v", "u"]
-
-        N_terms = exponents.shape[0]
-        N_vars = exponents.shape[1]
-
-        if N_vars > 6:
-            var_chars = [f"x_{i+1}" for i in range(N_vars)]
-        else:
-            var_chars = all_var_chars[:N_vars]
-
-        self._var_chars = var_chars
-
-        terms = []
-        if N_vars == 1:
-            equation = "f("
-        else:
-            equation = "F("
-
-        if N_vars <= 6:
-            for n,c in enumerate(var_chars):
-                if n > 0:
-                    equation = f"{equation}, "
-                equation = f"{equation}{c}"
-        else:
-            equation = f"{equation}x_i; i = 1,2,...,{N_vars}"
-
-        equation = f"{equation}) = "
-
-        for m,(e,b) in enumerate(zip(exponents, beta)):
-            b_sign = np.sign(b)
-            factors = [f"{abs(b):.3g}"]
-            for n,i in enumerate(e):
-                if i != 0:
-                    factors.append(f"{var_chars[n]}")
-                if i > 1:
-                    factors[-1] += f"**{i:d}"
-
-            if len(factors) == 0:
-                factors.append("")
-            elif len(factors) > 1:
-                for n,f in enumerate(factors):
-                    if "**" in f:
-                        factors[n] = "(" + f + ")"
-
-            factors = "*".join(factors)
-
-            if b_sign == -1:
-                terms.append(f"-{factors}")
-            else:
-                terms.append(factors)
-
-            if m > 0:
-                if b_sign == 1:
-                    factors = f" + {factors}"
-                elif b_sign == -1:
-                    factors = f" - {factors}"
-            elif b_sign == -1:
-                factors = f"-{factors}"
-
-            equation = f"{equation}{factors}"
-
-        return equation, terms
+        self._exponents = exponents
 
     def terms(self):
         """
             Returns the terms for each respective element in the coefficient
             of vectors as a list of evaluatable strings
         """
-        self._check_regr()
+        self._check_regr("terms")
         return self._terms
 
-    def __str__(self):
-        self._check_regr()
-        return self._readable
+    def predict(self, X):
+        """
+            ---PURPOSE------------------------------------
+
+            Assuming that a regression has taken place, will predict the output given
+            by a set of inputs in <X>
+
+            ---INPUT--------------------------------------
+
+            X           Numerical array of shape (M, p)
+
+            ---OUTPUT-------------------------------------
+
+            Y           Array of shape (M,)
+        """
+
+        self._check_regr("predict")
+
+        try:
+            X = np.array(X, dtype = self._dtype)
+        except TypeError:
+            error_msg = (f"Parameter <X> in method of <Regression.predict> must "
+                         f"be a NumPy array containing only numbers.")
+            raise TypeError(error_msg)
+        except ValueError:
+            error_msg = (f"Parameter <X> in method of <Regression.predict> must "
+                         f"be a NumPy array of shape (M, {self._p}).\n\tX.shape")
+            raise ValueError(error_msg)
+
+        if len(X.shape) != 2:
+            error_msg = (f"\n\nParameter <X> in method <Regression.predict> "
+                         f" must be two-dimensional\n\t"
+                         f"X.shape = {X.shape}")
+            raise ValueError(error_msg)
+
+        if X.shape[1] != self._p:
+            error_msg = (f"\n\nParameter <X> in method <Regression.predict> "
+                         f" must have {self._p} columns\n\n\tX.shape[1] = "
+                         f"{X.shape[1]}")
+            raise ValueError(error_msg)
+
+        if self._p > 1:
+            A = np.zeros((X.shape[0], self._exponents.shape[0]))
+            for n,exponent in enumerate(self._exponents):
+                A[:,n] = np.prod(X**exponent, axis = 1)
+        else:
+            A = np.zeros((X.shape[0], self._exponents.shape[0]))
+            for n,exponent in enumerate(self._exponents):
+                A[:,n] = X[:,0]**exponent
+
+        Y_hat = A @ self._beta
+        return Y_hat
+
+    def variance(self):
+        """
+            ---PURPOSE------------------------------------
+
+            Assuming that a regression has taken place, will return the
+            variance in the vector of coefficients beta.
+
+            ---OUTPUT-------------------------------------
+
+            var_beta            Array of shape (p,)
+        """
+        self._check_regr("variance")
+        self._check_split("variance")
+        return self._variance
+
+    def mse(self):
+        """
+            ---PURPOSE------------------------------------
+
+            Assuming that the dataset has been split, returns the mean-squared-
+            error of the regression based on the testing data output and
+            predicted values.
+
+            ---OUTPUT-------------------------------------
+
+            mean_squared_error          Number of type float
+        """
+
+        self._check_regr("mse")
+        self._check_split("mse")
+        Y_hat = self.predict(self._X_test)
+        mean_squared_error = (1/Y_hat.shape[0])*np.mean((self._Y_test - Y_hat)**2)
+
+        return mean_squared_error
+
+    def r_squared(self):
+        """
+            ---PURPOSE------------------------------------
+
+            Assuming that the dataset has been split, returns the R²
+            score based on the testing data output and predicted values.
+
+            ---OUTPUT-------------------------------------
+
+            r_squared               Number of type float
+        """
+
+        self._check_regr("r_squared")
+        self._check_split("r_squared")
+        Y_hat = self.predict(self._X_test)
+        r_squared = 1 - (np.sum((self._Y_test - Y_hat)**2))/\
+                        (np.sum((self._Y_test - np.mean(self._Y_test))**2))
+        return r_squared
+
+    def k_fold(self, k, degree, alpha = None):
+        """
+            ---PURPOSE------------------------------------
+
+            Implements k-fold cross-validation
+
+            ---INPUT--------------------------------------
+
+            k           Integer greater than 1
+            degree          Integer greater than zero
+
+            ---OPTIONAL-INPUT-----------------------------
+
+            alpha       Real number greater than zero or None
+
+            ---OUTPUT-------------------------------------
+
+
+        """
+        try:
+            if degree == int(degree) and degree > 0:
+                degree = int(degree)
+        except ValueError:
+            error_msg = (f"\n\nParameter <degree> in <Regression.k_fold> "
+                         f"must be an integer greater than zero\n\t"
+                         f"type(degree) = {type(degree)}")
+            raise ValueError(error_msg)
+
+        if alpha is not None:
+            try:
+                if alpha > 0:
+                    alpha = float(alpha)
+                elif alpha <= 0:
+                    raise ValueError()
+            except TypeError:
+                error_msg = (f"\n\nParameter <alpha> in <Regression.k_fold> "
+                             f"must be a number greater than zero\n\t"
+                             f"type(alpha) = {type(alpha)}")
+                raise TypeError(error_msg)
+            except ValueError:
+                error_msg = (f"\n\nParameter <alpha> in <Regression.k_fold> "
+                             f"must be a number greater than zero\n\t"
+                             f"alpha = {alpha} --> suggest changing to: alpha "
+                             f"= 1E-5")
+                raise ValueError(error_msg)
+
+        error_msg = (f"\n\nParameter <k> in method <Regression.k_fold> must be"
+                     f" an integer greater than one\n\t")
+
+        if not isinstance(k, int):
+            error_msg += f"type(k) = {type(k)}"
+            raise TypeError(error_msg)
+        elif k < 2:
+            error_msg += f"k = {k}"
+            if self._N >= 500:
+                error_msg += " --> suggest changing to: k = 10"
+            raise ValueError(error_msg)
+
+        N_subsample = self._X_backup.shape[0]//k
+        N_remain = self._X_backup.shape[0]%k
+        N_tot = self._X_backup.shape[0] - N_remain
+
+        if N_subsample < 10:
+            warning_msg = (f"Implementing k-fold cross-validation in method "
+                           f"<Regression.k_fold> with k = {k} leads to "
+                           f"subsamples of size {N_subsample}, which are small"
+                           f", and may thus lead to misleading results.")
+            warnings.warn(warning_msg)
+        elif N_subsample <= 1:
+            error_msg = (f"Implementing k-fold cross-validation in method "
+                           f"<Regression.k_fold> with k = {k} leads to "
+                           f"subsamples of size {N_subsample}.\n\nSubsamples "
+                           f"must contain more than one element.")
+
+            raise ValueError(error_msg)
+
+        idx_shuffle = np.random.permutation(N_tot)
+        X_shuffle = self._X_backup[idx_shuffle]
+        Y_shuffle = self._Y_backup[idx_shuffle]
+        X_split = X_shuffle.reshape((k, N_subsample, self._p))
+        Y_split = Y_shuffle.reshape((k, N_subsample))
+
+        MSE = np.zeros(k)
+        R2 = np.zeros(k)
+        variance = []
+
+        for i in range(k):
+            X_train = np.delete(X_split, i, axis = 0)
+            X_train = X_train.reshape((k-1*N_subsample, 2))
+            X_test = X_split[i]
+
+            Y_train = np.delete(Y_split, i, axis = 0)
+            Y_train = Y_train.reshape((k-1*N_subsample))
+            Y_test = Y_split[i]
+
+            beta, var, exponents = \
+            self._internal_poly(X_train, Y_train, degree, alpha)
+
+            variance.append(var)
+
+            Y_hat = self._internal_predict(X_test, beta, exponents)
+
+            R2[i] = 1 - (np.sum((Y_test - Y_hat)**2))/\
+                            (np.sum((Y_test - np.mean(Y_test))**2))
+
+            MSE[i] = (1/Y_hat.shape[0])*np.mean((Y_test - Y_hat)**2)
+
+        variance = np.array(variance)
+        return R2, MSE, variance
 
     def plot(self, detail = 0.5, xlabel = None, ylabel = None, zlabel = None,
     savename = None):
@@ -355,7 +510,7 @@ class Regression():
             ValueError.
 
         """
-        self._check_regr()
+        self._check_regr("plot")
 
         if self._p not in [1,2]:
             error_msg = (f"\n\nAttempting to call method <Regression.plot()> "
@@ -459,7 +614,6 @@ class Regression():
             if zlabel is not None:
                 ax.set_zlabel("\n\n\n" + zlabel + "\n", linespacing = 3)
 
-            # fig.colorbar(surf, shrink=0.5, aspect=5)
             figManager = plt.get_current_fig_manager()
             figManager.full_screen_toggle()
 
@@ -468,3 +622,278 @@ class Regression():
                 plt.close()
             else:
                 plt.show()
+
+    def reset(self):
+        """
+            Resets the object to its initial state.  Useful if you wish to
+        """
+        self.__init__(self._X_backup, self._Y_backup, dtype = self._dtype)
+
+    def _check_regr(self, method_name):
+        """
+            Helper method to inform user that the object instance has not yet
+            had regression applied to it in a situation where completion is
+            necessary.
+        """
+        if self._complete is False:
+            error_msg = (f"\n\nInvalid usage of <Regression> object; must "
+                         f"first select a regression method before calling "
+                         f"method <Regression.{method_name}>\n\nExample:\n\n"
+                         f"IN[1]\tfoo = Regression([[1],[2],[3]], [3,5,8])\n\t"
+                         f"foo.poly(degree = 2) # Selection of the regression"
+                         f" method")
+            raise Exception(error_msg)
+
+    def _check_not_regr(self, method_name):
+        """
+            Helper method to inform user that the object instance has had
+            regression applied to it in a situation where incompletion is
+            necessary.
+        """
+        if self._complete is True:
+            error_msg = (f"\n\nInvalid usage of <Regression> object; cannot "
+                         f"apply method <Regression.{method_name}> after a "
+                         f"regression has been implemented.\n\tCall method "
+                         f"<Regression.reset> to return object to its original "
+                         f"state.")
+            raise Exception(error_msg)
+
+    def _check_split(self, method_name):
+        """
+            Helper method to inform user that the object instance's dataset has
+            not yet been split into training and testing data.
+        """
+        if self._split is False:
+            error_msg = (f"\n\nInvalid usage of <Regression> object; must "
+                         f"first split the dataset into training and testing "
+                         f"data with <Regression.split> before calling the "
+                         f"method <Regression.{method_name}>")
+            raise Exception(error_msg)
+
+    def _internal_poly(self, X, y, degree, alpha = None):
+        """
+            ---PURPOSE------------------------------------
+
+            Implements regression for a multidimensional polynomial of the
+            given <degree> for the k-fold algorithm method.
+
+            Can also implement ridge regression by passing a number greater
+            than zero to parameter <alpha>.
+
+            ---INPUT--------------------------------------
+
+            X               2-D NumPy array of shape (N, p)
+            y               1-D NumPy array of shape (N,)
+            degree          Integer greater than zero
+
+            ---OPTIONAL-INPUT-----------------------------
+
+            alpha           Real number greater than zero or None
+
+            ---OUTPUT-------------------------------------
+
+            beta
+            variance
+            exponents
+        """
+
+        M = int(degree) + 1
+
+        # Setting up all the cross terms of the polynomial
+        powers = np.arange(0, M, 1)
+        exponents = list(permutations(powers, self._p))
+
+        # Including the non cross terms
+        if self._p != 1:
+            for power in powers:
+                exponents.append(power*np.ones(self._p))
+
+        # Excluding cross terms whose total is greater than <degree>
+        if self._p != 1:
+            expo_sum = np.sum(exponents, axis = 1)
+            valid_idx = np.where(np.less_equal(expo_sum, degree))[0]
+            exponents = np.array(exponents, dtype = np.int64)
+            exponents = exponents[valid_idx]
+        else:
+            exponents = np.array(exponents, dtype = np.int64)
+
+        # Creating the design matrix
+        if self._p > 1:
+            A = np.zeros((X.shape[0], exponents.shape[0]))
+            for n,exponent in enumerate(exponents):
+                A[:,n] = np.prod(X**exponent, axis = 1)
+        else:
+            A = np.zeros((X.shape[0], exponents.shape[0]))
+            for n,exponent in enumerate(exponents):
+                A[:,n] = X[:,0]**exponent
+
+        # Implementing the least-squares method
+        if alpha is None:
+            # If ridge regression is not implemented
+            try:
+                beta = np.linalg.inv(A.T @ A)
+                variance = np.diagonal(beta)
+                beta = beta @ A.T @ y
+            except np.linalg.LinAlgError:
+                error_msg = (f"\n\nThe design matrix product could not be "
+                             f"inverted because it is a singular matrix.\n\n\t"
+                             f"(XᵀX)⁻¹ = undefined\n\nTry setting parameter "
+                             f"<alpha> in <Regression.k_fold> to 1E-4; this "
+                             f"implements ridge regression, and may lead to an"
+                             f" approximate solution.")
+
+                raise np.linalg.LinAlgError(error_msg)
+        else:
+            # If ridge regression is implemented
+            beta = A.T @ A
+            try:
+                beta = np.linalg.inv(beta + alpha*\
+                np.identity(beta.shape[0]))
+                variance = np.diagonal(beta)
+                beta = beta @ A.T @ y
+            except np.linalg.LinAlgError:
+                error_msg = (f"\n\nThe design matrix product could not be "
+                             f"inverted because it is a singular matrix.\n\n\t"
+                             f"(XᵀX + {alpha:g}*I)⁻¹ = undefined\n\nTry "
+                             f"increasing parameter <alpha> in method "
+                             f"<Regression.k_fold> to find a non-singular "
+                             f"matrix.")
+                raise np.linalg.LinAlgError(error_msg)
+
+        return beta, variance, exponents
+
+    def _internal_predict(self, X, beta, exponents):
+        """
+            ---PURPOSE------------------------------------
+
+            Assuming that a regression has taken place, will predict the output given
+            by a set of inputs in <X>
+
+            ---INPUT--------------------------------------
+
+            X               Numerical array of shape (M, p)
+            beta
+            exponents
+
+            ---OUTPUT-------------------------------------
+
+            Y           Array of shape (M,)
+        """
+
+        if self._p > 1:
+            A = np.zeros((X.shape[0], exponents.shape[0]))
+            for n,exponent in enumerate(exponents):
+                A[:,n] = np.prod(X**exponent, axis = 1)
+        else:
+            A = np.zeros((X.shape[0], exponents.shape[0]))
+            for n,exponent in enumerate(exponents):
+                A[:,n] = X[:,0]**exponent
+
+        Y_hat = A @ self._beta
+        return Y_hat
+
+    def _poly_str(self, exponents, beta):
+        """
+            ---PURPOSE------------------------------------
+
+            Takes a set of exponents and a vector of coefficients and
+            uses these to create a list of strings which are human-readable.
+
+            Should not be accessed by users.
+
+            ---INPUT--------------------------------------
+
+            exponents       2-D NumPy array of shape (N, d)
+            beta            1-D Numpy array of shape (N,)
+
+            ---OUTPUT-------------------------------------
+
+            readable        String containing human-readable polynomial
+            terms           List of evaluatable strings of length N
+
+            ---NOTES--------------------------------------
+
+            Uses variables:
+                                x, y, z, w, v, u
+
+            for up to six dimensional functions, in the given order.
+            For d > 6 dimensional functions, generalizes to:
+
+                            x_i; i = 1, 2, ... , d
+
+            Example:
+
+            IN[1]       foo = Regression._poly_str()
+                        foo.poly(1)
+                        print(foo)
+
+            OUT[1]      F(x, y) = -1.38*y - 1.22*x + 9.03
+
+        """
+
+        all_var_chars = ["x", "y", "z", "w", "v", "u"]
+
+        N_terms = exponents.shape[0]
+        N_vars = exponents.shape[1]
+
+        if N_vars > 6:
+            var_chars = [f"x_{i+1}" for i in range(N_vars)]
+        else:
+            var_chars = all_var_chars[:N_vars]
+
+        self._var_chars = var_chars
+
+        terms = []
+        if N_vars == 1:
+            equation = "f("
+        else:
+            equation = "F("
+
+        if N_vars <= 6:
+            for n,c in enumerate(var_chars):
+                if n > 0:
+                    equation = f"{equation}, "
+                equation = f"{equation}{c}"
+        else:
+            equation = f"{equation}x_i; i = 1,2,...,{N_vars}"
+
+        equation = f"{equation}) = "
+
+        for m,(e,b) in enumerate(zip(exponents, beta)):
+            b_sign = np.sign(b)
+            factors = [f"{abs(b)}"]
+            for n,i in enumerate(e):
+                if i != 0:
+                    factors.append(f"{var_chars[n]}")
+                if i > 1:
+                    factors[-1] += f"**{i:d}"
+
+            if len(factors) == 0:
+                factors.append("")
+            elif len(factors) > 1:
+                for n,f in enumerate(factors):
+                    if "**" in f:
+                        factors[n] = "(" + f + ")"
+
+            factors = "*".join(factors)
+
+            if b_sign == -1:
+                terms.append(f"-{factors}")
+            else:
+                terms.append(factors)
+
+            if m > 0:
+                if b_sign == 1:
+                    factors = f" + {factors}"
+                elif b_sign == -1:
+                    factors = f" - {factors}"
+            elif b_sign == -1:
+                factors = f"-{factors}"
+
+            equation = f"{equation}{factors}"
+
+        return equation, terms
+
+    def __str__(self):
+        self._check_regr("__str__")
+        return self._readable
