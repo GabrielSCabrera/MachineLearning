@@ -8,13 +8,13 @@ from utils.classes import Regression
 N = int(1E3)
 x = np.linspace(0, 1, N) + np.random.normal(0, 10, N)
 y = np.linspace(0, 1, N) + np.random.normal(0, 10, N)
-z = 0.1*x**3 + 0.2*x**2*y - 0.1*x*y + np.random.normal(0, 1, N)
+z = 0.1*x**3 + 0.2*x**2*y**2 - 0.1*x*y**2 - 1.2*np.sin(x) + np.random.normal(0, 1, N)
 
 X = np.array([x,y]).T
 
 R = Regression(X,z)
-# R.poly(3)
-# R.plot(detail = 0.5)
+R.poly(4)
+R.plot(detail = 0.5)
 # R.reset()
 R.split(2)
 R.poly(3)
