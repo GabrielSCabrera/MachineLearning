@@ -92,7 +92,7 @@ def least_squares(x, y, fxn_list):
 
     return beta
 
-def variance()
+#def variance()
 
 x = np.random.rand(100, 1)
 y = 5*x*x+0.1*np.random.randn(100, 1)
@@ -113,7 +113,7 @@ print(mean_squared_error(y_test, y_predict))
 print(beta_manual)
 print(beta_sklearn)
 
-x2 = np.linspace(0, 1, 1E3)
+x2 = np.linspace(0, 1, int(1E3))
 y2 = beta_manual[0] + beta_manual[1]*x2 + beta_manual[2]*x2**2
 y3 = beta_sklearn[0] + beta_sklearn[1]*x2 + beta_sklearn[2]*x2**2
 

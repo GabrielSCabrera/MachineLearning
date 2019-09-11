@@ -20,9 +20,9 @@ R.split(2)
 R.poly(3)
 print(f"MSE = {R.mse():10.4g}")
 print(f"R²  = {R.r_squared():10.4g}")
-print(f"Var = \n\n{R.variance()}")
+print(f"Var = \n\n{R.variance(1)}")
 
-R2, MSE, variance = R.k_fold(k = 5, degree = 3)
+R2, MSE, variance = R.k_fold(k = 20, degree = 3, sigma = 1)
 
 print("\nK-Fold Mean Values:\n\n")
 print(f"MSE = {np.mean(MSE):10.4g}")
