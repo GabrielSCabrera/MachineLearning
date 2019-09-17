@@ -31,7 +31,6 @@ class Regression():
                      f"NumPy array containing only numbers.")
 
         # Attempting to convert X to a NumPy array
-
         try:
             X = np.array(X, dtype = dtype)
         except ValueError:
@@ -85,6 +84,15 @@ class Regression():
         self._split = False
         self._N = self._X.shape[0]
         self._p = self._X.shape[1]
+
+        # Cleans out all attributes in case of reset
+
+        # if not hasattr(self, '_dir_backup'):
+        #     self._dir_backup = self.__dir__().copy
+        # else:
+        #     for var in self.__dir__():
+        #         if var not in self._dir_backup() and var != "_dir_backup":
+        #             delattr(self, var)
 
     def split(self, test_size):
         """
@@ -263,44 +271,77 @@ class Regression():
         A, exponents = self._design(self._X, degree)
 
         z = np.sum(A**2, axis = 0)
-        beta = np.ones(A.shape[1])
+
+        # beta2 = np.zeros(A.shape[1])
+        # rho2 = np.zeros(A.shape[1])
+
+        # filter_idx = np.arange(0, A.shape[0]*A.shape[1], A.shape[1])
+        # filter_mask = np.ones(A.shape[0]*A.shape[1])
+        # filter_mask[filter_idx] = 0
+        # filter_mask = filter_mask.astype(bool)
+
+        beta = np.zeros(A.shape[1])
         beta_new = np.zeros(A.shape[1])
+        beta_old = beta.copy()
+
+        dx_old = 0
+        dx2 = None
+
         rho = np.zeros(A.shape[1])
-        # beta_old = beta.copy()
-        alpha = 0.001
+        alpha = 0.01
 
-        for idx in range(25):
-            # for j in range(A.shape[1]):
-            #     Y_hat = np.sum(beta*A, axis = 1) - (beta[j]*A[:,j])
-            #     rho[j] = np.sum(A[:,j]*(self._Y - Y_hat))
-            #     print(rho[j])
-            #     if rho[j] < -alpha/2:
-            #         beta_new[j] = (rho[j] + alpha/2)/z[j]
-            #     elif rho[j] > alpha/2:
-            #         beta_new[j] = (rho[j] - alpha/2)/z[j]
-            #     else:
-            #         beta_new[j] = 0
+        while dx2 is None or dx2 > 1E-3:
+            for j in range(A.shape[1]):
+                Y_hat = np.sum(beta*A, axis = 1) - (beta[j]*A[:,j])
+                rho[j] = np.sum(A[:,j]*(self._Y - Y_hat))
+                if rho[j] < -alpha/2:
+                    beta_new[j] = (rho[j] + alpha/2)/z[j]
+                elif rho[j] > alpha/2:
+                    beta_new[j] = (rho[j] - alpha/2)/z[j]
+                else:
+                    beta_new[j] = 0
+            beta = beta_new
 
-            Y_hat = np.tile(np.sum(beta*A, axis = 1), (A.shape[1], 1)) - (beta*A).T
-            diff = np.tile(self._Y, (A.shape[1],1)) - Y_hat
-            rho = np.sum(A*diff.T, axis = 0)
-            case_1 = np.less(rho, -alpha/2)
-            case_2 = np.greater(rho, alpha/2)
-            case_3 = np.logical_and(np.logical_not(case_1), np.logical_not(case_2))
-            beta[case_1] = (rho[case_1] + alpha/2)/z[case_1]
-            beta[case_2] = (rho[case_2] - alpha/2)/z[case_2]
-            beta[case_3] = 0
+            dx = np.mean(np.abs(beta - beta_old))
+            dx2 = np.abs(dx - dx_old)
+            beta_old = beta.copy()
+
+            # filtered = np.tile(np.sum(beta2*A, axis = 1), (A.shape[1],1))
+            # filtered = filtered.flatten()[filter_mask]
+            # filtered = filtered.reshape(A.shape[0], A.shape[1]-1)
+            # Y_hat2 = np.sum(filtered, axis = 1)
+            # # Y_hat2 = np.tile(np.sum(beta2*A, axis = 1), (A.shape[1], 1)) - (beta2*A).T
+            # print(Y_hat2, "2")
+            # diff = self._Y - Y_hat2
+            # # print(diff[-1][-1])
+            #
+            # rho2 = np.sum(A*np.column_stack(diff).T, axis = 0)
+            #
+            # case_1 = np.less(rho2, -alpha/2)
+            # case_2 = np.greater(rho2, alpha/2)
+            # case_3 = np.logical_not(np.logical_or(case_1, case_2))
+            #
+            # case_1 = np.where(case_1)[0]
+            # case_2 = np.where(case_2)[0]
+            # case_3 = np.where(case_3)[0]
+            #
+            # beta2[case_1] = (rho2[case_1] + alpha/2)/z[case_1]
+            # beta2[case_2] = (rho2[case_2] - alpha/2)/z[case_2]
+            # beta2[case_3] = 0
+            #
+            # if idx == 2:
+            #     break
 
 
             # dx = np.mean(np.abs(beta - beta_old))
             # beta_old = beta.copy()
             # print(dx)
+            # print("\n\n")
 
         self._beta = beta
         self._readable, self._terms = self._poly_str(exponents, self._beta)
         self._complete = True
         self._exponents = exponents
-
 
     def sigma(self):
         """

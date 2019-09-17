@@ -45,7 +45,7 @@ y = Z.flatten()
 R = Regression(x, y)
 
 # Implementing 5th degree polynomial regression in 2-D
-R.poly(degree = degree)
+# R.poly(degree = degree)
 
 
 def part_a():
@@ -134,5 +134,5 @@ def part_d():
 # part_b()
 # part_d()
 R.reset()
-R.lasso(degree = 5, alpha = 0.1)
+R.lasso(degree = degree, alpha = 0.1)
 R.plot()
