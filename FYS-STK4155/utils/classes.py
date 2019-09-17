@@ -625,6 +625,8 @@ class Regression():
 
         labels = [xlabel, ylabel, zlabel]
         label_names = ["xlabel", "ylabel", "zlabel"]
+        
+        plt.style.use("seaborn")
 
         if savename is not None and not isinstance(savename, str):
             error_msg = (f"\n\nParameter <savename> in method "
