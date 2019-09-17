@@ -98,7 +98,7 @@ def part_d():
     ridge_data = {"ridge":{}, "k_fold":{}}
 
     # Generating Array of Hyperparameters
-    lambda_min, lambda_max, N_lambda = 0.01, 1, 50
+    lambda_min, lambda_max, N_lambda = 0.0001, 0.01, 50
     lambda_vals = np.linspace(lambda_min, lambda_max, N_lambda)
 
     # Creating Blank Arrays

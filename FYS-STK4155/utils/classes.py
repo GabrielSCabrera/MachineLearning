@@ -290,9 +290,6 @@ class Regression():
 
             sigma2      Float
 
-            ---NOTES--------------------------------------
-
-            You need to run predict() before running sigma().
         """
         self._check_predict("sigma")
         sigma2 = 1/(self._N - self._p - 1) * np.sum((self._Y - self._Y_hat)**2)
@@ -359,16 +356,17 @@ class Regression():
         Y_hat = A @ self._beta
         return Y_hat
 
-    def variance(self, sigma, split = False):
+    def variance(self, sigma = None, split = False):
         """
             ---PURPOSE------------------------------------
 
             Assuming that a regression has taken place, will return the
             variance in the vector of coefficients beta.
 
-            ---INPUT--------------------------------------
+            ---OPTIONAL-INPUT-----------------------------
 
             sigma               Scalar value
+            split               Boolean
 
             ---OUTPUT-------------------------------------
 
@@ -388,6 +386,8 @@ class Regression():
         self._check_regr("variance")
         if split is True:
             self._check_split("variance")
+        if sigma is None:
+            sigma = self.sigma()
         return sigma**2*self._variance
 
     def mse(self, split = False):
@@ -495,7 +495,7 @@ class Regression():
 
         return r_squared
 
-    def k_fold(self, k, degree, sigma, alpha = None):
+    def k_fold(self, k, degree, sigma = None, alpha = None):
         """
             ---PURPOSE------------------------------------
 
@@ -506,10 +506,10 @@ class Regression():
             k               Integer greater than 1
             degree          Integer greater than zero, or array of integers
                             greater than zero
-            sigma           Scalar value
 
             ---OPTIONAL-INPUT-----------------------------
 
+            sigma           Scalar value
             alpha           Real number greater than zero
 
             ---OUTPUT-------------------------------------
@@ -621,6 +621,8 @@ class Regression():
 
             MSE[i] = np.mean((Y_test - Y_hat)**2)
 
+        if sigma is None:
+            sigma = self.sigma()
         variance = sigma**2*np.array(variance)
 
         return np.mean(R2), np.mean(MSE), np.mean(variance, axis = 0)
@@ -859,14 +861,11 @@ class Regression():
 
         # Setting up all the cross terms of the polynomial
         powers = np.arange(0, M, 1)
+        powers = np.repeat(powers, self._p)
         exponents = list(permutations(powers, self._p))
+        exponents = np.unique(exponents, axis = 0)
 
-        # Including the non cross terms
-        if self._p != 1:
-            for power in powers:
-                exponents.append(power*np.ones(self._p))
-
-        # Excluding cross terms whose total is greater than <degree>
+        # Excluding terms whose total is greater than <degree>
         if self._p != 1:
             expo_sum = np.sum(exponents, axis = 1)
             valid_idx = np.where(np.less_equal(expo_sum, degree))[0]
