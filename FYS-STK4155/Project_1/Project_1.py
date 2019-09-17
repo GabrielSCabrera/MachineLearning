@@ -13,8 +13,7 @@ degree = 5          # Polynomial approximation degree
 sigma = 1           # Variance of Gaussian Noise
 split_test = 20     # Percentage of data to split into testing set
 
-"""PART A"""
-print("\n" + "-"*80 + "\nPART A\n" + "-"*80)
+
 
 # Select random seed for consistent results
 np.random.seed(69420666)
@@ -43,12 +42,16 @@ y = Z.flatten()
 
 # Creating Regression object with x and y
 R = Regression(x, y)
-
-# Implementing 5th degree polynomial regression in 2-D
-R.poly(degree = degree)
-
-
+    
+    
 def part_a():
+    
+    """PART A"""
+    print("\n" + "-"*80 + "\nPART A\n" + "-"*80)
+    
+    # Implementing 5th degree polynomial regression in 2-D
+    R.poly(degree = degree)
+
     R.plot()
 
     # Creating <dict> of values for OLS
@@ -67,6 +70,7 @@ def part_a():
 
     # Displaying Results
     var = ", ".join(list(f"{i:.3g}" for i in OLS_data["var"]))
+    print(R._beta)
     print(f"\nVar(beta) = \n{var}")
     print(f"\nMSE = {OLS_data['MSE']:.2g}")
     print(f"\nR² = {OLS_data['R2']:.2g}")
@@ -129,7 +133,34 @@ def part_d():
     plt.xlabel("$\lambda$")
     plt.ylabel("$MSE$")
     plt.show()
+    
+def part_e():
 
-part_a()
-part_b()
-part_d()
+    """PART E"""
+    print("\n" + "-"*80 + "\nPART E\n" + "-"*80)
+    
+    R.reset()
+    R.lasso(degree, 0.001)
+    
+    
+    print(R._beta)
+    print(np.max(R._beta))
+    print(np.min(R._beta))
+    print()
+    
+    for i in R._beta:
+        print(i)
+        
+    R.plot()
+
+#part_a()
+#part_b()
+#part_d()
+part_e()
+
+
+
+
+
+
+
