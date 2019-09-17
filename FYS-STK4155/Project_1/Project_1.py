@@ -140,7 +140,7 @@ def part_e():
     """PART E"""
     print("\n" + "-"*80 + "\nPART E\n" + "-"*80)
     
-    """
+    
     R.reset()
     R.lasso(5, 0.001)
     
@@ -154,8 +154,8 @@ def part_e():
         print(i)
         
     R.plot()
-    """
     
+    """
     # Creating <dict> of values for ridge regression
     ridge_data = {"ridge":{}, "k_fold":{}}
 
@@ -189,7 +189,7 @@ def part_e():
     plt.xlabel("$\lambda$")
     plt.ylabel("$MSE$")
     plt.show()
-    
+    """
     
 def part_f():
     
@@ -224,8 +224,8 @@ def part_f():
 #part_a()
 #part_b()
 #part_d()
-#part_e()
-part_f()
+part_e()
+#part_f()
 
 
 
