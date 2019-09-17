@@ -151,7 +151,7 @@ def part_e():
     for i in R._beta:
         print(i)
         
-    R.plot()
+    #R.plot()
 
 #part_a()
 #part_b()
