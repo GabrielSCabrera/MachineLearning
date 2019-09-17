@@ -341,7 +341,9 @@ class Regression():
         self._beta[0] = clf.intercept_
 
         self._predicted = True
+        self._readable, self._terms = self._poly_str(exponents, self._beta)
         self._complete = True
+        self._exponents = exponents
 
     def sigma(self):
         """

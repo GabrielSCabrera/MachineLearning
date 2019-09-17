@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import sys, franke
+from imageio import imread
 
 sys.path.append("..")
 from utils.classes import Regression
@@ -139,8 +140,9 @@ def part_e():
     """PART E"""
     print("\n" + "-"*80 + "\nPART E\n" + "-"*80)
     
+    """
     R.reset()
-    R.lasso(degree, 0.001)
+    R.lasso(5, 0.001)
     
     
     print(R._beta)
@@ -151,12 +153,79 @@ def part_e():
     for i in R._beta:
         print(i)
         
-    #R.plot()
+    R.plot()
+    """
+    
+    # Creating <dict> of values for ridge regression
+    ridge_data = {"ridge":{}, "k_fold":{}}
+
+    # Generating Array of Hyperparameters
+    lambda_min, lambda_max, N_lambda = 0.0001, 0.01, 50
+    lambda_vals = np.linspace(lambda_min, lambda_max, N_lambda)
+
+    # Creating Blank Arrays
+
+    ridge_data["R2"] = np.zeros(N_lambda)
+    ridge_data["MSE"] = np.zeros(N_lambda)
+    ridge_data["var"] = np.zeros((N_lambda, degree**2 - degree + 1))
+
+    tot = len(lambda_vals)
+
+    for n,l in enumerate(lambda_vals):
+        R.reset()
+        R.lasso(degree = degree, alpha = l)
+
+        ridge_data["R2"][n], ridge_data["MSE"][n], ridge_data["var"][n] = \
+        R.k_fold(k = k, degree = degree, sigma = sigma)
+
+        print(f"\r{int(100*(n+1)/tot)}%", end = "")
+    print("\r    ")
+
+    plt.plot(lambda_vals, ridge_data["R2"])
+    plt.xlabel("$\lambda$")
+    plt.ylabel("$R^2$")
+    plt.figure()
+    plt.plot(lambda_vals, ridge_data["MSE"])
+    plt.xlabel("$\lambda$")
+    plt.ylabel("$MSE$")
+    plt.show()
+    
+    
+def part_f():
+    
+    # Load the terrain
+    terrain1 = imread("SRTM_data_Norway_1.tif")
+    # Show the terrain
+    plt.figure()
+    plt.title("Terrain over Norway 1")
+    plt.imshow(terrain1, cmap="gray")
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.show()
+
+    # Load the terrain
+    terrain2 = imread("SRTM_data_Norway_2.tif")
+    # Show the terrain
+    plt.figure()
+    plt.title("Terrain over Norway 2")
+    plt.imshow(terrain2, cmap="gray")
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.show()
+    
+    
+    
+    
+    
+    
+    
+    
 
 #part_a()
 #part_b()
 #part_d()
-part_e()
+#part_e()
+part_f()
 
 
 
