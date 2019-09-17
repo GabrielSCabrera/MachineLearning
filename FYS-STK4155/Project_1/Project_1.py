@@ -36,10 +36,10 @@ x = np.zeros((X.shape[0], 2))
 x[:,0] = X#.flatten()
 x[:,1] = Y#.flatten()
 y = Z.flatten()
-X = x
+#X = x
 
 # Creating Regression object with x and y
-R = Regression(X, y)
+R = Regression(x, y)
 
 # Implementing 5th degree polynomial regression in 2-D
 R.poly(degree = degree)
