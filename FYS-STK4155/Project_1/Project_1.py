@@ -5,6 +5,8 @@ import sys, franke
 sys.path.append("..")
 from utils.classes import Regression
 
+plt.style.use("seaborn")
+
 # Conditions
 k = 5               # k in k-fold
 degree = 5          # Polynomial approximation degree
