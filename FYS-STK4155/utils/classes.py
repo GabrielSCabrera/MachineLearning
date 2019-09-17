@@ -81,6 +81,7 @@ class Regression():
         self._Y = Y
         self._dtype = dtype
         self._complete = False
+        self._predicted = False
         self._split = False
         self._N = self._X.shape[0]
         self._p = self._X.shape[1]
@@ -195,14 +196,11 @@ class Regression():
 
         # Setting up all the cross terms of the polynomial
         powers = np.arange(0, M, 1)
+        powers = np.repeat(powers, self._p)
         exponents = list(permutations(powers, self._p))
+        exponents = np.unique(exponents, axis = 0)
 
-        # Including the non cross terms
-        if self._p != 1:
-            for power in powers:
-                exponents.append(power*np.ones(self._p))
-
-        # Excluding cross terms whose total is greater than <degree>
+        # Excluding terms whose total is greater than <degree>
         if self._p != 1:
             expo_sum = np.sum(exponents, axis = 1)
             valid_idx = np.where(np.less_equal(expo_sum, degree))[0]
@@ -265,7 +263,7 @@ class Regression():
 
             ---INPUT--------------------------------------
 
-            alpha       Real number greater than zero or None
+            alpha       Real number greater than zero, or None
 
             ---NOTES--------------------------------------
 
@@ -281,28 +279,24 @@ class Regression():
         clf = linear_model.Lasso(alpha=alpha)
         clf.fit(self._X, self._y)
 
-        
-
     def sigma(self):
         """
             ---PURPOSE------------------------------------
 
-            Finds the variance σ^2 of of original data vs.
+            Finds the variance sigma^2 of of original data vs.
             predicted data.
-
-            ---NOTES--------------------------------------
-
-            You need to run predict() before running sigma().
 
             ---OUTPUT-------------------------------------
 
             sigma2      Float
-            
+
+            ---NOTES--------------------------------------
+
+            You need to run predict() before running sigma().
         """
-
-        sigma2 = 1/(self._N - self._p - 1) * np.sum((self._Y - self.Y_hat)**2)
+        self._check_predict("sigma")
+        sigma2 = 1/(self._N - self._p - 1) * np.sum((self._Y - self._Y_hat)**2)
         return sigma2
-
 
     def terms(self):
         """
@@ -363,7 +357,6 @@ class Regression():
                 A[:,n] = X[:,0]**exponent
 
         Y_hat = A @ self._beta
-        self.Y_hat = Y_hat
         return Y_hat
 
     def variance(self, sigma, split = False):
@@ -491,7 +484,7 @@ class Regression():
 
         self._check_regr("r_squared")
         if split is True:
-            self._check_regr("r_squared")
+            self._check_split("r_squared")
             Y_hat = self.predict(self._X_test)
             r_squared = 1 - (np.sum((self._Y_test - Y_hat)**2))/\
                             (np.sum((self._Y_test - np.mean(self._Y_test))**2))
@@ -502,7 +495,7 @@ class Regression():
 
         return r_squared
 
-    def k_fold(self, k, degree, sigma, alpha = None, mean = False):
+    def k_fold(self, k, degree, sigma, alpha = None):
         """
             ---PURPOSE------------------------------------
 
@@ -511,22 +504,24 @@ class Regression():
             ---INPUT--------------------------------------
 
             k               Integer greater than 1
-            degree          Integer greater than zero
+            degree          Integer greater than zero, or array of integers
+                            greater than zero
             sigma           Scalar value
 
             ---OPTIONAL-INPUT-----------------------------
 
-            alpha           Real number greater than zero or None
-            mean            Returns the mean
+            alpha           Real number greater than zero
 
             ---OUTPUT-------------------------------------
 
-                                mean == False                mean == True
-            R2              1-D array of shape (k,)     OR      Float
-            MSE             1-D array of shape (k,)     OR      Float
-            variance        2-D array                   OR      1-D array
+            R2              Float
+            MSE             Float
+            variance        1-D array
 
             ---NOTES--------------------------------------
+
+            If the dataset has been split, will apply k-fold to the training
+            set.  If not, it will apply it to the entire dataset.
 
             The parameter <sigma> is representative of the standard deviation
             in a Gaussian noise that is expected to exist in the dataset.  It
@@ -537,6 +532,7 @@ class Regression():
             Where N(mu, sigma) is a normal distribution with a mean value of mu
             and a standard deviation of sigma.
         """
+
         try:
             if degree == int(degree) and degree > 0:
                 degree = int(degree)
@@ -576,9 +572,9 @@ class Regression():
                 error_msg += " --> suggest changing to: k = 10"
             raise ValueError(error_msg)
 
-        N_subsample = self._X_backup.shape[0]//k
-        N_remain = self._X_backup.shape[0]%k
-        N_tot = self._X_backup.shape[0] - N_remain
+        N_subsample = self._X.shape[0]//k
+        N_remain = self._X.shape[0]%k
+        N_tot = self._X.shape[0] - N_remain
 
         if N_subsample < 10:
             warning_msg = (f"Implementing k-fold cross-validation in method "
@@ -595,15 +591,14 @@ class Regression():
             raise ValueError(error_msg)
 
         idx_shuffle = np.random.permutation(N_tot)
-        X_shuffle = self._X_backup[idx_shuffle]
-        Y_shuffle = self._Y_backup[idx_shuffle]
+        X_shuffle = self._X[idx_shuffle]
+        Y_shuffle = self._Y[idx_shuffle]
         X_split = X_shuffle.reshape((k, N_subsample, self._p))
         Y_split = Y_shuffle.reshape((k, N_subsample))
 
         MSE = np.zeros(k)
         R2 = np.zeros(k)
         variance = []
-        Y_hat_arr = np.zeros((k, N_subsample))
 
         for i in range(k):
             X_train = np.delete(X_split, i, axis = 0)
@@ -620,7 +615,6 @@ class Regression():
             variance.append(var)
 
             Y_hat = self._internal_predict(X_test, beta, exponents)
-            Y_hat_arr[i] = Y_hat
 
             R2[i] = 1 - (np.sum((Y_test - Y_hat)**2))/\
                             (np.sum((Y_test - np.mean(Y_test))**2))
@@ -628,10 +622,8 @@ class Regression():
             MSE[i] = np.mean((Y_test - Y_hat)**2)
 
         variance = sigma**2*np.array(variance)
-        if mean is True:
-            return np.mean(R2), np.mean(MSE), np.mean(variance, axis = 0)
-        else:
-            return R2, MSE, variance
+
+        return np.mean(R2), np.mean(MSE), np.mean(variance, axis = 0)
 
     def plot(self, detail = 0.5, xlabel = None, ylabel = None, zlabel = None,
     savename = None):
@@ -673,8 +665,6 @@ class Regression():
 
         labels = [xlabel, ylabel, zlabel]
         label_names = ["xlabel", "ylabel", "zlabel"]
-        
-        plt.style.use("seaborn")
 
         if savename is not None and not isinstance(savename, str):
             error_msg = (f"\n\nParameter <savename> in method "
@@ -824,6 +814,19 @@ class Regression():
                          f"data with <Regression.split> before calling the "
                          f"method <Regression.{method_name}>")
             raise Exception(error_msg)
+
+    def _check_predict(self, method_name):
+        """
+            Helper method that returns the prediction of the original dataset,
+            or training set (if it has been split)
+
+            Raises an error if beta has not yet been calculated.
+        """
+        self._check_regr(method_name)
+        if self._predicted is False:
+            self._Y_hat = \
+            self._internal_predict(self._X, self._beta, self._exponents)
+            self._predicted = True
 
     def _internal_poly(self, X, y, degree, alpha = None):
         """

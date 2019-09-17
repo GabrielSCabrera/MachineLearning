@@ -9,9 +9,7 @@ from utils.classes import Regression
 k = 5               # k in k-fold
 degree = 5          # Polynomial approximation degree
 sigma = 1           # Variance of Gaussian Noise
-
-
-    
+split_test = 20     # Percentage of data to split into testing set
 
 """PART A"""
 print("\n" + "-"*80 + "\nPART A\n" + "-"*80)
@@ -46,104 +44,90 @@ R = Regression(x, y)
 
 # Implementing 5th degree polynomial regression in 2-D
 R.poly(degree = degree)
-    
-    
-def part_a():    
+
+
+def part_a():
     R.plot()
-    
+
     # Creating <dict> of values for OLS
     OLS_data = {}
-    
+
     # Calculating the variance in beta
     OLS_data["var"] = R.variance(sigma = 1)
-    
+
     # Calculating the MSE
     OLS_data["MSE"] = R.mse()
-    
+
     # Calculating the R-squared score
     OLS_data["R2"] = R.r_squared()
-    
+
     sigma2 = R.sigma()
-    
+
     # Displaying Results
     var = ", ".join(list(f"{i:.3g}" for i in OLS_data["var"]))
     print(f"\nVar(beta) = \n{var}")
     print(f"\nMSE = {OLS_data['MSE']:.2g}")
     print(f"\nR² = {OLS_data['R2']:.2g}")
     print(f"\nσ² = {sigma2}")
-    
+
 def part_b():
-    
+
 
     """PART B"""
     print("\n" + "-"*80 + "\nPART B\n" + "-"*80)
-    
+
     # Creating <dict> of values for OLS k-fold
     kfold_data = {}
-    
+
     # Implementing the k-fold algorithm
     kfold_data["R2"], kfold_data["MSE"], kfold_data["var"] = \
-    R.k_fold(k = k, degree = degree, sigma = sigma, mean = True)
-    
+    R.k_fold(k = k, degree = degree, sigma = sigma)
+
     # Displaying Results
     var = ", ".join(list(f"{i:.3g}" for i in kfold_data["var"]))
     print(f"\nVar(beta) = \n{var}")
     print(f"\nMSE = {kfold_data['MSE']:.2g}")
     print(f"\nR² = {kfold_data['R2']:.2g}")
 
-
 def part_d():
-    
+
     """PART D"""
     print("\n" + "-"*80 + "\nPART D\n" + "-"*80)
-    
+
     # Creating <dict> of values for ridge regression
     ridge_data = {"ridge":{}, "k_fold":{}}
-    
+
     # Generating Array of Hyperparameters
     lambda_min, lambda_max, N_lambda = 0.01, 1, 50
     lambda_vals = np.linspace(lambda_min, lambda_max, N_lambda)
-    
+
     # Creating Blank Arrays
-    
-    ridge_data["ridge"]["R2"] = np.zeros(N_lambda)
-    ridge_data["ridge"]["MSE"] = np.zeros(N_lambda)
-    ridge_data["ridge"]["var"] = np.zeros((N_lambda, degree**2 - degree + 1))
-    
-    ridge_data["k_fold"]["R2"] = np.zeros(N_lambda)
-    ridge_data["k_fold"]["MSE"] = np.zeros(N_lambda)
-    ridge_data["k_fold"]["var"] = np.zeros((N_lambda, degree**2 - degree + 1))
-    
+
+    ridge_data["R2"] = np.zeros(N_lambda)
+    ridge_data["MSE"] = np.zeros(N_lambda)
+    ridge_data["var"] = np.zeros((N_lambda, degree**2 - degree + 1))
+
     tot = len(lambda_vals)
-    
+
     for n,l in enumerate(lambda_vals):
         R.reset()
         R.poly(degree = degree, alpha = l)
-    
-        ridge_data["ridge"]["var"][n] = R.variance(sigma = sigma)
-        ridge_data["ridge"]["MSE"][n] = R.mse()
-        ridge_data["ridge"]["R2"][n] = R.r_squared()
-    
-        ridge_data["k_fold"]["R2"][n], ridge_data["k_fold"]["MSE"][n],\
-        ridge_data["k_fold"]["var"][n] = \
-        R.k_fold(k = k, degree = degree, sigma = sigma, mean = True)
-    
+
+        ridge_data["R2"][n], ridge_data["MSE"][n], ridge_data["var"][n] = \
+        R.k_fold(k = k, degree = degree, sigma = sigma)
+
         print(f"\r{int(100*(n+1)/tot)}%", end = "")
     print("\r    ")
-    
-    plt.plot(lambda_vals, ridge_data["k_fold"]["R2"])
-    plt.plot(lambda_vals, ridge_data["ridge"]["R2"])
-    plt.legend(["k-fold ridge", "ridge"])
+
+    plt.plot(lambda_vals, ridge_data["R2"])
     plt.xlabel("$\lambda$")
     plt.ylabel("$R^2$")
     plt.figure()
-    plt.plot(lambda_vals, ridge_data["k_fold"]["MSE"])
-    plt.plot(lambda_vals, ridge_data["ridge"]["MSE"])
-    plt.legend(["k-fold ridge", "ridge"])
+    plt.plot(lambda_vals, ridge_data["MSE"])
     plt.xlabel("$\lambda$")
     plt.ylabel("$MSE$")
     plt.show()
 
 part_a()
-#part_b()
-#part_d()
+part_b()
+part_d()
