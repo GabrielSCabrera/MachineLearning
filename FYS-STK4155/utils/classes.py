@@ -257,6 +257,27 @@ class Regression():
         self._complete = True
         self._exponents = exponents
 
+    def sigma(self):
+        """
+            ---PURPOSE------------------------------------
+
+            Finds the variance σ^2 of of original data vs.
+            predicted data.
+
+            ---NOTES--------------------------------------
+
+            You need to run predict() before running sigma().
+
+            ---OUTPUT-------------------------------------
+
+            sigma2      Float
+            
+        """
+
+        sigma2 = 1/(self._N - self._p - 1) * np.sum((self._Y - self.Y_hat)**2)
+        return sigma2
+
+
     def terms(self):
         """
             Returns the terms for each respective element in the coefficient
@@ -316,6 +337,7 @@ class Regression():
                 A[:,n] = X[:,0]**exponent
 
         Y_hat = A @ self._beta
+        self.Y_hat = Y_hat
         return Y_hat
 
     def variance(self, sigma, split = False):

@@ -61,12 +61,15 @@ def part_a():
     # Calculating the R-squared score
     OLS_data["R2"] = R.r_squared()
     
+    sigma2 = R.sigma()
+    
     # Displaying Results
     var = ", ".join(list(f"{i:.3g}" for i in OLS_data["var"]))
     print(f"\nVar(beta) = \n{var}")
     print(f"\nMSE = {OLS_data['MSE']:.2g}")
     print(f"\nR² = {OLS_data['R2']:.2g}")
-
+    print(f"\nσ² = {sigma2}")
+    
 def part_b():
     
 
