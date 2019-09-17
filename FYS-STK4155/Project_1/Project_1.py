@@ -10,43 +10,45 @@ k = 5               # k in k-fold
 degree = 5          # Polynomial approximation degree
 sigma = 1           # Variance of Gaussian Noise
 
-def part_a():
+
     
 
-    """PART A"""
-    print("\n" + "-"*80 + "\nPART A\n" + "-"*80)
+"""PART A"""
+print("\n" + "-"*80 + "\nPART A\n" + "-"*80)
+
+# Select random seed for consistent results
+np.random.seed(69420666)
+
+# # Generating NxN meshgrid of x,y values in range [0, 1]
+# x_min, x_max, N = 0, 1, 100
+# x = np.linspace(x_min, x_max, int(N))
+# X,Y = np.meshgrid(x, x)
+#
+# # Calculating the values of the Franke function at each (x,y) coordinate
+# Z = franke.FrankeFunction(X,Y)
+# Z = Z + np.random.normal(0, 0.1, Z.shape)
+#
+
+X = np.random.random(size = 10000)
+Y = np.random.random(size = 10000)
+Z = franke.FrankeFunction(X, Y) + np.random.normal(0, .01, size = X.shape[0])
+
+# Making compatible input arrays for Regression object
+# x = np.zeros((X.shape[0]*X.shape[1], 2))
+x = np.zeros((X.shape[0], 2))
+x[:,0] = X#.flatten()
+x[:,1] = Y#.flatten()
+y = Z.flatten()
+#X = x
+
+# Creating Regression object with x and y
+R = Regression(x, y)
+
+# Implementing 5th degree polynomial regression in 2-D
+R.poly(degree = degree)
     
-    # Select random seed for consistent results
-    np.random.seed(69420666)
     
-    # # Generating NxN meshgrid of x,y values in range [0, 1]
-    # x_min, x_max, N = 0, 1, 100
-    # x = np.linspace(x_min, x_max, int(N))
-    # X,Y = np.meshgrid(x, x)
-    #
-    # # Calculating the values of the Franke function at each (x,y) coordinate
-    # Z = franke.FrankeFunction(X,Y)
-    # Z = Z + np.random.normal(0, 0.1, Z.shape)
-    #
-    
-    X = np.random.random(size = 10000)
-    Y = np.random.random(size = 10000)
-    Z = franke.FrankeFunction(X, Y) + np.random.normal(0, .01, size = X.shape[0])
-    
-    # Making compatible input arrays for Regression object
-    # x = np.zeros((X.shape[0]*X.shape[1], 2))
-    x = np.zeros((X.shape[0], 2))
-    x[:,0] = X#.flatten()
-    x[:,1] = Y#.flatten()
-    y = Z.flatten()
-    #X = x
-    
-    # Creating Regression object with x and y
-    R = Regression(x, y)
-    
-    # Implementing 5th degree polynomial regression in 2-D
-    R.poly(degree = degree)
-    
+def part_a():    
     R.plot()
     
     # Creating <dict> of values for OLS

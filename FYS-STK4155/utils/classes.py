@@ -257,6 +257,32 @@ class Regression():
         self._complete = True
         self._exponents = exponents
 
+    def lasso(self, alpha):
+        """
+            ---PURPOSE------------------------------------
+
+            Implements lasso regression for a multidimensional polynomial.
+
+            ---INPUT--------------------------------------
+
+            alpha       Real number greater than zero or None
+
+            ---NOTES--------------------------------------
+
+            When directly working with the vector of coefficients, be sure you
+            know which coefficients correspond to each term in the polynomial.
+
+            After running this method, the corresponding order of terms can be
+            accessed via the <Regression.terms()> method.
+        """
+
+        self._check_not_regr("lasso")
+
+        clf = linear_model.Lasso(alpha=alpha)
+        clf.fit(self._X, self._y)
+
+        
+
     def sigma(self):
         """
             ---PURPOSE------------------------------------
