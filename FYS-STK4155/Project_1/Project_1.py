@@ -49,7 +49,7 @@ R.poly(degree = degree)
 
 
 def part_a():
-    R.plot()
+    # R.plot()
 
     # Creating <dict> of values for OLS
     OLS_data = {}
@@ -130,6 +130,9 @@ def part_d():
     plt.ylabel("$MSE$")
     plt.show()
 
-part_a()
-part_b()
-part_d()
+# part_a()
+# part_b()
+# part_d()
+R.reset()
+R.lasso(degree = 5, alpha = 0.1)
+R.plot()

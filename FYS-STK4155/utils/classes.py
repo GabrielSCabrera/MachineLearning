@@ -163,16 +163,6 @@ class Regression():
 
         self._check_not_regr("poly")
 
-        # Checking that <degree> is an integer greater than zero
-        try:
-            if degree == int(degree) and degree > 0:
-                degree = int(degree)
-        except ValueError:
-            error_msg = (f"\n\nParameter <degree> in <Regression.poly> "
-                         f"must be an integer greater than zero\n\t"
-                         f"type(degree) = {type(degree)}")
-            raise ValueError(error_msg)
-
         # Checking that <alpha> is either a positive number of Nonetype
         if alpha is not None:
             try:
@@ -192,32 +182,7 @@ class Regression():
                              f"= 1E-5")
                 raise ValueError(error_msg)
 
-        M = int(degree) + 1
-
-        # Setting up all the cross terms of the polynomial
-        powers = np.arange(0, M, 1)
-        powers = np.repeat(powers, self._p)
-        exponents = list(permutations(powers, self._p))
-        exponents = np.unique(exponents, axis = 0)
-
-        # Excluding terms whose total is greater than <degree>
-        if self._p != 1:
-            expo_sum = np.sum(exponents, axis = 1)
-            valid_idx = np.where(np.less_equal(expo_sum, degree))[0]
-            exponents = np.array(exponents, dtype = np.int64)
-            exponents = exponents[valid_idx]
-        else:
-            exponents = np.array(exponents, dtype = np.int64)
-
-        # Creating the design matrix
-        if self._p > 1:
-            A = np.zeros((self._N, exponents.shape[0]))
-            for n,exponent in enumerate(exponents):
-                A[:,n] = np.prod(self._X**exponent, axis = 1)
-        else:
-            A = np.zeros((self._N, exponents.shape[0]))
-            for n,exponent in enumerate(exponents):
-                A[:,n] = self._X[:,0]**exponent
+        A, exponents = self._design(self._X, degree)
 
         # Implementing the least-squares method
         if alpha is None:
@@ -255,7 +220,7 @@ class Regression():
         self._complete = True
         self._exponents = exponents
 
-    def lasso(self, alpha):
+    def lasso(self, degree, alpha = None):
         """
             ---PURPOSE------------------------------------
 
@@ -276,8 +241,66 @@ class Regression():
 
         self._check_not_regr("lasso")
 
-        clf = linear_model.Lasso(alpha=alpha)
-        clf.fit(self._X, self._y)
+        # Checking that <alpha> is either a positive number of Nonetype
+        if alpha is not None:
+            try:
+                if alpha > 0:
+                    alpha = float(alpha)
+                elif alpha <= 0:
+                    raise ValueError()
+            except TypeError:
+                error_msg = (f"\n\nParameter <alpha> in <Regression.lasso> "
+                             f"must be a number greater than zero\n\t"
+                             f"type(alpha) = {type(alpha)}")
+                raise TypeError(error_msg)
+            except ValueError:
+                error_msg = (f"\n\nParameter <alpha> in <Regression.lasso> "
+                             f"must be a number greater than zero\n\t"
+                             f"alpha = {alpha} --> suggest changing to: alpha "
+                             f"= 1E-5")
+                raise ValueError(error_msg)
+
+        A, exponents = self._design(self._X, degree)
+
+        z = np.sum(A**2, axis = 0)
+        beta = np.ones(A.shape[1])
+        beta_new = np.zeros(A.shape[1])
+        rho = np.zeros(A.shape[1])
+        # beta_old = beta.copy()
+        alpha = 0.001
+
+        for idx in range(25):
+            # for j in range(A.shape[1]):
+            #     Y_hat = np.sum(beta*A, axis = 1) - (beta[j]*A[:,j])
+            #     rho[j] = np.sum(A[:,j]*(self._Y - Y_hat))
+            #     print(rho[j])
+            #     if rho[j] < -alpha/2:
+            #         beta_new[j] = (rho[j] + alpha/2)/z[j]
+            #     elif rho[j] > alpha/2:
+            #         beta_new[j] = (rho[j] - alpha/2)/z[j]
+            #     else:
+            #         beta_new[j] = 0
+
+            Y_hat = np.tile(np.sum(beta*A, axis = 1), (A.shape[1], 1)) - (beta*A).T
+            diff = np.tile(self._Y, (A.shape[1],1)) - Y_hat
+            rho = np.sum(A*diff.T, axis = 0)
+            case_1 = np.less(rho, -alpha/2)
+            case_2 = np.greater(rho, alpha/2)
+            case_3 = np.logical_and(np.logical_not(case_1), np.logical_not(case_2))
+            beta[case_1] = (rho[case_1] + alpha/2)/z[case_1]
+            beta[case_2] = (rho[case_2] - alpha/2)/z[case_2]
+            beta[case_3] = 0
+
+
+            # dx = np.mean(np.abs(beta - beta_old))
+            # beta_old = beta.copy()
+            # print(dx)
+
+        self._beta = beta
+        self._readable, self._terms = self._poly_str(exponents, self._beta)
+        self._complete = True
+        self._exponents = exponents
+
 
     def sigma(self):
         """
@@ -776,6 +799,64 @@ class Regression():
         """
         self.__init__(self._X_backup, self._Y_backup, dtype = self._dtype)
 
+    def _design(self, X, degree):
+        """
+            ---PURPOSE------------------------------------
+
+            Returns a design matrix for a multidimensional polynomial of the
+            given <degree>, and their respective N-dimensional polynomial
+            exponents.
+
+            ---INPUT--------------------------------------
+
+            degree      Integer greater than zero
+
+            ---OUTPUT-------------------------------------
+
+            A           2-D array
+            exponents   1-D array
+
+
+        """
+        # Checking that <degree> is an integer greater than zero
+        try:
+            if degree == int(degree) and degree > 0:
+                degree = int(degree)
+        except ValueError:
+            error_msg = (f"\n\nParameter <degree> in <Regression._design> "
+                         f"must be an integer greater than zero\n\t"
+                         f"type(degree) = {type(degree)}")
+            raise ValueError(error_msg)
+
+        M = int(degree) + 1
+
+        # Setting up all the cross terms of the polynomial
+        powers = np.arange(0, M, 1)
+        powers = np.repeat(powers, self._p)
+        exponents = list(permutations(powers, self._p))
+        exponents = np.unique(exponents, axis = 0)
+
+        # Excluding terms whose total is greater than <degree>
+        if self._p != 1:
+            expo_sum = np.sum(exponents, axis = 1)
+            valid_idx = np.where(np.less_equal(expo_sum, degree))[0]
+            exponents = np.array(exponents, dtype = np.int64)
+            exponents = exponents[valid_idx]
+        else:
+            exponents = np.array(exponents, dtype = np.int64)
+
+        # Creating the design matrix
+        if self._p > 1:
+            A = np.zeros((X.shape[0], exponents.shape[0]))
+            for n,exponent in enumerate(exponents):
+                A[:,n] = np.prod(X**exponent, axis = 1)
+        else:
+            A = np.zeros((X.shape[0], exponents.shape[0]))
+            for n,exponent in enumerate(exponents):
+                A[:,n] = X[:,0]**exponent
+
+        return A, exponents
+
     def _check_regr(self, method_name):
         """
             Helper method to inform user that the object instance has not yet
@@ -857,32 +938,7 @@ class Regression():
             exponents
         """
 
-        M = int(degree) + 1
-
-        # Setting up all the cross terms of the polynomial
-        powers = np.arange(0, M, 1)
-        powers = np.repeat(powers, self._p)
-        exponents = list(permutations(powers, self._p))
-        exponents = np.unique(exponents, axis = 0)
-
-        # Excluding terms whose total is greater than <degree>
-        if self._p != 1:
-            expo_sum = np.sum(exponents, axis = 1)
-            valid_idx = np.where(np.less_equal(expo_sum, degree))[0]
-            exponents = np.array(exponents, dtype = np.int64)
-            exponents = exponents[valid_idx]
-        else:
-            exponents = np.array(exponents, dtype = np.int64)
-
-        # Creating the design matrix
-        if self._p > 1:
-            A = np.zeros((X.shape[0], exponents.shape[0]))
-            for n,exponent in enumerate(exponents):
-                A[:,n] = np.prod(X**exponent, axis = 1)
-        else:
-            A = np.zeros((X.shape[0], exponents.shape[0]))
-            for n,exponent in enumerate(exponents):
-                A[:,n] = X[:,0]**exponent
+        A, exponents = self._design(X, degree)
 
         # Implementing the least-squares method
         if alpha is None:
