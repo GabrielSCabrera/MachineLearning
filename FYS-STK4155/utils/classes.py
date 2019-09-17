@@ -226,7 +226,7 @@ class Regression():
             # If ridge regression is not implemented
             try:
                 self._beta = np.linalg.inv(A.T @ A)
-                self._variance = np.diagonal(self._beta)
+                self._variance = np.diag(self._beta)
                 self._beta = self._beta @ A.T @ self._Y
             except np.linalg.LinAlgError:
                 error_msg = (f"\n\nThe design matrix product could not be "
@@ -318,7 +318,7 @@ class Regression():
         Y_hat = A @ self._beta
         return Y_hat
 
-    def variance(self, sigma):
+    def variance(self, sigma, split = False):
         """
             ---PURPOSE------------------------------------
 
@@ -345,7 +345,8 @@ class Regression():
             and a standard deviation of sigma.
         """
         self._check_regr("variance")
-        self._check_split("variance")
+        if split is True:
+            self._check_split("variance")
         return sigma**2*self._variance
 
     def mse(self, split = False):
@@ -376,14 +377,46 @@ class Regression():
         if split is True:
             self._check_split("mse")
             Y_hat = self.predict(self._X_test)
-            mean_squared_error = (1/Y_hat.shape[0])*\
-                                  np.mean((self._Y_test - Y_hat)**2)
+            mean_squared_error = np.mean((self._Y_test - Y_hat)**2)
         else:
             Y_hat = self.predict(self._X)
-            mean_squared_error = (1/Y_hat.shape[0])*\
-                                  np.mean((self._Y - Y_hat)**2)
+            mean_squared_error = np.mean((self._Y - Y_hat)**2)
 
         return mean_squared_error
+
+    def bias(self, split = False):
+        """
+            ---PURPOSE------------------------------------
+
+            Assuming that the dataset has been split, returns the bias of the
+            regression based on the testing data output and predicted values.
+
+            ---OPTIONAL-INPUT-----------------------------
+
+            split                   Boolean
+
+            ---OUTPUT-------------------------------------
+
+            bias                    Number of type float
+
+            ---NOTES--------------------------------------
+
+            The parameter <split> determines whether or not R² should be
+            calculated for a split training-test set.  If True, it will use
+            a test set, if False it will use the entire <X> array for both
+            training and testing.
+        """
+
+        self._check_regr("bias")
+        if split is True:
+            self._check_split("bias")
+            Y_mean = np.mean(self.predict(self._X_test))
+            bias = np.mean((self._Y_test - Y_mean)**2)
+        else:
+            Y_mean = np.mean(self.predict(self._X))
+            bias = np.mean((self._Y - Y_mean)**2)
+
+        return bias
 
     def r_squared(self, split = False):
         """
@@ -409,9 +442,8 @@ class Regression():
         """
 
         self._check_regr("r_squared")
-        self._check_split("r_squared")
         if split is True:
-            self._check_regr("mse")
+            self._check_regr("r_squared")
             Y_hat = self.predict(self._X_test)
             r_squared = 1 - (np.sum((self._Y_test - Y_hat)**2))/\
                             (np.sum((self._Y_test - np.mean(self._Y_test))**2))
@@ -422,7 +454,7 @@ class Regression():
 
         return r_squared
 
-    def k_fold(self, k, degree, sigma, alpha = None):
+    def k_fold(self, k, degree, sigma, alpha = None, mean = False):
         """
             ---PURPOSE------------------------------------
 
@@ -437,12 +469,14 @@ class Regression():
             ---OPTIONAL-INPUT-----------------------------
 
             alpha           Real number greater than zero or None
+            mean            Returns the mean
 
             ---OUTPUT-------------------------------------
 
-            R2              1-D array of shape (k,)
-            MSE             1-D array of shape (k,)
-            variance        Array
+                                mean == False                mean == True
+            R2              1-D array of shape (k,)     OR      Float
+            MSE             1-D array of shape (k,)     OR      Float
+            variance        2-D array                   OR      1-D array
 
             ---NOTES--------------------------------------
 
@@ -521,14 +555,15 @@ class Regression():
         MSE = np.zeros(k)
         R2 = np.zeros(k)
         variance = []
+        Y_hat_arr = np.zeros((k, N_subsample))
 
         for i in range(k):
             X_train = np.delete(X_split, i, axis = 0)
-            X_train = X_train.reshape((k-1*N_subsample, 2))
+            X_train = X_train.reshape(((k-1)*N_subsample, 2))
             X_test = X_split[i]
 
             Y_train = np.delete(Y_split, i, axis = 0)
-            Y_train = Y_train.reshape((k-1*N_subsample))
+            Y_train = Y_train.reshape((k-1)*N_subsample)
             Y_test = Y_split[i]
 
             beta, var, exponents = \
@@ -537,14 +572,18 @@ class Regression():
             variance.append(var)
 
             Y_hat = self._internal_predict(X_test, beta, exponents)
+            Y_hat_arr[i] = Y_hat
 
             R2[i] = 1 - (np.sum((Y_test - Y_hat)**2))/\
                             (np.sum((Y_test - np.mean(Y_test))**2))
 
-            MSE[i] = (1/Y_hat.shape[0])*np.mean((Y_test - Y_hat)**2)
+            MSE[i] = np.mean((Y_test - Y_hat)**2)
 
         variance = sigma**2*np.array(variance)
-        return R2, MSE, variance
+        if mean is True:
+            return np.mean(R2), np.mean(MSE), np.mean(variance, axis = 0)
+        else:
+            return R2, MSE, variance
 
     def plot(self, detail = 0.5, xlabel = None, ylabel = None, zlabel = None,
     savename = None):
