@@ -227,7 +227,7 @@ class Regression():
         self._complete = True
         self._exponents = exponents
 
-    def lasso(self, degree, alpha = None, itermax = 500, tol = 1E-3):
+    def lasso(self, degree, alpha, itermax = 500, tol = 1E-3):
         """
             ---PURPOSE------------------------------------
 
