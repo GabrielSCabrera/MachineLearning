@@ -12,8 +12,7 @@ degree = 5          # Polynomial approximation degree
 sigma = 1           # Variance of Gaussian Noise
 split_test = 20     # Percentage of data to split into testing set
 
-"""PART A"""
-print("\n" + "-"*80 + "\nPART A\n" + "-"*80)
+
 
 # Select random seed for consistent results
 np.random.seed(69420666)
@@ -33,6 +32,7 @@ x[:,0] = X.flatten()
 x[:,1] = Y.flatten()
 y = Z.flatten()
 
+
 # TEMPORARY TESTING VALUES
 # X = np.random.random(size = 10000)
 # Y = np.random.random(size = 10000)
@@ -45,6 +45,9 @@ y = Z.flatten()
 R = Regression(x, y)
 
 def part_a(R):
+    
+    """PART A"""
+    print("\n" + "-"*80 + "\nPART A\n" + "-"*80)
 
     # Implementing 5th degree polynomial regression in 2-D
     R.poly(degree = degree)
@@ -140,7 +143,7 @@ def part_e(R):
 
     R.reset()
     R.lasso(5, 0.001)
-
+    """
 
     print(R._beta)
     print(np.max(R._beta))
@@ -186,34 +189,63 @@ def part_e(R):
     plt.xlabel("$\lambda$")
     plt.ylabel("$MSE$")
     plt.show()
-    """
+    
 
-def part_f(R):
+def part_f(plot=False, ter2=False):
 
     R.reset()
 
     # Load the terrain
     terrain1 = imread("SRTM_data_Norway_1.tif")
     # Show the terrain
-    plt.figure()
-    plt.title("Terrain over Norway 1")
-    plt.imshow(terrain1, cmap="gray")
-    plt.xlabel("X")
-    plt.ylabel("Y")
-    plt.show()
+    if plot:
+        plt.figure()
+        plt.title("Terrain over Norway 1")
+        plt.imshow(terrain1, cmap="gray")
+        plt.xlabel("X")
+        plt.ylabel("Y")
+        plt.show()
+    
+    if ter2:
+        # Load the terrain
+        terrain1 = imread("SRTM_data_Norway_2.tif")
+        # Show the terrain
+        if plot:
+            plt.figure()
+            plt.title("Terrain over Norway 2")
+            plt.imshow(terrain1, cmap="gray")
+            plt.xlabel("X")
+            plt.ylabel("Y")
+            plt.show()
+    
+    return terrain1
 
-    # Load the terrain
-    terrain2 = imread("SRTM_data_Norway_2.tif")
-    # Show the terrain
-    plt.figure()
-    plt.title("Terrain over Norway 2")
-    plt.imshow(terrain2, cmap="gray")
-    plt.xlabel("X")
-    plt.ylabel("Y")
-    plt.show()
+def part_g():
+    
+    ter_data = part_f()
+    
+    
+    x = np.linspace(0, 1, len(ter_data))
+    y = np.linspace(0, 1, len(ter_data[0]))
+    
+    X,Y = np.meshgrid(x, y)
+    x = np.zeros((X.shape[0]*X.shape[1], 2))
+    x[:,0] = X.flatten()
+    x[:,1] = Y.flatten()
+    y = ter_data.flatten()
+        
+    TER = Regression(x,y)
+    
+    part_a(TER)
+    part_b(TER)
+    part_d(TER)
+    part_e(TER)
+    
 
-# part_a(R)
-# part_b(R)
-# part_d(R)
-# part_e(R)
-part_f(R)
+#part_a(R)
+#part_b(R)
+#part_d(R)
+#part_e(R)
+#part_f(R)
+part_g()
+

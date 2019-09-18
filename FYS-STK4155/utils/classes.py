@@ -227,7 +227,7 @@ class Regression():
         self._complete = True
         self._exponents = exponents
 
-    def lasso(self, degree, alpha, itermax = 500, tol = 1E-3):
+    def lasso(self, degree, alpha, itermax = 500, tol = 1E-2):
         """
             ---PURPOSE------------------------------------
 
@@ -330,7 +330,7 @@ class Regression():
         alpha = 0.01
 
         i = 0
-        while (dx is None or dx > 1E-3) and (i < itermax):
+        while (dx is None or dx > tol) and (i < itermax):
             i += 1
             for j in range(A.shape[1]):
                 Y_hat = np.sum(beta*A, axis = 1) - (beta[j]*A[:,j])
