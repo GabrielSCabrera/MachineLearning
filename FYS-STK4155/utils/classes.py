@@ -86,13 +86,12 @@ class Regression():
         self._p = self._X.shape[1]
 
         # Cleans out all attributes in case of reset
-
-        # if not hasattr(self, '_dir_backup'):
-        #     self._dir_backup = self.__dir__().copy
-        # else:
-        #     for var in self.__dir__():
-        #         if var not in self._dir_backup() and var != "_dir_backup":
-        #             delattr(self, var)
+        if not hasattr(self, '_dir_backup'):
+            self._dir_backup = self.__dir__().copy
+        else:
+            for var in self.__dir__():
+                if var not in self._dir_backup() and var != "_dir_backup":
+                    delattr(self, var)
 
     def split(self, test_size):
         """
@@ -190,7 +189,7 @@ class Regression():
                              f"= 1E-5")
                 raise ValueError(error_msg)
 
-        A, exponents = self._design(self._X, degree)
+        A, exponents = self._design(self._X, degree, "poly")
 
         # Implementing the least-squares method
         if alpha is None:
@@ -228,7 +227,7 @@ class Regression():
         self._complete = True
         self._exponents = exponents
 
-    def lasso(self, degree, alpha = None):
+    def lasso(self, degree, alpha = None, itermax = 500, tol = 1E-3):
         """
             ---PURPOSE------------------------------------
 
@@ -238,6 +237,11 @@ class Regression():
 
             alpha       Real number greater than zero, or None
 
+            ---OPTIONAL-INPUT-----------------------------
+
+            itermax     Integer value
+            tol         Real number
+
             ---NOTES--------------------------------------
 
             When directly working with the vector of coefficients, be sure you
@@ -245,11 +249,18 @@ class Regression():
 
             After running this method, the corresponding order of terms can be
             accessed via the <Regression.terms()> method.
+
+            Parameter <itermax> represents the maximum number of iterations
+            that are allowed during the implementation of the lasso algorithm
+
+            Parameter <tol> represents the smallest mean difference in the
+            vector of coefficients <beta>  between steps -- this governs the
+            point at which the lasso algorithm ceases to run.
         """
 
         self._check_not_regr("lasso")
 
-        # Checking that <alpha> is either a positive number of Nonetype
+        # Checking that <alpha> is a positive number
         if alpha is not None:
             try:
                 if alpha > 0:
@@ -268,75 +279,72 @@ class Regression():
                              f"= 1E-5")
                 raise ValueError(error_msg)
 
-        A, exponents = self._design(self._X, degree)
+        # Checking that <itermax> is either a positive number or Nonetype
+        try:
+            if itermax <= 0 or int(itermax) != itermax:
+                raise ValueError()
+            elif itermax > 0:
+                itermax = int(itermax)
+        except TypeError:
+            error_msg = (f"\n\nParameter <itermax> in <Regression.lasso> "
+                         f"must be an integer greater than zero\n\t"
+                         f"type(itermax) = {type(itermax)}")
+            raise TypeError(error_msg)
+        except ValueError:
+            error_msg = (f"\n\nParameter <itermax> in <Regression.lasso> "
+                         f"must be an integer greater than zero\n\t"
+                         f"itermax = {itermax} --> suggest changing to: "
+                         f"itermax = 500")
+            raise ValueError(error_msg)
+
+        # Checking that <tol> is a positive number
+        if tol is not None:
+            try:
+                if tol > 0:
+                    tol = float(tol)
+                elif tol <= 0:
+                    raise ValueError()
+            except TypeError:
+                error_msg = (f"\n\nParameter <tol> in <Regression.lasso> "
+                             f"must be a number greater than zero\n\t"
+                             f"type(tol) = {type(tol)}")
+                raise TypeError(error_msg)
+            except ValueError:
+                error_msg = (f"\n\nParameter <tol> in <Regression.lasso> "
+                             f"must be a number greater than zero\n\t"
+                             f"tol = {tol} --> suggest changing to: tol "
+                             f"= 1E-3")
+                raise ValueError(error_msg)
+
+        A, exponents = self._design(self._X, degree, "lasso")
 
         z = np.sum(A**2, axis = 0)
-
-        # beta2 = np.zeros(A.shape[1])
-        # rho2 = np.zeros(A.shape[1])
-
-        # filter_idx = np.arange(0, A.shape[0]*A.shape[1], A.shape[1])
-        # filter_mask = np.ones(A.shape[0]*A.shape[1])
-        # filter_mask[filter_idx] = 0
-        # filter_mask = filter_mask.astype(bool)
 
         beta = np.zeros(A.shape[1])
         beta_new = np.zeros(A.shape[1])
         beta_old = beta.copy()
 
         dx_old = 0
-        dx2 = None
+        dx = None
 
-        rho = np.zeros(A.shape[1])
         alpha = 0.01
 
-        while dx2 is None or dx2 > 1E-3:
+        i = 0
+        while (dx is None or dx > 1E-3) and (i < itermax):
+            i += 1
             for j in range(A.shape[1]):
                 Y_hat = np.sum(beta*A, axis = 1) - (beta[j]*A[:,j])
-                rho[j] = np.sum(A[:,j]*(self._Y - Y_hat))
-                if rho[j] < -alpha/2:
-                    beta_new[j] = (rho[j] + alpha/2)/z[j]
-                elif rho[j] > alpha/2:
-                    beta_new[j] = (rho[j] - alpha/2)/z[j]
+                rho = np.sum(A[:,j]*(self._Y - Y_hat))
+                if rho < -alpha/2:
+                    beta[j] = (rho + alpha/2)/z[j]
+                elif rho > alpha/2:
+                    beta[j] = (rho - alpha/2)/z[j]
                 else:
-                    beta_new[j] = 0
-            beta = beta_new
+                    beta[j] = 0
 
             dx = np.mean(np.abs(beta - beta_old))
-            dx2 = np.abs(dx - dx_old)
+            dx_old = dx
             beta_old = beta.copy()
-
-            # filtered = np.tile(np.sum(beta2*A, axis = 1), (A.shape[1],1))
-            # filtered = filtered.flatten()[filter_mask]
-            # filtered = filtered.reshape(A.shape[0], A.shape[1]-1)
-            # Y_hat2 = np.sum(filtered, axis = 1)
-            # # Y_hat2 = np.tile(np.sum(beta2*A, axis = 1), (A.shape[1], 1)) - (beta2*A).T
-            # print(Y_hat2, "2")
-            # diff = self._Y - Y_hat2
-            # # print(diff[-1][-1])
-            #
-            # rho2 = np.sum(A*np.column_stack(diff).T, axis = 0)
-            #
-            # case_1 = np.less(rho2, -alpha/2)
-            # case_2 = np.greater(rho2, alpha/2)
-            # case_3 = np.logical_not(np.logical_or(case_1, case_2))
-            #
-            # case_1 = np.where(case_1)[0]
-            # case_2 = np.where(case_2)[0]
-            # case_3 = np.where(case_3)[0]
-            #
-            # beta2[case_1] = (rho2[case_1] + alpha/2)/z[case_1]
-            # beta2[case_2] = (rho2[case_2] - alpha/2)/z[case_2]
-            # beta2[case_3] = 0
-            #
-            # if idx == 2:
-            #     break
-
-
-            # dx = np.mean(np.abs(beta - beta_old))
-            # beta_old = beta.copy()
-            # print(dx)
-            # print("\n\n")
 
         self._beta = beta
         self._readable, self._terms = self._poly_str(exponents, self._beta)
@@ -674,7 +682,7 @@ class Regression():
             Y_test = Y_split[i]
 
             beta, var, exponents = \
-            self._internal_poly(X_train, Y_train, degree, alpha)
+            self._internal_poly(X_train, Y_train, degree, "k_fold", alpha)
 
             variance.append(var)
 
@@ -722,6 +730,7 @@ class Regression():
 
         """
         self._check_regr("plot")
+        plt.style.use("seaborn")
 
         if self._p not in [1,2]:
             error_msg = (f"\n\nAttempting to call method <Regression.plot()> "
@@ -808,8 +817,8 @@ class Regression():
             fig.set_size_inches(8, 6)
             fig.tight_layout()
 
-            surf = ax.scatter(self._X[:,0], self._X[:,1], self._Y, s = 150,
-            marker = "^")
+            surf = ax.scatter(self._X[:,0], self._X[:,1], self._Y, s = 10,
+            marker = ".", alpha = 0.5)
 
             zmin, zmax = ax.get_zlim()
 
@@ -840,7 +849,7 @@ class Regression():
         """
         self.__init__(self._X_backup, self._Y_backup, dtype = self._dtype)
 
-    def _design(self, X, degree):
+    def _design(self, X, degree, method):
         """
             ---PURPOSE------------------------------------
 
@@ -864,7 +873,7 @@ class Regression():
             if degree == int(degree) and degree > 0:
                 degree = int(degree)
         except ValueError:
-            error_msg = (f"\n\nParameter <degree> in <Regression._design> "
+            error_msg = (f"\n\nParameter <degree> in <Regression.{method}> "
                          f"must be an integer greater than zero\n\t"
                          f"type(degree) = {type(degree)}")
             raise ValueError(error_msg)
@@ -952,7 +961,7 @@ class Regression():
             self._internal_predict(self._X, self._beta, self._exponents)
             self._predicted = True
 
-    def _internal_poly(self, X, y, degree, alpha = None):
+    def _internal_poly(self, X, y, degree, method, alpha = None):
         """
             ---PURPOSE------------------------------------
 
@@ -967,6 +976,7 @@ class Regression():
             X               2-D NumPy array of shape (N, p)
             y               1-D NumPy array of shape (N,)
             degree          Integer greater than zero
+            method          String
 
             ---OPTIONAL-INPUT-----------------------------
 
@@ -979,7 +989,7 @@ class Regression():
             exponents
         """
 
-        A, exponents = self._design(X, degree)
+        A, exponents = self._design(X, degree, method)
 
         # Implementing the least-squares method
         if alpha is None:

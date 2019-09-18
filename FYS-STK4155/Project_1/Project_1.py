@@ -5,8 +5,6 @@ import sys, franke
 sys.path.append("..")
 from utils.classes import Regression
 
-plt.style.use("seaborn")
-
 # Conditions
 k = 5               # k in k-fold
 degree = 5          # Polynomial approximation degree
@@ -19,37 +17,37 @@ print("\n" + "-"*80 + "\nPART A\n" + "-"*80)
 # Select random seed for consistent results
 np.random.seed(69420666)
 
-# # Generating NxN meshgrid of x,y values in range [0, 1]
-# x_min, x_max, N = 0, 1, 100
-# x = np.linspace(x_min, x_max, int(N))
-# X,Y = np.meshgrid(x, x)
-#
-# # Calculating the values of the Franke function at each (x,y) coordinate
-# Z = franke.FrankeFunction(X,Y)
-# Z = Z + np.random.normal(0, 0.1, Z.shape)
-#
+# Generating NxN meshgrid of x,y values in range [0, 1]
+x_min, x_max, N = 0, 1, 250
+x = np.linspace(x_min, x_max, int(N))
+X,Y = np.meshgrid(x, x)
 
-X = np.random.random(size = 10000)
-Y = np.random.random(size = 10000)
-Z = franke.FrankeFunction(X, Y) + np.random.normal(0, .01, size = X.shape[0])
+# Calculating the values of the Franke function at each (x,y) coordinate
+Z = franke.FrankeFunction(X,Y)
+Z = Z + np.random.normal(0, 0.1, Z.shape)
 
 # Making compatible input arrays for Regression object
-# x = np.zeros((X.shape[0]*X.shape[1], 2))
-x = np.zeros((X.shape[0], 2))
-x[:,0] = X#.flatten()
-x[:,1] = Y#.flatten()
+x = np.zeros((X.shape[0]*X.shape[1], 2))
+x[:,0] = X.flatten()
+x[:,1] = Y.flatten()
 y = Z.flatten()
-#X = x
+
+# TEMPORARY TESTING VALUES
+# X = np.random.random(size = 10000)
+# Y = np.random.random(size = 10000)
+# Z = franke.FrankeFunction(X, Y) + np.random.normal(0, .01, size = X.shape[0])
+# x = np.zeros((X.shape[0], 2))
+# x[:,0] = X
+# x[:,1] = Y
 
 # Creating Regression object with x and y
 R = Regression(x, y)
 
-# Implementing 5th degree polynomial regression in 2-D
-# R.poly(degree = degree)
+def part_a(R):
 
-
-def part_a():
-    # R.plot()
+    # Implementing 5th degree polynomial regression in 2-D
+    R.poly(degree = degree)
+    R.plot()
 
     # Creating <dict> of values for OLS
     OLS_data = {}
@@ -71,8 +69,9 @@ def part_a():
     print(f"\nMSE = {OLS_data['MSE']:.2g}")
     print(f"\nR² = {OLS_data['R2']:.2g}")
     print(f"\nσ² = {sigma2}")
+    R.reset()
 
-def part_b():
+def part_b(R):
 
 
     """PART B"""
@@ -90,8 +89,9 @@ def part_b():
     print(f"\nVar(beta) = \n{var}")
     print(f"\nMSE = {kfold_data['MSE']:.2g}")
     print(f"\nR² = {kfold_data['R2']:.2g}")
+    R.reset()
 
-def part_d():
+def part_d(R):
 
     """PART D"""
     print("\n" + "-"*80 + "\nPART D\n" + "-"*80)
@@ -129,10 +129,8 @@ def part_d():
     plt.xlabel("$\lambda$")
     plt.ylabel("$MSE$")
     plt.show()
+    R.reset()
 
-# part_a()
-# part_b()
-# part_d()
-R.reset()
-R.lasso(degree = degree, alpha = 0.1)
-R.plot()
+part_a(R)
+part_b(R)
+part_d(R)
