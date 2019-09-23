@@ -186,9 +186,7 @@ def part_e(R):
     plt.ylabel("$MSE$")
     plt.show()
 
-def part_f(R):
-
-    R.reset()
+def part_f():
 
     # Load the terrain
     terrain1 = imread("SRTM_data_Norway_1.tif")
@@ -210,10 +208,11 @@ def part_f(R):
     plt.ylabel("Y")
     plt.show()
     
+    return(terrain1)
+    
 def part_g():
     
     ter_data = part_f()
-    
     
     x = np.linspace(0, 1, len(ter_data))
     y = np.linspace(0, 1, len(ter_data[0]))
@@ -232,9 +231,12 @@ def part_g():
     part_e(TER)
     
     
-
+"""
 part_a(R)
 part_b(R)
 part_d(R)
 part_e(R)
 part_f(R)
+"""
+
+part_g()
