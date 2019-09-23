@@ -209,6 +209,29 @@ def part_f(R):
     plt.xlabel("X")
     plt.ylabel("Y")
     plt.show()
+    
+def part_g():
+    
+    ter_data = part_f()
+    
+    
+    x = np.linspace(0, 1, len(ter_data))
+    y = np.linspace(0, 1, len(ter_data[0]))
+    
+    X,Y = np.meshgrid(x, y)
+    x = np.zeros((X.shape[0]*X.shape[1], 2))
+    x[:,0] = X.flatten()
+    x[:,1] = Y.flatten()
+    y = ter_data.flatten()
+        
+    TER = Regression(x,y)
+    
+    part_a(TER)
+    part_b(TER)
+    part_d(TER)
+    part_e(TER)
+    
+    
 
 part_a(R)
 part_b(R)
