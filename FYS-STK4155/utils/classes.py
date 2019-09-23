@@ -5,6 +5,7 @@ from matplotlib import cm
 import numpy as np
 import matplotlib
 import warnings
+from sklearn import linear_model as skl
 
 np.random.seed(69420666)
 
@@ -227,7 +228,73 @@ class Regression():
         self._complete = True
         self._exponents = exponents
 
-    def lasso(self, degree, alpha, itermax = 500, tol = 1E-3):
+    def lasso(self, degree, alpha):
+        """
+            ---PURPOSE------------------------------------
+
+            Implements lasso regression for a multidimensional polynomial.
+
+            ---INPUT--------------------------------------
+
+            degree      Integer over 0
+            alpha       Real number greater than zero, or None
+
+            ---NOTES--------------------------------------
+
+            When directly working with the vector of coefficients, be sure you
+            know which coefficients correspond to each term in the polynomial.
+
+            After running this method, the corresponding order of terms can be
+            accessed via the <Regression.terms()> method.
+        """
+
+        self._check_not_regr("lasso")
+
+        # Checking that <degree> is an integer greater than zero
+        try:
+            if degree == int(degree) and degree > 0:
+                degree = int(degree)
+        except ValueError:
+            error_msg = (f"\n\nParameter <degree> in <Regression.poly> "
+                         f"must be an integer greater than zero\n\t"
+                         f"type(degree) = {type(degree)}")
+            raise ValueError(error_msg)
+
+        # Checking that <alpha> is either a positive number of Nonetype
+        if alpha is not None:
+            try:
+                if alpha > 0:
+                    alpha = float(alpha)
+                elif alpha <= 0:
+                    raise ValueError()
+            except TypeError:
+                error_msg = (f"\n\nParameter <alpha> in <Regression.poly> "
+                             f"must be a number greater than zero\n\t"
+                             f"type(alpha) = {type(alpha)}")
+                raise TypeError(error_msg)
+            except ValueError:
+                error_msg = (f"\n\nParameter <alpha> in <Regression.poly> "
+                             f"must be a number greater than zero\n\t"
+                             f"alpha = {alpha} --> suggest changing to: alpha "
+                             f"= 1E-5")
+                raise ValueError(error_msg)
+
+        M = int(degree) + 1
+
+        A, exponents = self._design(self._X, degree, "lasso")
+
+        clf = skl.Lasso(alpha=alpha)
+        clf.fit(A, self._Y)
+        beta = clf.coef_
+        self._beta = beta
+        self._beta[0] = clf.intercept_
+
+        self._predicted = True
+        self._readable, self._terms = self._poly_str(exponents, self._beta)
+        self._complete = True
+        self._exponents = exponents
+
+    def lasso_manual(self, degree, alpha, itermax = 500, tol = 2E-3):
         """
             ---PURPOSE------------------------------------
 
@@ -330,7 +397,7 @@ class Regression():
         alpha = 0.01
 
         i = 0
-        while (dx is None or dx > 1E-3) and (i < itermax):
+        while (dx is None or dx > tol) and (i < itermax):
             i += 1
             for j in range(A.shape[1]):
                 Y_hat = np.sum(beta*A, axis = 1) - (beta[j]*A[:,j])

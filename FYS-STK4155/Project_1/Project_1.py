@@ -12,9 +12,6 @@ degree = 5          # Polynomial approximation degree
 sigma = 1           # Variance of Gaussian Noise
 split_test = 20     # Percentage of data to split into testing set
 
-"""PART A"""
-print("\n" + "-"*80 + "\nPART A\n" + "-"*80)
-
 # Select random seed for consistent results
 np.random.seed(69420666)
 
@@ -45,6 +42,9 @@ y = Z.flatten()
 R = Regression(x, y)
 
 def part_a(R):
+
+    """PART A"""
+    print("\n" + "-"*80 + "\nPART A\n" + "-"*80)
 
     # Implementing 5th degree polynomial regression in 2-D
     R.poly(degree = degree)
@@ -105,7 +105,6 @@ def part_d(R):
     lambda_vals = np.linspace(lambda_min, lambda_max, N_lambda)
 
     # Creating Blank Arrays
-
     ridge_data["R2"] = np.zeros(N_lambda)
     ridge_data["MSE"] = np.zeros(N_lambda)
     ridge_data["var"] = np.zeros((N_lambda, degree**2 - degree + 1))
@@ -141,7 +140,7 @@ def part_e(R):
     R.reset()
     R.lasso(5, 0.001)
 
-
+    """
     print(R._beta)
     print(np.max(R._beta))
     print(np.min(R._beta))
@@ -186,7 +185,6 @@ def part_e(R):
     plt.xlabel("$\lambda$")
     plt.ylabel("$MSE$")
     plt.show()
-    """
 
 def part_f(R):
 
@@ -212,8 +210,8 @@ def part_f(R):
     plt.ylabel("Y")
     plt.show()
 
-# part_a(R)
-# part_b(R)
-# part_d(R)
-# part_e(R)
+part_a(R)
+part_b(R)
+part_d(R)
+part_e(R)
 part_f(R)
