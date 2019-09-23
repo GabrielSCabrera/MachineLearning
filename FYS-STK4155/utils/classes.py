@@ -256,7 +256,11 @@ class Regression():
         self._complete = True
         self._exponents = exponents
 
+<<<<<<< Updated upstream
     def lasso(self, degree, alpha):
+=======
+    def lasso(self, degree, alpha, itermax = 500, tol = 1E-2):
+>>>>>>> Stashed changes
         """
             ---PURPOSE------------------------------------
 
@@ -315,6 +319,7 @@ class Regression():
         exponents = list(permutations(powers, self._p))
         exponents = np.unique(exponents, axis = 0)
 
+<<<<<<< Updated upstream
         # Excluding terms whose total is greater than <degree>
         if self._p != 1:
             expo_sum = np.sum(exponents, axis = 1)
@@ -323,6 +328,20 @@ class Regression():
             exponents = exponents[valid_idx]
         else:
             exponents = np.array(exponents, dtype = np.int64)
+=======
+        i = 0
+        while (dx is None or dx > tol) and (i < itermax):
+            i += 1
+            for j in range(A.shape[1]):
+                Y_hat = np.sum(beta*A, axis = 1) - (beta[j]*A[:,j])
+                rho = np.sum(A[:,j]*(self._Y - Y_hat))
+                if rho < -alpha/2:
+                    beta[j] = (rho + alpha/2)/z[j]
+                elif rho > alpha/2:
+                    beta[j] = (rho - alpha/2)/z[j]
+                else:
+                    beta[j] = 0
+>>>>>>> Stashed changes
 
         # Creating the design matrix
         if self._p > 1:
