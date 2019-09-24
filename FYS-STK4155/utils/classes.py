@@ -890,12 +890,14 @@ class Regression():
                 surf = ax.scatter(self._X[:,0], self._X[:,1], self._Y, s = 10,
                 marker = ".", alpha = 0.5)
 
-            zmin, zmax = ax.get_zlim()
+            if plot_points is True:
+                zmin, zmax = ax.get_zlim()
 
-            surf = ax.plot_surface(x, y, F, cmap=cm.autumn, alpha = 0.5,
+            surf = ax.plot_surface(x, y, F, cmap=cm.terrain, alpha = 1,#0.5,
             antialiased=True, rcount = 116, ccount = 116)
 
-            ax.set_zlim(zmin, zmax)
+            if plot_points is True:
+                ax.set_zlim(zmin, zmax)
 
             if xlabel is not None:
                 ax.set_xlabel("\n\n\n" + xlabel + "\n", linespacing = 3)

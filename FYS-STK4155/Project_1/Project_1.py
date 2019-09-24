@@ -1,5 +1,7 @@
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from imageio import imread
+from matplotlib import cm
 import numpy as np
 import sys, franke
 
@@ -8,9 +10,10 @@ from utils.classes import Regression
 
 # Conditions
 k = 5               # k in k-fold
-degree = 5          # Polynomial approximation degree
+degree = 25          # Polynomial approximation degree
 sigma = 1           # Variance of Gaussian Noise
 split_test = 20     # Percentage of data to split into testing set
+alpha = 0.1
 
 # Select random seed for consistent results
 np.random.seed(69420666)
@@ -47,7 +50,7 @@ def part_a(R):
     print("\n" + "-"*80 + "\nPART A\n" + "-"*80)
 
     # Implementing 5th degree polynomial regression in 2-D
-    R.poly(degree = degree)
+    R.lasso(degree = degree, alpha = alpha)
     R.plot(plot_points = False)
 
     # Creating <dict> of values for OLS
@@ -208,14 +211,14 @@ def part_f():
     plt.ylabel("Y")
     plt.show()
 
-    return(terrain1)
+    return(terrain2[::25, ::25])
 
 def part_g():
 
     ter_data = part_f()
 
-    x = np.linspace(0, 1, len(ter_data))
-    y = np.linspace(0, 1, len(ter_data[0]))
+    x = np.arange(0, ter_data.shape[1], 1)
+    y = np.arange(0, ter_data.shape[0], 1)
 
     X,Y = np.meshgrid(x, y)
     x = np.zeros((X.shape[0]*X.shape[1], 2))
@@ -225,6 +228,12 @@ def part_g():
 
     TER = Regression(x,y)
 
+    fig = plt.figure()
+    ax = fig.gca(projection="3d")
+    fig.set_size_inches(8, 6)
+    fig.tight_layout()
+    surf = ax.plot_surface(X, Y, ter_data, cmap=cm.terrain, antialiased=False)
+    plt.show()
     part_a(TER)
     part_b(TER)
 
