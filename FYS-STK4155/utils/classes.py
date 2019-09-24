@@ -767,7 +767,7 @@ class Regression():
         return np.mean(R2), np.mean(MSE), np.mean(variance, axis = 0)
 
     def plot(self, detail = 0.5, xlabel = None, ylabel = None, zlabel = None,
-    savename = None):
+    savename = None, plot_points = True):
         """
             ---PURPOSE------------------------------------
 
@@ -781,6 +781,7 @@ class Regression():
             ylabel          String or None
             zlabel          String or None
             savename        String or None
+            plot_points     Boolean
 
             ---NOTES--------------------------------------
 
@@ -863,7 +864,8 @@ class Regression():
             F = F + eval(term)
 
         if self._p == 1:
-            plt.plot(self._X[:,0], self._Y, "x", ms = 10)
+            if plot_points is True:
+                plt.plot(self._X[:,0], self._Y, "x", ms = 10)
             ymin, ymax = plt.ylim()
             plt.plot(x, F, "r-")
             plt.ylim(ymin, ymax)
@@ -884,8 +886,9 @@ class Regression():
             fig.set_size_inches(8, 6)
             fig.tight_layout()
 
-            surf = ax.scatter(self._X[:,0], self._X[:,1], self._Y, s = 10,
-            marker = ".", alpha = 0.5)
+            if plot_points is True:
+                surf = ax.scatter(self._X[:,0], self._X[:,1], self._Y, s = 10,
+                marker = ".", alpha = 0.5)
 
             zmin, zmax = ax.get_zlim()
 
