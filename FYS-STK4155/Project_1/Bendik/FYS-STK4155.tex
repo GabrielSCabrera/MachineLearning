@@ -11,7 +11,7 @@
 \usepackage{listings}
 \usepackage[table,xcdraw]{xcolor}
 \usepackage{booktabs}
-%\usepackage{amsmath,graphicx,varioref,verbatim,amsfonts,geometry,amssymb,dsfont,blindtext}
+\usepackage{amsmath,graphicx,varioref,verbatim,amsfonts,geometry,amssymb,dsfont,blindtext}
 \hypersetup{colorlinks=true}
 \usepackage{xcolor}
 \usepackage{hhline}
@@ -66,12 +66,13 @@ yvycjyukioyjfchdxcgfjhbk
 \section{Results}
 \label{sec:results}
 
+%Part a and b:
+
 \begin{figure}[h!]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[scale=0.6]{../results/part_a_reg.pdf}
-	\caption{The resulting function after performing a standard least square regression analysis using polynomials in x
-	and y up to fifth order on the Franke function}
+	\caption{The resulting function after performing a standard least square regression analysis using polynomials in x and y up to fifth order on the Franke function}
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_a}
 \end{figure}
@@ -117,6 +118,8 @@ yvycjyukioyjfchdxcgfjhbk
 \end{table}
 
 
+%Part d:
+
 
 \begin{figure}[h!]
 	\centering 
@@ -136,6 +139,8 @@ yvycjyukioyjfchdxcgfjhbk
 	\label{part_d_R2}
 \end{figure}
 
+
+%Part e:
 
 \begin{figure}[h!]
 	\centering 
@@ -185,6 +190,47 @@ yvycjyukioyjfchdxcgfjhbk
 \section{Appendix}
 \label{sec:appendix}
 	
+\subsection{Part c math}
+
+We are too show that 
+\begin{align}
+C(\boldsymbol{X}, \boldsymbol{\beta})=\frac{1}{n} \sum_{i=0}^{n-1}\left(y_{i}-\tilde{y}_{i}\right)^{2}
+= \mathbf{E}\left[(\boldsymbol{y}-\tilde{\boldsymbol{y}})^{2}\right]
+=\frac{1}{n} \sum_{i}\left(f_{i}-\mathbf{E}[\tilde{\boldsymbol{y}}]\right)^{2}+\frac{1}{n} \sum_{i}\left(\tilde{y}_{i}-\mathbf{E}[\tilde{\boldsymbol{y}}]\right)^{2}+\sigma^{2}
+\end{align}
+
+\begin{align}
+\mathbf{E}\left[(\boldsymbol{y}-\tilde{\boldsymbol{y}})^{2}\right] 
+=& \frac{1}{n} \sum_{i} \left( y_i - \tilde{y}_i \right)^2
+= \frac{1}{n} \sum_{i} \left( f_i + \varepsilon - \tilde{y}_i \right)^2 \\
+=& \frac{1}{n} \sum_{i} \left( f_i + \varepsilon - \tilde{y}_i  + \mathbf{E}[\tilde{\boldsymbol{y}}] - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)^2 \hspace{0.9cm} 
+| \hspace{0.1cm} \text{introduce $a = f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] $ and $b = \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}]$}\\
+=& \frac{1}{n} \sum_{i} \left( a - b + \varepsilon \right)^2
+= \frac{1}{n} \sum_{i} \left( a^2 - 2ab + b^2 - 2b\varepsilon + \varepsilon^2 + 2a\varepsilon \right)\\
+=& \frac{1}{n} \sum_{i} \left( f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)^2 
++ \frac{1}{n} \sum_{i} \left( \varepsilon^2 \right)
++ \frac{1}{n} \sum_{i} \left( \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)^2 
+- 2\frac{1}{n} \sum_{i} \varepsilon \left( \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)
++ 2\frac{1}{n} \sum_{i} \varepsilon \left( f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)\\
+&- 2\frac{1}{n} \sum_{i} \left( f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right) \left( \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)\\
+=& \frac{1}{n} \sum_{i} \left( f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)^2 
++ \frac{1}{n} \sum_{i} \left( \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)^2 
++ \sigma^2
+- 2 \mathbf{E}[\varepsilon] \frac{1}{n} \sum_{i} \left( \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)
++ 2 \mathbf{E}[\varepsilon] \frac{1}{n} \sum_{i} \left( f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)\\
+&- 2\frac{1}{n} \sum_{i} \left( f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right) \left( \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)\\
+=& \frac{1}{n} \sum_{i} \left( f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)^2 
++ \frac{1}{n} \sum_{i} \left( \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)^2 
++ \sigma^2 \hspace{0.3cm} \blacksquare
+\end{align}
+
+Where $\frac{1}{n} \sum_{i} \left( f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)$ is the bias and
+$\frac{1}{n} \sum_{i} \left( \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)^2$ is the variance. 
+
+(skal vi gjøre noe annet og?)
+
+
+
 \end{document}
 
 

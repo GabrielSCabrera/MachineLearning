@@ -104,8 +104,8 @@ def part_d(R, savename_R2=None, savename_MSE=None):
     ridge_data = {"ridge":{}, "k_fold":{}}
 
     # Generating Array of Hyperparameters
-    lambda_min, lambda_max, N_lambda = 0.0001, 0.01, 50
-    lambda_vals = np.linspace(lambda_min, lambda_max, N_lambda)
+    lambda_min, lambda_max, N_lambda = -4, 1, 1000
+    lambda_vals = np.logspace(lambda_min, lambda_max, N_lambda)
 
     # Creating Blank Arrays
     ridge_data["R2"] = np.zeros(N_lambda)
@@ -127,12 +127,14 @@ def part_d(R, savename_R2=None, savename_MSE=None):
     plt.plot(lambda_vals, ridge_data["R2"])
     plt.xlabel("$\lambda$")
     plt.ylabel("$R^2$")
+    plt.xscale("log")
     if savename_R2!=None:
         plt.savefig(savename_R2)
     plt.figure()
     plt.plot(lambda_vals, ridge_data["MSE"])
     plt.xlabel("$\lambda$")
     plt.ylabel("$MSE$")
+    plt.xscale("log")
     if savename_MSE!=None:
         plt.savefig(savename_MSE)
     plt.show()
@@ -163,8 +165,9 @@ def part_e(R, savename_R2=None, savename_MSE=None):
     ridge_data = {"ridge":{}, "k_fold":{}}
 
     # Generating Array of Hyperparameters
-    lambda_min, lambda_max, N_lambda = 0.0001, 0.01, 50
-    lambda_vals = np.linspace(lambda_min, lambda_max, N_lambda)
+    lambda_min, lambda_max, N_lambda = -4, 1, 1000
+    lambda_vals = np.logspace(lambda_min, lambda_max, N_lambda)
+    print(lambda_vals)
 
     # Creating Blank Arrays
 
@@ -187,12 +190,14 @@ def part_e(R, savename_R2=None, savename_MSE=None):
     plt.plot(lambda_vals, ridge_data["R2"])
     plt.xlabel("$\lambda$")
     plt.ylabel("$R^2$")
+    plt.xscale("log")
     if savename_R2!=None:
         plt.savefig(savename_R2)
     plt.figure()
     plt.plot(lambda_vals, ridge_data["MSE"])
     plt.xlabel("$\lambda$")
     plt.ylabel("$MSE$")
+    plt.xscale("log")
     if savename_MSE!=None:
         plt.savefig(savename_MSE)
     plt.show()
@@ -247,10 +252,10 @@ def part_g(savename=None):
     part_b(TER)
 
 
-part_a(R, savename="results/part_a_reg.pdf")
-part_b(R)
-#part_d(R, savename_MSE="results/part_d_reg_MSE.pdf", savename_R2="results/part_d_reg_R2.pdf")
-#part_e(R, savename_MSE="results/part_e_reg_MSE.pdf", savename_R2="results/part_e_reg_R2.pdf")
+#part_a(R, savename="results/part_a_reg.pdf")
+#part_b(R)
+part_d(R, savename_MSE="results/part_d_reg_MSE.pdf", savename_R2="results/part_d_reg_R2.pdf")
+part_e(R, savename_MSE="results/part_e_reg_MSE.pdf", savename_R2="results/part_e_reg_R2.pdf")
 #part_f(R)
 
 
