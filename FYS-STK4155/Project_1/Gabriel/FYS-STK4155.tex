@@ -2,11 +2,15 @@
 %\documentclass[12pt,preprint]{aastex}
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
+\usepackage{cite}
 \usepackage{float}
 \usepackage{amsmath}
 \usepackage{epsfig,floatflt}
 \usepackage{hyperref}
 \usepackage{listings}
+\usepackage{subfig}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
 %\usepackage{amsmath,graphicx,varioref,verbatim,amsfonts,geometry,amssymb,dsfont,blindtext}
 \hypersetup{colorlinks=true}
 \usepackage{xcolor}
@@ -16,24 +20,32 @@
 \definecolor{mauve}{rgb}{0.58,0,0.82}
 \definecolor{mygray}{rgb}{0.9,0.9,0.9}
 \definecolor{LightGray}{gray}{0.95}
-\lstset{frame=tb,
-	language=Python,
-	aboveskip=3mm,
-	belowskip=3mm,
-	showstringspaces=false,
-	columns=flexible,
-	basicstyle={\small\ttfamily},
-	numbers=none,
-	numberstyle=\tiny\color{gray},
-	keywordstyle=\color{blue},
-	commentstyle=\color{dkgreen},
-	stringstyle=\color{mauve},
-	backgroundcolor=\color{mygray},
-	breaklines=true,
-	postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space}
-	%breakatwhitespace=true,
-	%tabsize=3
-}
+\usepackage{textcomp}
+\definecolor{listinggray}{gray}{0.9}
+\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
+\lstset{
+	backgroundcolor=\color{lbcolor},
+	tabsize=4,
+	rulecolor=,
+	language=python,
+        basicstyle=\scriptsize,
+        upquote=true,
+        aboveskip={1.5\baselineskip},
+        columns=fixed,
+	numbers=left,
+        showstringspaces=false,
+        extendedchars=true,
+        breaklines=true,
+        prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+        frame=single,
+        showtabs=false,
+        showspaces=false,
+        showstringspaces=false,
+        identifierstyle=\ttfamily,
+        keywordstyle=\color[rgb]{0,0,1},
+        commentstyle=\color[rgb]{0.133,0.545,0.133},
+        stringstyle=\color[rgb]{0.627,0.126,0.941}
+        }
 
 
 
@@ -47,25 +59,194 @@
 
 \end{abstract}
 
-\section{Introduction}
+\section*{Introduction}
 \label{sec:introduction}
 
-\section{Data}
+\section*{Data}
 \label{sec:method}
 
-\section{Method}
+\section*{Method}
 \label{sec:method}
 
-\section{Results}
+	\subsection*{Generalization of Multidimensional Polynomials}
+	
+	If we wish to construct a $p$-dimensional polynomial of degree $d$, we need to know what terms need to be included to give us a completely generalized polynomial.  For a 1-D polynomial of second degree, we would have three terms:
+	
+	\begin{equation*}
+	f(x) = \beta_1 + \beta_2 x + \beta_3 x^2
+	\end{equation*}
+	
+	Where $\beta$ is a vector containing each coefficient.	For a 2-D polynomial of second degree, we would have 6 terms:
+	
+	\begin{equation*}
+	f(x,y) = \beta_1 + \beta_2 x + \beta_3 y + \beta_4 xy + \beta_5 x^2 + \beta_6 y^2
+	\end{equation*}
+	
+	And for a 3-D polynomial of second degree, we would have 10 terms:
+	
+	\begin{equation*}
+	f(x,y,z) = \beta_1 + \beta_2 x + \beta_3 y + \beta_4 z + \beta_5 xy + \beta_6 xz + \beta_7 yz + \beta_8 x^2 + \beta_9 y^2 + \beta_{10} z^2
+	\end{equation*}
+	
+	There are many possible combinations of $p$ and $d$, and the number of terms blows up significantly as these values increase.  We can, however, create a general expression \cite{2482654} for any $p$ and $d$ using summation notation:
+	
+	\begin{equation}
+	\label{eq_method_0}
+	f(\mathbf{x}) = \sum_{\sum_{j = 1}^d i_j \leq p} \left( \beta_{i_1, i_2, \cdots, i_d} \prod_{k = 1}^d x_k^{i_k} \right)
+	\end{equation}
+	
+	Alternatively, a simple \texttt{python} script can be used to find all the terms' exponents by calculating all permutations of the natural numbers from zero to $d$ in sets of length $p$, then removing all results whose sum is greater than $d$.
+	
+	\begin{lstlisting}[showstringspaces=false,language=Python,firstnumber = 1][frame=none]
+	def get_exponents(p,d):
+    	powers = np.arange(0, d+1, 1)
+    	powers = np.repeat(powers, p)
+    	exponents = list(permutations(powers, p))
+    	exponents = np.unique(exponents, axis = 0)
+
+   	 	if p != 1:
+        	expo_sum = np.sum(exponents, axis = 1)
+        	valid_idx = np.where(np.less_equal(expo_sum, d))[0]
+        	exponents = np.array(exponents, dtype = np.int64)
+        	exponents = exponents[valid_idx]
+    	else:
+        	exponents = np.array(exponents, dtype = np.int64)
+
+    	return len(exponents)
+	\end{lstlisting}
+
+	\subsection*{Ordinary Least-Squares (OLS) Regression}
+	
+	We are given a $p+1$-dimensional dataset\footnote{Meaning a set of $p$ input features and 1 output.} consisting of $N$ datapoints per feature such that:
+	
+	\begin{equation}
+	\label{eq_method_1}
+	\mathbf{X} = \begin{bmatrix} X_{1,1} & X_{1,2} & \cdots & X_{1,p} \\ X_{2,1} & X_{2,2} & \cdots & X_{2,p} \\ \vdots & \vdots & \ddots & \vdots \\ X_{N,1} & X_{N,2} & \cdots & X_{N,p} \end{bmatrix} \qquad \mathbf{y} = \begin{bmatrix} y_1 \\ y_2 \\ \vdots \\ y_N \end{bmatrix}
+	\end{equation}
+	
+	Where the $N \times p$ matrix $\mathbf{X}$ contains the dataset's \textit{input data}, and the $N$-vector $\mathbf{y}$ contains its \textit{output data}, such that each row in $\mathbf{X}$ corresponds to a single output in $\mathbf{y}$.
+	
+	Now, we wish to find a $p$-dimensional polynomial of degree $d$ which most closely matches our dataset. We will need a design matrix $\mathbf{A}$; this will require using the knowledge presented in (\ref{eq_method_0}), since a design matrix should contain each polynomial term as an individual column.
+	
+	Next, we will be using the method of \textit{least squares} \cite{hastie_tibshirani_friedman_2013}, whereby we attempt to minimize the \textit{residual sum of squares}:
+	
+	\begin{equation*}
+	RSS(\beta) = \sum_{i=1}^N (y_i - \mathbf{A}_i^\textsc{t} \beta)^2 
+	\end{equation*}
+	
+	Where $\mathbf{A}_i$ represents the $i$\textsuperscript{th} row in $\mathbf{A}$, and $beta$ is the set of coefficents in the aforementioned polynomial; in matrix form, this can be written more concisely:
+	
+	\begin{equation*}
+	RSS(\beta) = (\mathbf{y} - \mathbf{A} \beta)^\textsc{t}(\mathbf{y} - \mathbf{A} \beta)
+	\end{equation*}
+	
+	To minimize the $RSS$, we can differentiate it with respect to $\beta$ and set the right-hand side equal to zero – this allows us to solve for $\beta$, which will give us the coefficients to the polynomial that best matches our dataset:
+	
+	\begin{equation*}
+	\mathbf{A}^\textsc{t} (\mathbf{y} - \mathbf{A} \beta) = 0 \iff \mathbf{A}^\textsc{t} y = \mathbf{A}^\textsc{t} \mathbf{A} \beta
+	\end{equation*}
+	
+	Solving for $\beta$ then gives us our desired result:
+	
+	\begin{equation}
+	\label{eq_method_2}
+	\beta = (\mathbf{A}^\textsc{t} \mathbf{A} ) ^{-1} \mathbf{A}^\textsc{t} \mathbf{y}
+	\end{equation}
+	
+	Using the set of coefficients given by (\ref{eq_method_2}), we can then match the dataset from (\ref{eq_method_1}) as effectively as possible.
+	
+	\subsection*{Ridge Regression}
+	
+	The solution for $\beta$ given in (\ref{eq_method_2}) can be used without issue in many cases, but if the matrix $\mathbf{A}$ is singular\footnote{Meaning that $\text{det}(\mathbf{A}) = 0$}, we run into an issue – namely, we cannot take the inverse of a singular matrix!  As a result, we must look to more robust methods; one such method is called \textit{ridge regression}.  
+	
+	The process of obtaining our vector of coefficients $\beta$ via ridge regression is functionally very similar to that of OLS.  The main difference is that we include an extra term in the residual sum of squares:
+
+	\begin{equation*}
+	RSS(\beta) = \sum_{i=1}^N (y_i - \mathbf{A}_i^\textsc{t} \beta)^2 + \lambda \sum_{i=1}^N \beta^2
+	\end{equation*}
+	
+	In matrix form, this can be rewritten:	
+	
+	\begin{equation*}
+	RSS(\beta) = (\mathbf{y} - \mathbf{A} \beta)^\textsc{t}(\mathbf{y} - \mathbf{A} \beta) + \lambda \beta^\textsc{t} \beta
+	\end{equation*}
+	
+	Where $\lambda$, known as the \textit{hyperparameter}, is a scalar value. Performing the same process as in the previous subsection, we are left with a solution similar to that in (\ref{eq_method_2}):
+	
+	\begin{equation}
+	\label{eq_method_3}
+	\beta = (\mathbf{A}^\textsc{t} \mathbf{A} + \lambda \mathbf{I}) ^{-1} \mathbf{A}^\textsc{t} \mathbf{y}
+	\end{equation}
+	
+	In cases where $\mathbf{A}$ is singular, it is therefore possible to make very few changes to the OLS algorithm and still get a good result, one must simply optimize the hyperparameter and find a $\lambda$ that minimizes the \textit{mean squared error} (yet to be introduced) of our polynomial approximation.
+	
+	\subsection*{LASSO Regression}
+	
+	The \textit{least absolute shrinkage and selection operator}, commonly abbreviated as \textit{LASSO}, is a method that implements the \textbf{L1} norm in place of the \textbf{L2} (or Euclidian) norm used in ridge regression.  The residual sum of squares is therefore given by:
+	
+	\begin{equation}
+	\label{eq_method_4}
+	RSS(\beta) = \sum_{i=1}^N (y_i - \mathbf{A}_i^\textsc{t} \beta)^2 + \lambda \sum_{i=1}^N |\beta|
+	\end{equation}
+	
+	Unfortunately, differentiating the above with respect to $\beta$ will not work as intended, since we cannot take the matrix-form derivative of $\lambda \sum_{i=1}^N |\beta|$.  As a result, we must use an iterative \textit{gradient descent} method to minimize the right-hand side of (\ref{eq_method_4}).
+	
+	\begin{algorithm}[H]
+		\caption{The LASSO algorithm, over the course of $500$ iterations.}
+		\begin{algorithmic}[1]
+			\State $z = \sum_i A_i^2$
+			\State $i = 0$
+			\While{$i \leq 500$}
+				\State $i = i + 1$
+				\State $j = 0$
+				\While{j < p}
+					\State $\hat{y} = \sum_{k \neq j} \beta A_{*,k}$
+					\State $\rho = \sum_k A_{*,k} (\mathbf{y} - \mathbf{\hat{y}})$
+					\If {$\rho < -\lambda/2$}
+						\State $\beta_j = (\rho + \lambda/2)/z_j$
+					\ElsIf {$\rho > \lambda/2$}
+						\State $\beta_j = (\rho - \lambda/2)/z_j$
+					\Else
+						\State $\beta_j = 0$
+					\EndIf
+				\EndWhile		
+			\EndWhile
+		\end{algorithmic}
+	\end{algorithm}
+	
+	\subsection*{Mean Squared Error}
+	
+	To get a measure of success with respect to the implemented method and parameters, we can calculate the mean difference in the squares of each measured output $y_i$ and their respective predicted outputs $\hat{y}_i$:
+	
+	\begin{equation}
+	MSE(\mathbf{y}, \mathbf{\hat{y}}) = \frac{1}{N} \sum_{i=1}^{N} (y_i - \hat{y}_i)^2
+	\end{equation}
+	
+	The lower the $MSE$, the closer the polynomial approximation is to the original dataset.  If it is too low, however, we run the risk of overfitting our dataset, which is not desireable either – fortunately, this not an issue within the scope of this report.
+	
+	\subsection*{R\textsuperscript{2} Score}
+	
+	Another measure of success is the \textit{coefficient of determination}, colloquially known as the $R^2$ score, is given by the following expression:
+	
+	\begin{equation}
+	R^2 = 1 - \frac{\sum_{i=1}^N (y_i - \hat{y}_i)^2 }{\sum_{i=1}^N (y_i - \bar{y}_i)^2 }
+	\end{equation}
+	
+	The closer $R^2$ is to one, the closer the polynomial approximation is to the input/output dataset, although a perfect score can once again arise due to overfitting just as in the case of the $MSE$.
+		
+\section*{Results}
 \label{sec:results}
 
-\section{Discussion}
+\section*{Discussion}
 \label{sec:discussion}
 
 \newpage
 
-\section{Appendix}
+\section*{Appendix}
 \label{sec:appendix}
+
+\bibliography{bib}{}
+\bibliographystyle{ieeetr}
 	
 \end{document}
 
