@@ -44,14 +44,14 @@ y = Z.flatten()
 # Creating Regression object with x and y
 R = Regression(x, y)
 
-def part_a(R):
+def part_a(R, savename=None):
 
     """PART A"""
     print("\n" + "-"*80 + "\nPART A\n" + "-"*80)
 
     # Implementing 5th degree polynomial regression in 2-D
     R.lasso(degree = degree, alpha = alpha)
-    R.plot(plot_points = False)
+    R.plot(plot_points = False, savename=savename)
 
     # Creating <dict> of values for OLS
     OLS_data = {}
@@ -75,7 +75,7 @@ def part_a(R):
     print(f"\nσ² = {sigma2}")
     R.reset()
 
-def part_b(R):
+def part_b(R, savename=None):
 
 
     """PART B"""
@@ -95,7 +95,7 @@ def part_b(R):
     print(f"\nR² = {kfold_data['R2']:.2g}")
     R.reset()
 
-def part_d(R):
+def part_d(R, savename_R2=None, savename_MSE=None):
 
     """PART D"""
     print("\n" + "-"*80 + "\nPART D\n" + "-"*80)
@@ -124,17 +124,17 @@ def part_d(R):
         print(f"\r{int(100*(n+1)/tot)}%", end = "")
     print("\r    ")
 
-    plt.plot(lambda_vals, ridge_data["R2"])
+    plt.plot(lambda_vals, ridge_data["R2"], savename=savename_R2)
     plt.xlabel("$\lambda$")
     plt.ylabel("$R^2$")
     plt.figure()
-    plt.plot(lambda_vals, ridge_data["MSE"])
+    plt.plot(lambda_vals, ridge_data["MSE"], savename=savename_MSE)
     plt.xlabel("$\lambda$")
     plt.ylabel("$MSE$")
     plt.show()
     R.reset()
 
-def part_e(R):
+def part_e(R, savename_R2=None, savename_MSE=None):
 
     """PART E"""
     print("\n" + "-"*80 + "\nPART E\n" + "-"*80)
@@ -180,16 +180,16 @@ def part_e(R):
         print(f"\r{int(100*(n+1)/tot)}%", end = "")
     print("\r    ")
 
-    plt.plot(lambda_vals, ridge_data["R2"])
+    plt.plot(lambda_vals, ridge_data["R2"], savename=savename_R2)
     plt.xlabel("$\lambda$")
     plt.ylabel("$R^2$")
     plt.figure()
-    plt.plot(lambda_vals, ridge_data["MSE"])
+    plt.plot(lambda_vals, ridge_data["MSE"], savename=savename_MSE)
     plt.xlabel("$\lambda$")
     plt.ylabel("$MSE$")
     plt.show()
 
-def part_f():
+def part_f(savename=None):
 
     # Load the terrain
     terrain1 = imread("SRTM_data_Norway_1.tif")
@@ -213,7 +213,7 @@ def part_f():
 
     return(terrain2[::25, ::25])
 
-def part_g():
+def part_g(savename=None):
 
     ter_data = part_f()
 
@@ -238,12 +238,12 @@ def part_g():
     part_b(TER)
 
 
-"""
-part_a(R)
+
+part_a(R, savename="results/part_a_reg.pdf")
 part_b(R)
 part_d(R)
 part_e(R)
 part_f(R)
-"""
 
-part_g()
+
+#part_g()
