@@ -1,12 +1,16 @@
+%\documentclass[a4paper,10pt,english]{amsart}
 \documentclass[a4paper,10pt,english]{article}
 %\documentclass[12pt,preprint]{aastex}
 \usepackage[utf8]{inputenc}
+\usepackage[margin=0.3in]{geometry} % narrow margins
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{amsmath}
 \usepackage{epsfig,floatflt}
 \usepackage{hyperref}
 \usepackage{listings}
+\usepackage[table,xcdraw]{xcolor}
+\usepackage{booktabs}
 %\usepackage{amsmath,graphicx,varioref,verbatim,amsfonts,geometry,amssymb,dsfont,blindtext}
 \hypersetup{colorlinks=true}
 \usepackage{xcolor}
@@ -38,6 +42,7 @@
 
 
 \begin{document}
+%\twocolumn
 
 \title{FYS-STK4155 Project 1}
 \author{Bendik Steinsvåg Dalen \& Gabriel Sigurd Cabrera}
@@ -50,8 +55,9 @@
 \section{Introduction}
 \label{sec:introduction}
 
+yvycjyukioyjfchdxcgfjhbk
 \section{Data}
-\label{sec:method}
+\label{sec:data}
 
 \section{Method}
 \label{sec:method}
@@ -59,8 +65,105 @@
 \section{Results}
 \label{sec:results}
 
+\begin{figure}[h!]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.6]{../results/part_a_reg.pdf}
+	\caption{The resulting function after performing a standard least square regression analysis using polynomials in x
+	and y up to fifth order on the Franke function}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_a}
+\end{figure}
+
+\begin{table}[htbp]
+%	\centering
+	\begin{tabular}{|>{\columncolor[HTML]{EFEFEF}}c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+		\hline
+		\cellcolor[HTML]{9B9B9B} & \cellcolor[HTML]{EFEFEF}$\beta_0$ & \cellcolor[HTML]{EFEFEF}$\beta_1$ & \cellcolor[HTML]{EFEFEF}$\beta_2$ & \cellcolor[HTML]{EFEFEF}$\beta_3$ & \cellcolor[HTML]{EFEFEF}$\beta_4$ & \cellcolor[HTML]{EFEFEF}$\beta_5$ & \cellcolor[HTML]{EFEFEF}$\beta_6$ & \cellcolor[HTML]{EFEFEF}$\beta_7$ & \cellcolor[HTML]{EFEFEF}$\beta_8$ & \cellcolor[HTML]{EFEFEF}$\beta_9$ & \cellcolor[HTML]{EFEFEF}$\beta_{10}$ & \cellcolor[HTML]{EFEFEF}$\beta_{11}$ & \cellcolor[HTML]{EFEFEF}$\beta_{12}$ & \cellcolor[HTML]{EFEFEF}$\beta_{13}$ & \cellcolor[HTML]{EFEFEF}$\beta_{14}$ & \cellcolor[HTML]{EFEFEF}$\beta_{15}$ & \cellcolor[HTML]{EFEFEF}$\beta_{16}$  \\ \hline
+		SLS & 0.00789 & 0.322 & 2.46 & 4.81 & 5.61 & 1.76 & 0.322 & 1.85 & 4.3 & 5.97 & 2.83 & 2.46 & 4.3 & 5.97 & 4.23 & 4.81 & 5.97  \\ \hline
+		$k$-fold & 0.0321 & 4.03 & 94 & 474 & 517 & 79.5 & 4.03 & 57.3 & 260 & 301 & 60.1 & 93.9 & 260 & 261 & 57.1 & 474 & 301 \\ \hline
+	\end{tabular}
+
+	\begin{tabular}{|>{\columncolor[HTML]{EFEFEF}}c|c|c|c|c|}
+		\hline
+		\cellcolor[HTML]{9B9B9B} & \cellcolor[HTML]{EFEFEF}$\beta_{17}$ & \cellcolor[HTML]{EFEFEF}$\beta_{18}$ & \cellcolor[HTML]{EFEFEF}$\beta_{19}$ & \cellcolor[HTML]{EFEFEF}$\beta_{20}$ \\ \hline
+		SLS & 4.23 & 5.61 & 2.83 & 1.76  \\ \hline
+		$k$-fold &  57.1 & 517 & 60.1 & 79.5  \\ \hline
+	\end{tabular}
+	\caption{$\beta$ for part a and b}
+\end{table}
+
+\begin{table}[htbp]
+	\centering
+	\begin{tabular}{|
+			>{\columncolor[HTML]{EFEFEF}}c |c|c|}
+		\hline
+		\cellcolor[HTML]{9B9B9B} & \cellcolor[HTML]{EFEFEF}MSE & \cellcolor[HTML]{EFEFEF}$R^2$ \\ \hline
+		SLS                      & 0.015                       & 0.84                          \\ \hline
+		$k$-fold                 & 0.012                       & 0.87                          \\ \hline
+	\end{tabular}
+	\caption{MSE and R2 for a and b}
+\end{table}
 
 
+
+\begin{figure}[h!]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.6]{../results/part_d_reg_MSE.pdf}
+	\caption{The Mean Squared Error for the Ridge method for different values of $\lambda$}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_d_MSE}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.6]{../results/part_d_reg_R2.pdf}
+	\caption{$R^2$-score for the Ridge method for different values of $\lambda$}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_d_R2}
+\end{figure}
+
+
+\begin{figure}[h!]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.6]{../results/part_e_reg_MSE.pdf}
+	\caption{The Mean Squared Error for the Lasso method for different values of $\lambda$}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_e_MSE}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.6]{../results/part_e_reg_R2.pdf}
+	\caption{$R^2$-score for the Lasso method for different values of $\lambda$}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_e_R2}
+\end{figure}
+
+
+\begin{figure}[h!]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.9]{../results/part_g_input.pdf}
+	\caption{The terrain-data we are studying, from Møsvatn Austfjell in Norway}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_g_input}
+\end{figure}
+
+
+
+%\begin{figure}[h!]
+%	\centering 
+%	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+%	\includegraphics[scale=0.6]{plot.pdf}
+%	\caption{A plot of $PL$ against the dimensionless temperature $T_k$, using both the model for a large and small $T$	}
+%	%Label gjør det enkelt å referere til ulike bilder.
+%	\label{plot}
+%\end{figure}
 
 
 \section{Discussion}
