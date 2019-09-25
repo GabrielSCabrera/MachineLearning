@@ -14,6 +14,7 @@
 %\usepackage{amsmath,graphicx,varioref,verbatim,amsfonts,geometry,amssymb,dsfont,blindtext}
 \hypersetup{colorlinks=true}
 \usepackage{xcolor}
+\usepackage{hhline}
 \definecolor{LightGray}{gray}{0.95}
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
@@ -99,6 +100,16 @@ yvycjyukioyjfchdxcgfjhbk
 			>{\columncolor[HTML]{EFEFEF}}c |c|c|}
 		\hline
 		\cellcolor[HTML]{9B9B9B} & \cellcolor[HTML]{EFEFEF}MSE & \cellcolor[HTML]{EFEFEF}$R^2$ \\ \hline
+		SLS                      & 0.015                       & 0.84                          \\ \hline
+		$k$-fold                 & 0.012                       & 0.87                          \\ \hline
+	\end{tabular}
+	\caption{MSE and R2 for a and b}
+\end{table}
+\begin{table}[htbp]
+	\centering
+	\begin{tabular}{|c|c|c|}
+		\hline
+		& MSE & \\ \hline
 		SLS                      & 0.015                       & 0.84                          \\ \hline
 		$k$-fold                 & 0.012                       & 0.87                          \\ \hline
 	\end{tabular}
