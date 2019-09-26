@@ -25,7 +25,8 @@ X,Y = np.meshgrid(x, x)
 
 # Calculating the values of the Franke function at each (x,y) coordinate
 Z = franke.FrankeFunction(X,Y)
-Z = Z + np.random.normal(0, 0.1, Z.shape)
+init_error = np.random.normal(0, 0.1, Z.shape)
+Z = Z + init_error
 
 # Making compatible input arrays for Regression object
 x = np.zeros((X.shape[0]*X.shape[1], 2))
@@ -48,7 +49,8 @@ def part_a(R, savename=None):
 
     """PART A"""
     print("\n" + "-"*80 + "\nPART A\n" + "-"*80)
-
+    
+#    R.reset()
     # Implementing 5th degree polynomial regression in 2-D
     R.poly(degree = degree, alpha = alpha)
     R.plot(plot_points = True, savename=savename)
@@ -73,27 +75,60 @@ def part_a(R, savename=None):
     print(f"\nMSE = {OLS_data['MSE']:.2g}")
     print(f"\nR² = {OLS_data['R2']:.2g}")
     print(f"\nσ² = {sigma2}")
-    R.reset()
+#    R.reset()
 
 def part_b(R, savename=None):
 
 
     """PART B"""
     print("\n" + "-"*80 + "\nPART B\n" + "-"*80)
-
+    
+#    R.reset()
     # Creating <dict> of values for OLS k-fold
     kfold_data = {}
 
     # Implementing the k-fold algorithm
     kfold_data["R2"], kfold_data["MSE"], kfold_data["var"] = \
     R.k_fold(k = k, degree = degree, sigma = sigma)
+    
+#    sigma2 = R.sigma()
 
     # Displaying Results
     var = " & ".join(list(f"{i:.3g}" for i in kfold_data["var"]))
     print(f"\nVar(beta) = \n{var}")
     print(f"\nMSE = {kfold_data['MSE']:.2g}")
     print(f"\nR² = {kfold_data['R2']:.2g}")
-    R.reset()
+#    print(f"\nσ² = {sigma2}")
+    
+    return kfold_data
+#    R.reset()
+    
+    
+def part_c(R):
+    
+    """PART C"""
+    print("\n" + "-"*80 + "\nPART C\n" + "-"*80)
+    
+#    R.reset()
+    part_b(R)
+    
+
+    #implements the Cost function
+    y_data = R.predict(R._X)
+    exp_y = np.mean(y_data)
+    
+    f_data = R._Y - init_error.flatten()
+    err = 0
+    for fi,yi in zip(f_data, y_data):
+        err += (fi - exp_y)**2 - (yi - exp_y)**2
+        
+    err /= len(f_data)
+    err += R.sigma()
+    
+    print(f"\nE = {err}")
+#    print(err)
+    
+    
 
 def part_d(R, savename_R2=None, savename_MSE=None):
 
@@ -254,8 +289,9 @@ def part_g(savename=None):
 
 #part_a(R, savename="results/part_a_reg.pdf")
 #part_b(R)
-part_d(R, savename_MSE="results/part_d_reg_MSE.pdf", savename_R2="results/part_d_reg_R2.pdf")
-part_e(R, savename_MSE="results/part_e_reg_MSE.pdf", savename_R2="results/part_e_reg_R2.pdf")
+part_c(R)
+#part_d(R, savename_MSE="results/part_d_reg_MSE.pdf", savename_R2="results/part_d_reg_R2.pdf")
+#part_e(R, savename_MSE="results/part_e_reg_MSE.pdf", savename_R2="results/part_e_reg_R2.pdf")
 #part_f(R)
 
 
