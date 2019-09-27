@@ -1,3 +1,4 @@
+import seaborn
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from imageio import imread
@@ -13,7 +14,7 @@ k = 5               # k in k-fold
 degree = 5          # Polynomial approximation degree
 sigma = 1           # Variance of Gaussian Noise
 split_test = 20     # Percentage of data to split into testing set
-alpha = 0.1
+alpha = None
 
 # Select random seed for consistent results
 np.random.seed(69420666)
@@ -110,23 +111,64 @@ def part_c(R):
     print("\n" + "-"*80 + "\nPART C\n" + "-"*80)
     
 #    R.reset()
-    part_b(R)
-    
+#    part_a(R)
 
-    #implements the Cost function
-    y_data = R.predict(R._X)
-    exp_y = np.mean(y_data)
+    degrees = np.arange(0, 20 + 1)
+    Errs = np.zeros_like(degrees, dtype=float)
+#    Errs = []
     
-    f_data = R._Y - init_error.flatten()
-    err = 0
-    for fi,yi in zip(f_data, y_data):
-        err += (fi - exp_y)**2 - (yi - exp_y)**2
+    test_Errs = np.zeros_like(degrees, dtype=float)
+
+    tot = len(degrees)
+    
+    for i in degrees:
+        R.reset()
+        R.split(2/5)
+        R.poly(degree = i, alpha = 0.1)
         
-    err /= len(f_data)
-    err += R.sigma()
+        #implements the Cost function for training data
+        y_data = R.predict(R._X)
+        exp_y = np.mean(y_data)
+        
+        f_data = R._Y - np.delete(init_error.flatten(), R._test_idx)
+        err = 0
+        for fi,yi in zip(f_data, y_data):
+            err += (fi - exp_y)**2 - (yi - exp_y)**2
+            
+        err /= len(f_data)
+        err += R.sigma()
+        
+        Errs[i] = err
+#        Errs.append(err)
+
+        #implements the Cost function for test data
+        y_data_test = R.predict(R._X_test)
+        exp_y_test = np.mean(y_data_test)
+        
+        f_data_test = R._Y_test - init_error.flatten()[R._test_idx]
+#        np.delete(init_error.flatten(), R._test_idx)
+        err_test = 0
+        for fi,yi in zip(f_data_test, y_data_test):
+            err_test += (fi - exp_y_test)**2 - (yi - exp_y_test)**2
+            
+        err_test /= len(f_data_test)
+        err_test += R.sigma()
+        
+        test_Errs[i] = err_test
+        
+        
+        print(f"\r{int(100*(i+1)/tot)}%", end = "")
+    print("\r    ")
+        
+#        print(f"\nE = {err}")
+#        print(err)
     
-    print(f"\nE = {err}")
-#    print(err)
+#    print(Errs)
+    
+    plt.plot(degrees, Errs)
+    plt.plot(degrees, test_Errs)
+    plt.legend(["Training sample", "Test sample"])
+    plt.show()
     
     
 
