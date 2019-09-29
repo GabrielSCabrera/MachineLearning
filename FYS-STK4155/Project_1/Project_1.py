@@ -110,20 +110,16 @@ def part_c(R):
     """PART C"""
     print("\n" + "-"*80 + "\nPART C\n" + "-"*80)
     
-#    R.reset()
-#    part_a(R)
 
-    degrees = np.arange(0, 20 + 1)
-    Errs = np.zeros_like(degrees, dtype=float)
-#    Errs = []
-    
-    test_Errs = np.zeros_like(degrees, dtype=float)
+    degrees = np.arange(0, 20 + 1) #an array for each of the degrees we are testing
+    Errs = np.zeros_like(degrees, dtype=float) #an array for the errors in the training sample
+    test_Errs = np.zeros_like(degrees, dtype=float) #an array for the errors in the test sample
 
     tot = len(degrees)
     
     for i in degrees:
         R.reset()
-        R.split(2/5)
+        R.split(1/5) #splits the data into training and testing data
         R.poly(degree = i, alpha = 0.1)
         
         #implements the Cost function for training data
@@ -134,7 +130,6 @@ def part_c(R):
         err = 0
         for fi,yi in zip(f_data, y_data):
             err += (fi - exp_y)**2 - (yi - exp_y)**2
-            
         err /= len(f_data)
         err += R.sigma()
         
@@ -146,7 +141,6 @@ def part_c(R):
         exp_y_test = np.mean(y_data_test)
         
         f_data_test = R._Y_test - init_error.flatten()[R._test_idx]
-#        np.delete(init_error.flatten(), R._test_idx)
         err_test = 0
         for fi,yi in zip(f_data_test, y_data_test):
             err_test += (fi - exp_y_test)**2 - (yi - exp_y_test)**2
@@ -160,11 +154,7 @@ def part_c(R):
         print(f"\r{int(100*(i+1)/tot)}%", end = "")
     print("\r    ")
         
-#        print(f"\nE = {err}")
-#        print(err)
-    
-#    print(Errs)
-    
+    #plots the resulting errors by degree    
     plt.plot(degrees, Errs)
     plt.plot(degrees, test_Errs)
     plt.legend(["Training sample", "Test sample"])
