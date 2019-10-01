@@ -25,7 +25,6 @@ class Regression():
             ---OPTIONAL-INPUT-----------------------------
 
             dtype       Datatype - see NumPy's documentation for <dtype>
-
         """
 
         error_msg = (f" in initialization of <Regression> object must be a "
@@ -77,6 +76,7 @@ class Regression():
 
         self._X_backup = X
         self._Y_backup = Y
+
         self._X = X
         self._Y = Y
         self._dtype = dtype
@@ -283,7 +283,7 @@ class Regression():
 
         A, exponents = self._design(self._X, degree, "lasso")
 
-        clf = skl.Lasso(alpha=alpha)
+        clf = skl.Lasso(alpha=alpha, max_iter = 2E3)
         clf.fit(A, self._Y)
         beta = clf.coef_
         self._beta = beta
@@ -887,8 +887,8 @@ class Regression():
             fig.tight_layout()
 
             if plot_points is True:
-                surf = ax.scatter(self._X[:,0], self._X[:,1], self._Y, s = 10,
-                marker = ".", alpha = 0.5)
+                surf = ax.scatter(self._X[:,0], self._X[:,1],
+                self._Y, s = 10, marker = ".", alpha = 0.5)
 
             if plot_points is True:
                 zmin, zmax = ax.get_zlim()
@@ -1115,7 +1115,6 @@ class Regression():
 
             Y           Array of shape (M,)
         """
-
         if self._p > 1:
             A = np.zeros((X.shape[0], exponents.shape[0]))
             for n,exponent in enumerate(exponents):
@@ -1126,6 +1125,7 @@ class Regression():
                 A[:,n] = X[:,0]**exponent
 
         Y_hat = A @ beta
+
         return Y_hat
 
     def _poly_str(self, exponents, beta):

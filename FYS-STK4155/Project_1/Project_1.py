@@ -11,10 +11,10 @@ from utils.classes import Regression
 
 # Conditions
 k = 5               # k in k-fold
-degree = 5          # Polynomial approximation degree
+degree = 8          # Polynomial approximation degree
 sigma = 1           # Variance of Gaussian Noise
 split_test = 20     # Percentage of data to split into testing set
-alpha = None
+alpha = 1E-10
 
 # Select random seed for consistent results
 np.random.seed(69420666)
@@ -50,10 +50,11 @@ def part_a(R, savename=None):
 
     """PART A"""
     print("\n" + "-"*80 + "\nPART A\n" + "-"*80)
-    
-#    R.reset()
+
+    #    R.reset()
     # Implementing 5th degree polynomial regression in 2-D
-    R.poly(degree = degree, alpha = alpha)
+    # R.poly(degree = degree, alpha = alpha)
+    R.lasso(degree = degree, alpha = alpha)
     R.plot(plot_points = True, savename=savename)
 
     # Creating <dict> of values for OLS
@@ -76,91 +77,88 @@ def part_a(R, savename=None):
     print(f"\nMSE = {OLS_data['MSE']:.2g}")
     print(f"\nR² = {OLS_data['R2']:.2g}")
     print(f"\nσ² = {sigma2}")
-#    R.reset()
+    #    R.reset()
 
 def part_b(R, savename=None):
 
 
     """PART B"""
     print("\n" + "-"*80 + "\nPART B\n" + "-"*80)
-    
-#    R.reset()
+
+    #    R.reset()
     # Creating <dict> of values for OLS k-fold
     kfold_data = {}
 
     # Implementing the k-fold algorithm
     kfold_data["R2"], kfold_data["MSE"], kfold_data["var"] = \
     R.k_fold(k = k, degree = degree, sigma = sigma)
-    
-#    sigma2 = R.sigma()
+
+    #    sigma2 = R.sigma()
 
     # Displaying Results
     var = " & ".join(list(f"{i:.3g}" for i in kfold_data["var"]))
     print(f"\nVar(beta) = \n{var}")
     print(f"\nMSE = {kfold_data['MSE']:.2g}")
     print(f"\nR² = {kfold_data['R2']:.2g}")
-#    print(f"\nσ² = {sigma2}")
-    
+    #    print(f"\nσ² = {sigma2}")
+
     return kfold_data
-#    R.reset()
-    
-    
+    #    R.reset()
+
 def part_c(R):
-    
+
     """PART C"""
     print("\n" + "-"*80 + "\nPART C\n" + "-"*80)
-    
+
 
     degrees = np.arange(0, 20 + 1) #an array for each of the degrees we are testing
     Errs = np.zeros_like(degrees, dtype=float) #an array for the errors in the training sample
     test_Errs = np.zeros_like(degrees, dtype=float) #an array for the errors in the test sample
 
     tot = len(degrees)
-    
+
     for i in degrees:
         R.reset()
         R.split(1/5) #splits the data into training and testing data
         R.poly(degree = i, alpha = 0.1)
-        
+
         #implements the Cost function for training data
         y_data = R.predict(R._X)
         exp_y = np.mean(y_data)
-        
+
         f_data = R._Y - np.delete(init_error.flatten(), R._test_idx)
         err = 0
         for fi,yi in zip(f_data, y_data):
             err += (fi - exp_y)**2 - (yi - exp_y)**2
         err /= len(f_data)
         err += R.sigma()
-        
+
         Errs[i] = err
-#        Errs.append(err)
+        #        Errs.append(err)
 
         #implements the Cost function for test data
         y_data_test = R.predict(R._X_test)
         exp_y_test = np.mean(y_data_test)
-        
+
         f_data_test = R._Y_test - init_error.flatten()[R._test_idx]
         err_test = 0
         for fi,yi in zip(f_data_test, y_data_test):
             err_test += (fi - exp_y_test)**2 - (yi - exp_y_test)**2
-            
+
         err_test /= len(f_data_test)
         err_test += R.sigma()
-        
+
         test_Errs[i] = err_test
-        
-        
+
+
         print(f"\r{int(100*(i+1)/tot)}%", end = "")
     print("\r    ")
-        
-    #plots the resulting errors by degree    
+
+    #plots the resulting errors by degree
     plt.plot(degrees, Errs)
     plt.plot(degrees, test_Errs)
     plt.legend(["Training sample", "Test sample"])
     plt.show()
-    
-    
 
 def part_d(R, savename_R2=None, savename_MSE=None):
 
@@ -292,7 +290,20 @@ def part_f(savename=None):
     plt.savefig("results/part_g_input.pdf")
     plt.show()
 
-    return(terrain2[::25, ::25])
+    # Load the terrain
+    terrain3 = imread("norway1.tif")
+    terrain3 = terrain3[:terrain3.shape[1]]
+    # Show the terrain
+    plt.figure()
+    plt.title("Terrain over Norway 3")
+    plt.imshow(terrain3, cmap="gray")
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.savefig("results/part_g_input.pdf")
+    plt.show()
+
+    output = terrain3[::25, ::25]
+    return output
 
 def part_g(savename=None):
 
@@ -318,13 +329,11 @@ def part_g(savename=None):
     part_a(TER)
     part_b(TER)
 
+# part_a(R, savename="results/part_a_reg.pdf")
+# part_b(R)
+# part_c(R)
+# part_d(R, savename_MSE="results/part_d_reg_MSE.pdf", savename_R2="results/part_d_reg_R2.pdf")
+# part_e(R, savename_MSE="results/part_e_reg_MSE.pdf", savename_R2="results/part_e_reg_R2.pdf")
+# part_f(R)
 
-#part_a(R, savename="results/part_a_reg.pdf")
-#part_b(R)
-part_c(R)
-#part_d(R, savename_MSE="results/part_d_reg_MSE.pdf", savename_R2="results/part_d_reg_R2.pdf")
-#part_e(R, savename_MSE="results/part_e_reg_MSE.pdf", savename_R2="results/part_e_reg_R2.pdf")
-#part_f(R)
-
-
-#part_g()
+part_g()
