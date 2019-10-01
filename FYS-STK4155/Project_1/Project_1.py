@@ -114,6 +114,9 @@ def part_c(R):
     degrees = np.arange(0, 20 + 1) #an array for each of the degrees we are testing
     Errs = np.zeros_like(degrees, dtype=float) #an array for the errors in the training sample
     test_Errs = np.zeros_like(degrees, dtype=float) #an array for the errors in the test sample
+    mses = np.zeros_like(degrees, dtype=float)
+    mses_test = np.zeros_like(degrees, dtype=float)
+    
 
     tot = len(degrees)
     
@@ -134,6 +137,7 @@ def part_c(R):
         err += R.sigma()
         
         Errs[i] = err
+        mses[i] = np.mean((R._Y - y_data)**2)
 #        Errs.append(err)
 
         #implements the Cost function for test data
@@ -149,6 +153,7 @@ def part_c(R):
         err_test += R.sigma()
         
         test_Errs[i] = err_test
+        mses_test[i] = np.mean((R._Y_test - y_data_test)**2)
         
         
         print(f"\r{int(100*(i+1)/tot)}%", end = "")
@@ -157,6 +162,12 @@ def part_c(R):
     #plots the resulting errors by degree    
     plt.plot(degrees, Errs)
     plt.plot(degrees, test_Errs)
+    plt.legend(["Training sample", "Test sample"])
+    plt.show()
+    
+#    print(R.mse())
+    plt.plot(degrees, mses)
+    plt.plot(degrees, mses_test)
     plt.legend(["Training sample", "Test sample"])
     plt.show()
     
