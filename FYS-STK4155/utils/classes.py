@@ -442,14 +442,15 @@ class Regression():
         self._check_regr("terms")
         return self._terms
 
-    def predict(self, X):
+    def predict(self, X = None):
         """
             ---PURPOSE------------------------------------
 
-            Assuming that a regression has taken place, will predict the output given
-            by a set of inputs in <X>
+            Assuming that a regression has taken place, will predict the output
+            given by a set of inputs in <X>, or if X = None, will use the input
+            array self._X in its place.
 
-            ---INPUT--------------------------------------
+            ---OPTIONAL-INPUT-----------------------------
 
             X           Numerical array of shape (M, p)
 
@@ -460,16 +461,19 @@ class Regression():
 
         self._check_regr("predict")
 
-        try:
-            X = np.array(X, dtype = self._dtype)
-        except TypeError:
-            error_msg = (f"Parameter <X> in method of <Regression.predict> must "
-                         f"be a NumPy array containing only numbers.")
-            raise TypeError(error_msg)
-        except ValueError:
-            error_msg = (f"Parameter <X> in method of <Regression.predict> must "
-                         f"be a NumPy array of shape (M, {self._p}).\n\tX.shape")
-            raise ValueError(error_msg)
+        if X is not None:
+            try:
+                X = np.array(X, dtype = self._dtype)
+            except TypeError:
+                error_msg = (f"Parameter <X> in method of <Regression.predict> must "
+                             f"be a NumPy array containing only numbers.")
+                raise TypeError(error_msg)
+            except ValueError:
+                error_msg = (f"Parameter <X> in method of <Regression.predict> must "
+                             f"be a NumPy array of shape (M, {self._p}).\n\tX.shape")
+                raise ValueError(error_msg)
+        else:
+            X = self._X
 
         if len(X.shape) != 2:
             error_msg = (f"\n\nParameter <X> in method <Regression.predict> "
@@ -527,7 +531,9 @@ class Regression():
             self._check_split("variance")
         if sigma is None:
             sigma = self.sigma()
-        return sigma**2*self._variance
+        else:
+            sigma *= sigma
+        return sigma*self._variance
 
     def mse(self, split = False):
         """
@@ -760,11 +766,7 @@ class Regression():
 
             MSE[i] = np.mean((Y_test - Y_hat)**2)
 
-        if sigma is None:
-            sigma = self.sigma()
-        variance = sigma**2*np.array(variance)
-
-        return np.mean(R2), np.mean(MSE), np.mean(variance, axis = 0)
+        return np.mean(R2), np.mean(MSE)
 
     def plot(self, detail = 0.5, xlabel = None, ylabel = None, zlabel = None,
     savename = None, plot_points = True):
