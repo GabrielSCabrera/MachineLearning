@@ -105,6 +105,16 @@ class Regression():
 
             test_size           The percentage (0,100) of that data that
                                 should be allocated to the test input
+
+            ---OUTPUT-------------------------------------
+
+            arg_idx             2-D list
+
+            ---NOTES--------------------------------------
+
+            The returned list <arg_idx> contains two sublists; the first
+            sublist contains the indices of the training set, and the second
+            contains the indices of the test set, as were randomly selected.
         """
 
         self._check_not_regr("split")
@@ -139,8 +149,15 @@ class Regression():
         self._Y = np.delete(self._Y, self._test_idx)
         self._split = True
 
+
+        arg_idx = []
+        arg_idx.append(list(np.setdiff1d(np.arange(0, self._N), self._test_idx)))
+        arg_idx.append(list(self._test_idx))
+
         self._N = self._X.shape[0]
         self._p = self._X.shape[1]
+
+        return arg_idx
 
     def poly(self, degree, alpha = None):
         """
@@ -227,6 +244,7 @@ class Regression():
         self._readable, self._terms = self._poly_str(exponents, self._beta)
         self._complete = True
         self._exponents = exponents
+        self._degree = degree
 
     def lasso(self, degree, alpha):
         """
@@ -293,6 +311,7 @@ class Regression():
         self._readable, self._terms = self._poly_str(exponents, self._beta)
         self._complete = True
         self._exponents = exponents
+        self._degree = degree
 
     def lasso_manual(self, degree, alpha, itermax = 500, tol = 2E-3):
         """
@@ -462,39 +481,9 @@ class Regression():
         self._check_regr("predict")
 
         if X is not None:
-            try:
-                X = np.array(X, dtype = self._dtype)
-            except TypeError:
-                error_msg = (f"Parameter <X> in method of <Regression.predict> must "
-                             f"be a NumPy array containing only numbers.")
-                raise TypeError(error_msg)
-            except ValueError:
-                error_msg = (f"Parameter <X> in method of <Regression.predict> must "
-                             f"be a NumPy array of shape (M, {self._p}).\n\tX.shape")
-                raise ValueError(error_msg)
+            A, e = self._design(X = X, degree = self._degree, method = "predict")
         else:
-            X = self._X
-
-        if len(X.shape) != 2:
-            error_msg = (f"\n\nParameter <X> in method <Regression.predict> "
-                         f" must be two-dimensional\n\t"
-                         f"X.shape = {X.shape}")
-            raise ValueError(error_msg)
-
-        if X.shape[1] != self._p:
-            error_msg = (f"\n\nParameter <X> in method <Regression.predict> "
-                         f" must have {self._p} columns\n\n\tX.shape[1] = "
-                         f"{X.shape[1]}")
-            raise ValueError(error_msg)
-
-        if self._p > 1:
-            A = np.zeros((X.shape[0], self._exponents.shape[0]))
-            for n,exponent in enumerate(self._exponents):
-                A[:,n] = np.prod(X**exponent, axis = 1)
-        else:
-            A = np.zeros((X.shape[0], self._exponents.shape[0]))
-            for n,exponent in enumerate(self._exponents):
-                A[:,n] = X[:,0]**exponent
+            A, e = self._design(X = self._X, degree = self._degree, method = "predict")
 
         Y_hat = A @ self._beta
         return Y_hat
@@ -919,7 +908,7 @@ class Regression():
 
     def reset(self):
         """
-            Resets the object to its initial state.  Useful if you wish to
+            Resets the object to its initial state.
         """
         self.__init__(self._X_backup, self._Y_backup, dtype = self._dtype)
 
@@ -929,10 +918,11 @@ class Regression():
 
             Returns a design matrix for a multidimensional polynomial of the
             given <degree>, and their respective N-dimensional polynomial
-            exponents.
+            exponents, for a given set of features <X>
 
             ---INPUT--------------------------------------
 
+            X           2-D Array of features
             degree      Integer greater than zero
 
             ---OUTPUT-------------------------------------

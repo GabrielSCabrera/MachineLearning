@@ -121,7 +121,7 @@ def part_c(R):
 
     for i in degrees:
         R.reset()
-        R.split(1/5) #splits the data into training and testing data
+        R.split(20) #splits the data into training and testing data
         R.poly(degree = i, alpha = 0.1)
 
         #implements the Cost function for training data
@@ -338,9 +338,9 @@ def part_g(savename=None):
 
 # part_a(R, savename="results/part_a_reg.pdf")
 # part_b(R)
-# part_c(R)
+part_c(R)
 # part_d(R, savename_MSE="results/part_d_reg_MSE.pdf", savename_R2="results/part_d_reg_R2.pdf")
 # part_e(R, savename_MSE="results/part_e_reg_MSE.pdf", savename_R2="results/part_e_reg_R2.pdf")
 # part_f(R)
 
-part_g()
+# part_g()

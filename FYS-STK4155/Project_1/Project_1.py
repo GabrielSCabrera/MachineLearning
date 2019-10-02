@@ -13,23 +13,27 @@ from utils.classes import Regression
 
 """Preparing Global Settings"""
 
-k_fold = 5          # k in k-fold
-max_deg = 10        # Maximum polynomial approximation degree
-sigma = 1           # Variance of Gaussian noise in Franke function
-split_test = 20     # Percentage of data to split into testing set
+k_fold = 12          # k in k-fold
+max_deg = 5          # Maximum polynomial approximation degree
+sigma = 1            # Variance of Gaussian noise in Franke function
+split_test = 20      # Percentage of data to split into testing set
+sigma = 0.01         # Standard deviation of Gaussian noise in Franke function
 
-alpha_min = 1E-10   # Minimum Lambda in LASSO and Ridge
-alpha_max = 1E-1    # Maximum lambda in LASSO and Ridge
-N_alpha = 30        # Number of lambdas to check for in Parts d), e)
+alpha_min_R = 1E-12  # Minimum Lambda in Ridge
+alpha_max_R = 1E0    # Maximum lambda in Ridge
+alpha_min_L = 1E-12  # Minimum Lambda in LASSO
+alpha_max_L = 1E-4   # Maximum lambda in LASSO
+N_alpha_R = 40       # Number of lambdas to check for with Ridge in Part d)
+N_alpha_L = 40       # Number of lambdas to check for with LASSO in Part e)
 
-save_dir = "output" # Default directory in which to save output files
-plots = True        # Whether to generate plots
-save_all = True     # Whether to save all data in the save_dir directory
-debug_mode = True   # Print status to terminal
-extension = "png"   # Extension (filetype) of saved plots (do not include ".")
-bv_plots = 4        # Number of bias-variance tradeoff plots in Part d)
-cmap = cm.plasma    # Colormap to use in 3-D surface plots
-alpha_3D = 0.5      # Transparency of 3-D surface plots, range -> [0,1]
+save_dir = "output"  # Default directory in which to save output files
+plots = True         # Whether to generate plots
+save_all = True      # Whether to save all data in the save_dir directory
+debug_mode = True    # Print status to terminal
+extension = "png"    # Extension (filetype) of saved plots (do not include ".")
+bv_plots = 4         # Number of bias-variance tradeoff plots in Part d)
+cmap = cm.twilight   # Colormap to use in 3-D surface plots
+alpha_3D = 0.5       # Transparency of 3-D surface plots, range -> [0,1]
 
 # Path of .tif file containing real terrain data
 terrain_data = "SRTM_data_Norway_1.tif"
@@ -42,7 +46,7 @@ np.random.seed(69420666)
 
 """Helper Functions"""
 
-def generate_Franke_data(x_min = 0, x_max = 1, N = 100):
+def generate_Franke_data(x_min = 0, x_max = 1, N = 100, sigma = 0.01):
 
     # Generating NxN meshgrid of x,y values in range [0, 1]
     x_min, x_max, N = 0, 1, 100
@@ -51,9 +55,7 @@ def generate_Franke_data(x_min = 0, x_max = 1, N = 100):
 
     # Calculating the values of the Franke function at each (x,y) coordinate
     Z = franke.FrankeFunction(X,Y)
-    # Normalizing the Franke function
-    Z = (Z - np.mean(Z))/np.std(Z)
-    init_error = np.random.normal(0, 0.1, Z.shape)
+    init_error = np.random.normal(0, sigma, Z.shape)
     Z = Z + init_error
 
     # Making compatible input arrays for Regression object
@@ -98,7 +100,7 @@ def part_A(R, save = False, plots = False):
         plt.plot(d_vals, R2)
         plt.xlabel("Polynomial Degree")
         plt.xlim(1, max_deg)
-        plt.legend(["Mean Variance", "$MSE$", "$R^2$"])
+        plt.legend(["Variance", "$MSE$", "$R^2$"])
         if save is False:
             plt.show()
         else:
@@ -151,6 +153,8 @@ def part_C(R, save = False, plots = False):
     bias = []
     var = []
     mse = []
+    cost_train = []
+    cost_test = []
 
     debug_title("C")
 
@@ -160,17 +164,26 @@ def part_C(R, save = False, plots = False):
         if globals()["debug_mode"] is True:
             print(f"\r{np.round(100*d/max_deg):>3.0f}%", end = "")
         R.reset()
-        R.split(test_size = split_test)
+        arg_idx = R.split(test_size = split_test)
         R.poly(degree = d)
-        Y_hat = R.predict(R._X_test)
+
+        Y_hat_train = R.predict()
+        Y_hat_test = R.predict(X = R._X_test)
 
         mse_step = R.mse(split = True)
-        bias_step = np.mean(Y_hat) - np.mean(R._Y_test)
-        var_step = np.mean(Y_hat**2) - np.mean(Y_hat)**2
+        bias_step = np.mean(Y_hat_test) - np.mean(R._Y_test)
+        var_step = np.mean(Y_hat_test**2) - np.mean(Y_hat_test)**2
+
+        cost_train_step = np.mean((R._Y - Y_hat_train)**2)
+        cost_test_step = np.mean((R._Y_test - Y_hat_test)**2)
+
+        cost_train.append(cost_train_step)
+        cost_test.append(cost_test_step)
 
         mse.append(mse_step)
         bias.append(bias_step**2)
         var.append(var_step)
+
     print()
 
     if plots is True:
@@ -183,7 +196,19 @@ def part_C(R, save = False, plots = False):
         if save is False:
             plt.show()
         else:
-            plt.savefig(f"{save_dir}/part_C.{extension}", dpi = 250)
+            plt.savefig(f"{save_dir}/part_C_1.{extension}", dpi = 250)
+            plt.close()
+
+        plt.plot(d_vals, cost_train)
+        plt.plot(d_vals, cost_test)
+        plt.xlabel("Polynomial Degree")
+        plt.xlim(1, max_deg)
+        plt.legend([r"$C(\mathbf{X}_{train},\beta)$",
+                    r"$C(\mathbf{X}_{test},\beta)$"])
+        if save is False:
+            plt.show()
+        else:
+            plt.savefig(f"{save_dir}/part_C_2.{extension}", dpi = 250)
             plt.close()
 
 def part_D(R, save = False, plots = False):
@@ -191,7 +216,7 @@ def part_D(R, save = False, plots = False):
     debug_title("D")
 
     d_vals = np.arange(1, max_deg + 1)
-    lambda_vals = np.linspace(alpha_min, alpha_max, N_alpha)
+    lambda_vals = np.linspace(alpha_min_R, alpha_max_R, N_alpha_R)
 
     var = []
     mse = []
@@ -276,7 +301,7 @@ def part_E(R, save = False, plots = False):
     debug_title("E")
 
     d_vals = np.arange(1, max_deg + 1)
-    lambda_vals = np.linspace(alpha_min, alpha_max, N_alpha)
+    lambda_vals = np.linspace(alpha_min_L, alpha_max_L, N_alpha_L)
 
     var = []
     mse = []
@@ -364,9 +389,6 @@ def part_F(save = False, plots = False):
         terrain_data = imread(globals()["terrain_data"])
         # Resizing the data
         terrain_data = terrain_data[::10,::10]
-        # Normalizing the data
-        terrain_data = (terrain_data - np.mean(terrain_data))\
-                       /np.std(terrain_data)
         figure = plt.imshow(terrain_data, cmap="gray")
         plt.xlabel("\n$x$")
         plt.ylabel("\n$y$")
@@ -394,7 +416,7 @@ if __name__ == "__main__":
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
 
-    x, y = generate_Franke_data()
+    x, y = generate_Franke_data(sigma = sigma)
     R_Franke = Regression(x, y)
 
     """Parts a – e"""
