@@ -32,7 +32,7 @@ save_all = True      # Whether to save all data in the save_dir directory
 debug_mode = True    # Print status to terminal
 extension = "png"    # Extension (filetype) of saved plots (do not include ".")
 bv_plots = 4         # Number of bias-variance tradeoff plots in Part d)
-cmap = cm.twilight   # Colormap to use in 3-D surface plots
+#cmap = cm.twilight   # Colormap to use in 3-D surface plots
 alpha_3D = 0.5       # Transparency of 3-D surface plots, range -> [0,1]
 
 # Path of .tif file containing real terrain data
@@ -64,7 +64,7 @@ def generate_Franke_data(x_min = 0, x_max = 1, N = 100, sigma = 0.01):
     x[:,1] = Y.flatten()
     y = Z.flatten()
 
-    return x, y
+    return x, y, init_error
 
 def debug_title(letter):
     if globals()["debug_mode"] is True:
@@ -149,7 +149,7 @@ def part_B(R, save = False, plots = False):
                 temp = f"{'_'*80}\nDegree {n+1:d}\n\nMSE = {i:g}\nR2 = {j:g}\n"
                 outfile.write(temp)
 
-def part_C(R, save = False, plots = False):
+def part_C(R, init_error = 0, save = False, plots = False):
     bias = []
     var = []
     mse = []
@@ -157,12 +157,47 @@ def part_C(R, save = False, plots = False):
     cost_test = []
 
     debug_title("C")
+    
+    degrees = np.arange(0, 20 + 1) #an array for each of the degrees we are testing
+    Errs = np.zeros_like(degrees, dtype=float) #an array for the errors in the training sample
+    test_Errs = np.zeros_like(degrees, dtype=float) #an array for the errors in the test sample
+    mses = np.zeros_like(degrees, dtype=float)
+    mses_test = np.zeros_like(degrees, dtype=float)    
+    tot = len(degrees)
 
-    d_vals = np.arange(1, max_deg + 1)
+    for i in degrees:
+        R.reset()
+        R.split(20) #splits the data into training and testing data
+        R.poly(degree = i, alpha = 0.1)
+
+        #implements the Cost function for training data
+        y_data = R.predict(R._X)
+        exp_y = np.mean(y_data)
+
+        f_data = R._Y - np.delete(init_error.flatten(), R._test_idx)
+        err = np.mean((f_data - exp_y)**2 + (y_data - exp_y)**2) + R.sigma()
+
+        Errs[i] = err
+        mses[i] = np.mean((R._Y - y_data)**2)
+
+        #implements the Cost function for test data
+        y_data_test = R.predict(R._X_test)
+        exp_y_test = np.mean(y_data_test)
+
+        f_data_test = R._Y_test - init_error.flatten()[R._test_idx]
+        err_test = np.mean((f_data_test - exp_y_test)**2 + (y_data_test - exp_y_test)**2) + R.sigma()
+
+        test_Errs[i] = err_test
+        mses_test[i] = np.mean((R._Y_test - y_data_test)**2)
+        print(f"\r{int(100*(i+1)/tot)}%", end = "")
+    print("\r    ")
+
+    m_deg = 7
+    d_vals = np.arange(1, m_deg + 1)
 
     for d in d_vals:
         if globals()["debug_mode"] is True:
-            print(f"\r{np.round(100*d/max_deg):>3.0f}%", end = "")
+            print(f"\r{np.round(100*d/m_deg):>3.0f}%", end = "")
         R.reset()
         arg_idx = R.split(test_size = split_test)
         R.poly(degree = d)
@@ -173,7 +208,7 @@ def part_C(R, save = False, plots = False):
         mse_step = R.mse(split = True)
         bias_step = np.mean(Y_hat_test) - np.mean(R._Y_test)
         var_step = np.mean(Y_hat_test**2) - np.mean(Y_hat_test)**2
-
+        
         cost_train_step = np.mean((R._Y - Y_hat_train)**2)
         cost_test_step = np.mean((R._Y_test - Y_hat_test)**2)
 
@@ -185,13 +220,14 @@ def part_C(R, save = False, plots = False):
         var.append(var_step)
 
     print()
+    
 
     if plots is True:
         plt.plot(d_vals, mse)
         plt.plot(d_vals, bias)
         plt.plot(d_vals, var)
         plt.xlabel("Polynomial Degree")
-        plt.xlim(1, max_deg)
+#        plt.xlim(1, max_deg)
         plt.legend(["$MSE$", "Bias", "Variance"])
         if save is False:
             plt.show()
@@ -201,8 +237,11 @@ def part_C(R, save = False, plots = False):
 
         plt.plot(d_vals, cost_train)
         plt.plot(d_vals, cost_test)
+        plt.show()
+        plt.plot(degrees, Errs)
+        plt.plot(degrees, test_Errs)
         plt.xlabel("Polynomial Degree")
-        plt.xlim(1, max_deg)
+#        plt.xlim(1, max_deg)
         plt.legend([r"$C(\mathbf{X}_{train},\beta)$",
                     r"$C(\mathbf{X}_{test},\beta)$"])
         if save is False:
@@ -416,33 +455,33 @@ if __name__ == "__main__":
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
 
-    x, y = generate_Franke_data(sigma = sigma)
+    x, y, init_error = generate_Franke_data(sigma = sigma)
     R_Franke = Regression(x, y)
 
     """Parts a – e"""
 
     print("\n\n\t\tFRANKE FUNCTION\n\n")
-
-    part_A(R = R_Franke, save = save_all, plots = plots)
-    part_B(R = R_Franke, save = save_all, plots = plots)
-    part_C(R = R_Franke, save = save_all, plots = plots)
-    part_D(R = R_Franke, save = save_all, plots = plots)
-    part_E(R = R_Franke, save = save_all, plots = plots)
+#
+#    part_A(R = R_Franke, save = save_all, plots = plots)
+#    part_B(R = R_Franke, save = save_all, plots = plots)
+    part_C(R = R_Franke, plots = plots, init_error=init_error)
+#    part_D(R = R_Franke, save = save_all, plots = plots)
+#    part_E(R = R_Franke, save = save_all, plots = plots)
 
     """Parts f and g"""
-
-    print("\n\n\t\tREAL DATA\n\n")
-
-    # Creating a new directory to save the real data
-    save_dir = "real_output"
-    if not os.path.exists(save_dir):
-        os.mkdir(save_dir)
-
-    x, y = part_F(save = save_all, plots = plots)
-    R_real = Regression(x, y)
-
-    part_A(R = R_real, save = save_all, plots = plots)
-    part_B(R = R_real, save = save_all, plots = plots)
-    part_C(R = R_real, save = save_all, plots = plots)
-    part_D(R = R_real, save = save_all, plots = plots)
-    part_E(R = R_real, save = save_all, plots = plots)
+#
+#    print("\n\n\t\tREAL DATA\n\n")
+#
+#    # Creating a new directory to save the real data
+#    save_dir = "real_output"
+#    if not os.path.exists(save_dir):
+#        os.mkdir(save_dir)
+#
+#    x, y = part_F(save = save_all, plots = plots)
+#    R_real = Regression(x, y)
+#
+#    part_A(R = R_real, save = save_all, plots = plots)
+#    part_B(R = R_real, save = save_all, plots = plots)
+#    part_C(R = R_real, save = save_all, plots = plots)
+#    part_D(R = R_real, save = save_all, plots = plots)
+#    part_E(R = R_real, save = save_all, plots = plots)

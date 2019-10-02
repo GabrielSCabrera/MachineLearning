@@ -131,7 +131,7 @@ def part_c(R):
         f_data = R._Y - np.delete(init_error.flatten(), R._test_idx)
         err = 0
         for fi,yi in zip(f_data, y_data):
-            err += (fi - exp_y)**2 - (yi - exp_y)**2
+            err += (fi - exp_y)**2 + (yi - exp_y)**2
         err /= len(f_data)
         err += R.sigma()
 
@@ -146,7 +146,7 @@ def part_c(R):
         f_data_test = R._Y_test - init_error.flatten()[R._test_idx]
         err_test = 0
         for fi,yi in zip(f_data_test, y_data_test):
-            err_test += (fi - exp_y_test)**2 - (yi - exp_y_test)**2
+            err_test += (fi - exp_y_test)**2 + (yi - exp_y_test)**2
 
         err_test /= len(f_data_test)
         err_test += R.sigma()
@@ -162,10 +162,10 @@ def part_c(R):
     plt.legend(["Training sample", "Test sample"])
     plt.show()
     # print(R.mse())
-    plt.plot(degrees, mses)
-    plt.plot(degrees, mses_test)
-    plt.legend(["Training sample", "Test sample"])
-    plt.show()
+#    plt.plot(degrees, mses)
+#    plt.plot(degrees, mses_test)
+#    plt.legend(["Training sample", "Test sample"])
+#    plt.show()
 
 def part_d(R, savename_R2=None, savename_MSE=None):
 
