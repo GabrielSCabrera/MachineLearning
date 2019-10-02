@@ -14,13 +14,13 @@ from utils.classes import Regression
 """Preparing Global Settings"""
 
 k_fold = 5          # k in k-fold
-max_deg = 5         # Maximum polynomial approximation degree
+max_deg = 10        # Maximum polynomial approximation degree
 sigma = 1           # Variance of Gaussian noise in Franke function
 split_test = 20     # Percentage of data to split into testing set
 
 alpha_min = 1E-10   # Minimum Lambda in LASSO and Ridge
 alpha_max = 1E-1    # Maximum lambda in LASSO and Ridge
-N_alpha = 10        # Number of lambdas to check for in Parts d), e)
+N_alpha = 30        # Number of lambdas to check for in Parts d), e)
 
 save_dir = "output" # Default directory in which to save output files
 plots = True        # Whether to generate plots
