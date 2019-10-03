@@ -14,10 +14,10 @@ from utils.classes import Regression
 """Preparing Global Settings"""
 
 k_fold = 12          # k in k-fold
+min_deg = 2          # Minimum polynomial approximation degree
 max_deg = 5          # Maximum polynomial approximation degree
-sigma = 1            # Variance of Gaussian noise in Franke function
-split_test = 20      # Percentage of data to split into testing set
-sigma = 0.01         # Standard deviation of Gaussian noise in Franke function
+split_test = 33      # Percentage of data to split into testing set
+sigma = 0.1          # Standard deviation of Gaussian noise in Franke function
 
 alpha_min_R = 1E-12  # Minimum Lambda in Ridge
 alpha_max_R = 1E0    # Maximum lambda in Ridge
@@ -32,11 +32,14 @@ save_all = True      # Whether to save all data in the save_dir directory
 debug_mode = True    # Print status to terminal
 extension = "png"    # Extension (filetype) of saved plots (do not include ".")
 bv_plots = 4         # Number of bias-variance tradeoff plots in Part d)
-#cmap = cm.twilight   # Colormap to use in 3-D surface plots
+cmap = cm.magma      # Colormap to use in 3-D surface plots
 alpha_3D = 0.5       # Transparency of 3-D surface plots, range -> [0,1]
 
 # Path of .tif file containing real terrain data
 terrain_data = "SRTM_data_Norway_1.tif"
+
+# Generating array of dimensions
+d_vals = np.arange(min_deg, max_deg + 1, 1)
 
 # Preparing the save path
 save_dir = os.path.join(os.getcwd(), save_dir)
@@ -55,8 +58,11 @@ def generate_Franke_data(x_min = 0, x_max = 1, N = 100, sigma = 0.01):
 
     # Calculating the values of the Franke function at each (x,y) coordinate
     Z = franke.FrankeFunction(X,Y)
-    init_error = np.random.normal(0, sigma, Z.shape)
+    init_error = np.random.normal(0, globals()["sigma"], Z.shape)
     Z = Z + init_error
+
+    # Normalizing Z
+    Z = (Z - np.mean(Z))/np.std(Z)
 
     # Making compatible input arrays for Regression object
     x = np.zeros((X.shape[0]*X.shape[1], 2))
@@ -64,7 +70,7 @@ def generate_Franke_data(x_min = 0, x_max = 1, N = 100, sigma = 0.01):
     x[:,1] = Y.flatten()
     y = Z.flatten()
 
-    return x, y, init_error
+    return x, y
 
 def debug_title(letter):
     if globals()["debug_mode"] is True:
@@ -79,8 +85,6 @@ def part_A(R, save = False, plots = False):
     var = []
     mse = []
     R2 = []
-
-    d_vals = np.arange(1, max_deg + 1, 1)
 
     debug_title("A")
 
@@ -99,7 +103,7 @@ def part_A(R, save = False, plots = False):
         plt.plot(d_vals, mse)
         plt.plot(d_vals, R2)
         plt.xlabel("Polynomial Degree")
-        plt.xlim(1, max_deg)
+        plt.xlim(min_deg, max_deg)
         plt.legend(["Variance", "$MSE$", "$R^2$"])
         if save is False:
             plt.show()
@@ -120,7 +124,6 @@ def part_B(R, save = False, plots = False):
 
     debug_title("B")
 
-    d_vals = np.arange(1, max_deg + 1, 1)
     for d in d_vals:
         if globals()["debug_mode"] is True:
             print(f"\r{np.round(100*d/max_deg):>3.0f}%", end = "")
@@ -135,7 +138,7 @@ def part_B(R, save = False, plots = False):
         plt.plot(d_vals, mse)
         plt.plot(d_vals, R2)
         plt.xlabel("Polynomial Degree")
-        plt.xlim(1, max_deg)
+        plt.xlim(min_deg, max_deg)
         plt.legend(["$MSE$", "$R^2$"])
         if save is False:
             plt.show()
@@ -149,7 +152,7 @@ def part_B(R, save = False, plots = False):
                 temp = f"{'_'*80}\nDegree {n+1:d}\n\nMSE = {i:g}\nR2 = {j:g}\n"
                 outfile.write(temp)
 
-def part_C(R, init_error = 0, save = False, plots = False):
+def part_C(R, save = False, plots = False):
     bias = []
     var = []
     mse = []
@@ -157,58 +160,21 @@ def part_C(R, init_error = 0, save = False, plots = False):
     cost_test = []
 
     debug_title("C")
-    
-    degrees = np.arange(0, 20 + 1) #an array for each of the degrees we are testing
-    Errs = np.zeros_like(degrees, dtype=float) #an array for the errors in the training sample
-    test_Errs = np.zeros_like(degrees, dtype=float) #an array for the errors in the test sample
-    mses = np.zeros_like(degrees, dtype=float)
-    mses_test = np.zeros_like(degrees, dtype=float)    
-    tot = len(degrees)
 
-    for i in degrees:
-        R.reset()
-        R.split(20) #splits the data into training and testing data
-        R.poly(degree = i, alpha = 0.1)
-
-        #implements the Cost function for training data
-        y_data = R.predict(R._X)
-        exp_y = np.mean(y_data)
-
-        f_data = R._Y - np.delete(init_error.flatten(), R._test_idx)
-        err = np.mean((f_data - exp_y)**2 + (y_data - exp_y)**2) + R.sigma()
-
-        Errs[i] = err
-        mses[i] = np.mean((R._Y - y_data)**2)
-
-        #implements the Cost function for test data
-        y_data_test = R.predict(R._X_test)
-        exp_y_test = np.mean(y_data_test)
-
-        f_data_test = R._Y_test - init_error.flatten()[R._test_idx]
-        err_test = np.mean((f_data_test - exp_y_test)**2 + (y_data_test - exp_y_test)**2) + R.sigma()
-
-        test_Errs[i] = err_test
-        mses_test[i] = np.mean((R._Y_test - y_data_test)**2)
-        print(f"\r{int(100*(i+1)/tot)}%", end = "")
-    print("\r    ")
-
-    m_deg = 7
-    d_vals = np.arange(1, m_deg + 1)
-
-    for d in d_vals:
+    for n,d in enumerate(d_vals):
         if globals()["debug_mode"] is True:
-            print(f"\r{np.round(100*d/m_deg):>3.0f}%", end = "")
+            print(f"\r{np.round(100*(n+1)/len(d_vals)):>3.0f}%", end = "")
         R.reset()
         arg_idx = R.split(test_size = split_test)
         R.poly(degree = d)
 
-        Y_hat_train = R.predict()
+        Y_hat_train = R.predict(X = R._X)
         Y_hat_test = R.predict(X = R._X_test)
 
         mse_step = R.mse(split = True)
         bias_step = np.mean(Y_hat_test) - np.mean(R._Y_test)
         var_step = np.mean(Y_hat_test**2) - np.mean(Y_hat_test)**2
-        
+
         cost_train_step = np.mean((R._Y - Y_hat_train)**2)
         cost_test_step = np.mean((R._Y_test - Y_hat_test)**2)
 
@@ -220,14 +186,13 @@ def part_C(R, init_error = 0, save = False, plots = False):
         var.append(var_step)
 
     print()
-    
 
     if plots is True:
         plt.plot(d_vals, mse)
         plt.plot(d_vals, bias)
         plt.plot(d_vals, var)
         plt.xlabel("Polynomial Degree")
-#        plt.xlim(1, max_deg)
+        plt.xlim(min_deg, max_deg)
         plt.legend(["$MSE$", "Bias", "Variance"])
         if save is False:
             plt.show()
@@ -237,11 +202,8 @@ def part_C(R, init_error = 0, save = False, plots = False):
 
         plt.plot(d_vals, cost_train)
         plt.plot(d_vals, cost_test)
-        plt.show()
-        plt.plot(degrees, Errs)
-        plt.plot(degrees, test_Errs)
         plt.xlabel("Polynomial Degree")
-#        plt.xlim(1, max_deg)
+        plt.xlim(min_deg, max_deg)
         plt.legend([r"$C(\mathbf{X}_{train},\beta)$",
                     r"$C(\mathbf{X}_{test},\beta)$"])
         if save is False:
@@ -254,7 +216,6 @@ def part_D(R, save = False, plots = False):
 
     debug_title("D")
 
-    d_vals = np.arange(1, max_deg + 1)
     lambda_vals = np.linspace(alpha_min_R, alpha_max_R, N_alpha_R)
 
     var = []
@@ -325,7 +286,7 @@ def part_D(R, save = False, plots = False):
             plt.xlabel(xlabel)
             plt.text(np.median(d_vals), 2*(np.max([i,j,k])-np.min([i,j,k]))/3,
              f"$\\lambda = {lambda_vals[s*n]:.2E}$")
-            plt.xlim([1, max_deg])
+            plt.xlim([min_deg, max_deg])
 
             if save is False:
                 plt.show()
@@ -339,7 +300,6 @@ def part_E(R, save = False, plots = False):
 
     debug_title("E")
 
-    d_vals = np.arange(1, max_deg + 1)
     lambda_vals = np.linspace(alpha_min_L, alpha_max_L, N_alpha_L)
 
     var = []
@@ -410,7 +370,7 @@ def part_E(R, save = False, plots = False):
             plt.xlabel(xlabel)
             plt.text(np.median(d_vals), 2*(np.max([i,j,k])-np.min([i,j,k]))/3,
              f"$\\lambda = {lambda_vals[s*n]:.2E}$")
-            plt.xlim([1, max_deg])
+            plt.xlim([min_deg, max_deg])
 
             if save is False:
                 plt.show()
@@ -428,6 +388,9 @@ def part_F(save = False, plots = False):
         terrain_data = imread(globals()["terrain_data"])
         # Resizing the data
         terrain_data = terrain_data[::10,::10]
+        # Normalizing the data
+        terrain_data = (terrain_data - np.mean(terrain_data))\
+                       / np.std(terrain_data)
         figure = plt.imshow(terrain_data, cmap="gray")
         plt.xlabel("\n$x$")
         plt.ylabel("\n$y$")
@@ -455,33 +418,33 @@ if __name__ == "__main__":
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
 
-    x, y, init_error = generate_Franke_data(sigma = sigma)
+    x, y = generate_Franke_data(sigma = sigma)
     R_Franke = Regression(x, y)
 
     """Parts a – e"""
 
     print("\n\n\t\tFRANKE FUNCTION\n\n")
-#
-#    part_A(R = R_Franke, save = save_all, plots = plots)
-#    part_B(R = R_Franke, save = save_all, plots = plots)
-    part_C(R = R_Franke, plots = plots, init_error=init_error)
-#    part_D(R = R_Franke, save = save_all, plots = plots)
-#    part_E(R = R_Franke, save = save_all, plots = plots)
+
+    part_A(R = R_Franke, save = save_all, plots = plots)
+    part_B(R = R_Franke, save = save_all, plots = plots)
+    part_C(R = R_Franke, save = save_all, plots = plots)
+    part_D(R = R_Franke, save = save_all, plots = plots)
+    part_E(R = R_Franke, save = save_all, plots = plots)
 
     """Parts f and g"""
-#
-#    print("\n\n\t\tREAL DATA\n\n")
-#
-#    # Creating a new directory to save the real data
-#    save_dir = "real_output"
-#    if not os.path.exists(save_dir):
-#        os.mkdir(save_dir)
-#
-#    x, y = part_F(save = save_all, plots = plots)
-#    R_real = Regression(x, y)
-#
-#    part_A(R = R_real, save = save_all, plots = plots)
-#    part_B(R = R_real, save = save_all, plots = plots)
-#    part_C(R = R_real, save = save_all, plots = plots)
-#    part_D(R = R_real, save = save_all, plots = plots)
-#    part_E(R = R_real, save = save_all, plots = plots)
+
+    print("\n\n\t\tREAL DATA\n\n")
+
+    # Creating a new directory to save the real data
+    save_dir = "real_output"
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+
+    x, y = part_F(save = save_all, plots = plots)
+    R_real = Regression(x, y)
+
+    part_A(R = R_real, save = save_all, plots = plots)
+    part_B(R = R_real, save = save_all, plots = plots)
+    part_C(R = R_real, save = save_all, plots = plots)
+    part_D(R = R_real, save = save_all, plots = plots)
+    part_E(R = R_real, save = save_all, plots = plots)

@@ -142,7 +142,7 @@ class Regression():
             raise ValueError(error_msg)
 
         N_test = int(round(self._N*test_size*0.01))
-        self._test_idx = np.random.choice(a = N_test, size = N_test, replace = False)
+        self._test_idx = np.random.choice(a = self._N, size = N_test, replace = False)
         self._X_test = self._X[self._test_idx]
         self._Y_test = self._Y[self._test_idx]
         self._X = np.delete(self._X, self._test_idx, axis = 0)
@@ -522,7 +522,8 @@ class Regression():
             sigma = self.sigma()
         else:
             sigma *= sigma
-        return sigma*self._variance
+        # return sigma*self._variance
+        return self._variance
 
     def mse(self, split = False):
         """
@@ -748,7 +749,7 @@ class Regression():
 
             variance.append(var)
 
-            Y_hat = self._internal_predict(X_test, beta, exponents)
+            Y_hat = self._internal_predict(X_test, beta, degree)
 
             R2[i] = 1 - (np.sum((Y_test - Y_hat)**2))/\
                             (np.sum((Y_test - np.mean(Y_test))**2))
@@ -1022,7 +1023,7 @@ class Regression():
         self._check_regr(method_name)
         if self._predicted is False:
             self._Y_hat = \
-            self._internal_predict(self._X, self._beta, self._exponents)
+            self._internal_predict(self._X, self._beta, self._degree)
             self._predicted = True
 
     def _internal_poly(self, X, y, degree, method, alpha = None):
@@ -1090,7 +1091,7 @@ class Regression():
 
         return beta, variance, exponents
 
-    def _internal_predict(self, X, beta, exponents):
+    def _internal_predict(self, X, beta, degree):
         """
             ---PURPOSE------------------------------------
 
@@ -1101,20 +1102,22 @@ class Regression():
 
             X               Numerical array of shape (M, p)
             beta
-            exponents
+            degree          Integer value
 
             ---OUTPUT-------------------------------------
 
             Y           Array of shape (M,)
         """
-        if self._p > 1:
-            A = np.zeros((X.shape[0], exponents.shape[0]))
-            for n,exponent in enumerate(exponents):
-                A[:,n] = np.prod(X**exponent, axis = 1)
-        else:
-            A = np.zeros((X.shape[0], exponents.shape[0]))
-            for n,exponent in enumerate(exponents):
-                A[:,n] = X[:,0]**exponent
+        # if self._p > 1:
+        #     A = np.zeros((X.shape[0], exponents.shape[0]))
+        #     for n,exponent in enumerate(exponents):
+        #         A[:,n] = np.prod(X**exponent, axis = 1)
+        # else:
+        #     A = np.zeros((X.shape[0], exponents.shape[0]))
+        #     for n,exponent in enumerate(exponents):
+        #         A[:,n] = X[:,0]**exponent
+
+        A,e = self._design(X, degree, method = "_internal_predict")
 
         Y_hat = A @ beta
 
