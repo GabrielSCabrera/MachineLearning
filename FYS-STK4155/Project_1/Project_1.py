@@ -15,7 +15,7 @@ from utils.classes import Regression
 
 k_fold = 12          # k in k-fold
 min_deg = 2          # Minimum polynomial approximation degree
-max_deg = 5          # Maximum polynomial approximation degree
+max_deg = 10         # Maximum polynomial approximation degree
 split_test = 33      # Percentage of data to split into testing set
 sigma = 0.1          # Standard deviation of Gaussian noise in Franke function
 
@@ -23,8 +23,8 @@ alpha_min_R = 1E-12  # Minimum Lambda in Ridge
 alpha_max_R = 1E0    # Maximum lambda in Ridge
 alpha_min_L = 1E-12  # Minimum Lambda in LASSO
 alpha_max_L = 1E-4   # Maximum lambda in LASSO
-N_alpha_R = 40       # Number of lambdas to check for with Ridge in Part d)
-N_alpha_L = 40       # Number of lambdas to check for with LASSO in Part e)
+N_alpha_R = 100      # Number of lambdas to check for with Ridge in Part d)
+N_alpha_L = 100      # Number of lambdas to check for with LASSO in Part e)
 
 save_dir = "output"  # Default directory in which to save output files
 plots = True         # Whether to generate plots
