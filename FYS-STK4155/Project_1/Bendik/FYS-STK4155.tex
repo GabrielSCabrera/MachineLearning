@@ -68,7 +68,7 @@ Mention:
 
 We will first study how they preform for the two dimensional Franke-function. (A bit about the Franke-function, maybe a tldr for the method).
 
-We will then implement them for some real terrain data for Møsvatn Austfjell in Norway. mm. (biggest lake in Norway ) \cite{https://no.wikipedia.org/wiki/Møsvatn}
+We will then implement them for some real terrain data for Møsvatn Austfjell in Norway. mm. (biggest lake in Norway ) %\cite{https://no.wikipedia.org/wiki/Møsvatn}
 
 
 %Discuss background, physical importance and possibly some history of
@@ -91,41 +91,61 @@ We will use real terrain data for Møsvatn Austfjell in Telemark, Norway, collec
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.6]{part_a_reg.pdf}
-	\caption{The resulting function after performing a standard least square regression analysis using polynomials in x and y up to fifth order on the Franke function}
+	\includegraphics[scale=0.9]{HiResData/franke_output/part_A.png}
+	\caption{
+		A plot of the mean square error, the $R^2$-score and the $\sigma$ variance of the $\beta$-values against the polynomial degree after performing a standard least square regression analysis on the Franke-function
+%		The resulting function after performing a standard least square regression analysis using polynomials in x and y up to fifth order on the Franke function
+	}
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_a}
 \end{figure}
 
-\begin{table}[H]
+\begin{figure}[H]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.9]{HiResData/franke_output/part_B.png}
+	\caption{
+		A plot of the mean square error and the $R^2$-score against the polynomial degree after performing a standard least square regression analysis on the Franke-function and and performing a $k$-fold cross-validation
+		%		The resulting function after performing a standard least square regression analysis using polynomials in x and y up to fifth order on the Franke function
+	}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_b}
+\end{figure}
+
+
+
+%\begin{table}[H]
+%%	\centering
+%	\begin{tabular}{|>{\columncolor[HTML]{EFEFEF}}c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+%		\hline
+%		\cellcolor[HTML]{9B9B9B} & \cellcolor[HTML]{EFEFEF}$\beta_0$ & \cellcolor[HTML]{EFEFEF}$\beta_1$ & \cellcolor[HTML]{EFEFEF}$\beta_2$ & \cellcolor[HTML]{EFEFEF}$\beta_3$ & \cellcolor[HTML]{EFEFEF}$\beta_4$ & \cellcolor[HTML]{EFEFEF}$\beta_5$ & \cellcolor[HTML]{EFEFEF}$\beta_6$ & \cellcolor[HTML]{EFEFEF}$\beta_7$ & \cellcolor[HTML]{EFEFEF}$\beta_8$ & \cellcolor[HTML]{EFEFEF}$\beta_9$ & \cellcolor[HTML]{EFEFEF}$\beta_{10}$ & \cellcolor[HTML]{EFEFEF}$\beta_{11}$ & \cellcolor[HTML]{EFEFEF}$\beta_{12}$ & \cellcolor[HTML]{EFEFEF}$\beta_{13}$ & \cellcolor[HTML]{EFEFEF}$\beta_{14}$ & \cellcolor[HTML]{EFEFEF}$\beta_{15}$ & \cellcolor[HTML]{EFEFEF}$\beta_{16}$  \\ \hline
+%		SLS & 0.00789 & 0.322 & 2.46 & 4.81 & 5.61 & 1.76 & 0.322 & 1.85 & 4.3 & 5.97 & 2.83 & 2.46 & 4.3 & 5.97 & 4.23 & 4.81 & 5.97  \\ \hline
+%		$k$-fold & 0.0321 & 4.03 & 94 & 474 & 517 & 79.5 & 4.03 & 57.3 & 260 & 301 & 60.1 & 93.9 & 260 & 261 & 57.1 & 474 & 301 \\ \hline
+%	\end{tabular}
+%
+%	\begin{tabular}{|>{\columncolor[HTML]{EFEFEF}}c|c|c|c|c|}
+%		\hline
+%		\cellcolor[HTML]{9B9B9B} & \cellcolor[HTML]{EFEFEF}$\beta_{17}$ & \cellcolor[HTML]{EFEFEF}$\beta_{18}$ & \cellcolor[HTML]{EFEFEF}$\beta_{19}$ & \cellcolor[HTML]{EFEFEF}$\beta_{20}$ \\ \hline
+%		SLS & 4.23 & 5.61 & 2.83 & 1.76  \\ \hline
+%		$k$-fold &  57.1 & 517 & 60.1 & 79.5  \\ \hline
+%	\end{tabular}
+%	\caption{The variance of $\beta$ for the standard least square regression and for $k$-fold validation}
+%\end{table}
+%
+%\begin{table}[H]
 %	\centering
-	\begin{tabular}{|>{\columncolor[HTML]{EFEFEF}}c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
-		\hline
-		\cellcolor[HTML]{9B9B9B} & \cellcolor[HTML]{EFEFEF}$\beta_0$ & \cellcolor[HTML]{EFEFEF}$\beta_1$ & \cellcolor[HTML]{EFEFEF}$\beta_2$ & \cellcolor[HTML]{EFEFEF}$\beta_3$ & \cellcolor[HTML]{EFEFEF}$\beta_4$ & \cellcolor[HTML]{EFEFEF}$\beta_5$ & \cellcolor[HTML]{EFEFEF}$\beta_6$ & \cellcolor[HTML]{EFEFEF}$\beta_7$ & \cellcolor[HTML]{EFEFEF}$\beta_8$ & \cellcolor[HTML]{EFEFEF}$\beta_9$ & \cellcolor[HTML]{EFEFEF}$\beta_{10}$ & \cellcolor[HTML]{EFEFEF}$\beta_{11}$ & \cellcolor[HTML]{EFEFEF}$\beta_{12}$ & \cellcolor[HTML]{EFEFEF}$\beta_{13}$ & \cellcolor[HTML]{EFEFEF}$\beta_{14}$ & \cellcolor[HTML]{EFEFEF}$\beta_{15}$ & \cellcolor[HTML]{EFEFEF}$\beta_{16}$  \\ \hline
-		SLS & 0.00789 & 0.322 & 2.46 & 4.81 & 5.61 & 1.76 & 0.322 & 1.85 & 4.3 & 5.97 & 2.83 & 2.46 & 4.3 & 5.97 & 4.23 & 4.81 & 5.97  \\ \hline
-		$k$-fold & 0.0321 & 4.03 & 94 & 474 & 517 & 79.5 & 4.03 & 57.3 & 260 & 301 & 60.1 & 93.9 & 260 & 261 & 57.1 & 474 & 301 \\ \hline
-	\end{tabular}
+%	\begin{tabular}{|
+%			>{\columncolor[HTML]{EFEFEF}}c |c|c|}
+%		\hline
+%		\cellcolor[HTML]{9B9B9B} & \cellcolor[HTML]{EFEFEF}MSE & \cellcolor[HTML]{EFEFEF}$R^2$ \\ \hline
+%		SLS                      & 0.015                       & 0.84                          \\ \hline
+%		$k$-fold                 & 0.012                       & 0.87                          \\ \hline
+%	\end{tabular}
+%	\caption{MSE and R2 for a and b}
+%\end{table}
 
-	\begin{tabular}{|>{\columncolor[HTML]{EFEFEF}}c|c|c|c|c|}
-		\hline
-		\cellcolor[HTML]{9B9B9B} & \cellcolor[HTML]{EFEFEF}$\beta_{17}$ & \cellcolor[HTML]{EFEFEF}$\beta_{18}$ & \cellcolor[HTML]{EFEFEF}$\beta_{19}$ & \cellcolor[HTML]{EFEFEF}$\beta_{20}$ \\ \hline
-		SLS & 4.23 & 5.61 & 2.83 & 1.76  \\ \hline
-		$k$-fold &  57.1 & 517 & 60.1 & 79.5  \\ \hline
-	\end{tabular}
-	\caption{The variance of $\beta$ for the standard least square regression and for $k$-fold validation}
-\end{table}
 
-\begin{table}[H]
-	\centering
-	\begin{tabular}{|
-			>{\columncolor[HTML]{EFEFEF}}c |c|c|}
-		\hline
-		\cellcolor[HTML]{9B9B9B} & \cellcolor[HTML]{EFEFEF}MSE & \cellcolor[HTML]{EFEFEF}$R^2$ \\ \hline
-		SLS                      & 0.015                       & 0.84                          \\ \hline
-		$k$-fold                 & 0.012                       & 0.87                          \\ \hline
-	\end{tabular}
-	\caption{MSE and R2 for a and b}
-\end{table}
+
 %\begin{table}[H]
 %	\centering
 %	\begin{tabular}{|c|c|c|}

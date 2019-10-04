@@ -338,9 +338,9 @@ def part_g(savename=None):
 
 # part_a(R, savename="results/part_a_reg.pdf")
 # part_b(R)
-part_c(R)
+#part_c(R)
 # part_d(R, savename_MSE="results/part_d_reg_MSE.pdf", savename_R2="results/part_d_reg_R2.pdf")
 # part_e(R, savename_MSE="results/part_e_reg_MSE.pdf", savename_R2="results/part_e_reg_R2.pdf")
-# part_f(R)
+part_f(R)
 
 # part_g()
