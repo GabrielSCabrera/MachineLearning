@@ -99,21 +99,18 @@
 	Alternatively, a simple \texttt{python} script can be used to find all the terms' exponents by calculating all permutations of the natural numbers from zero to $d$ in sets of length $p$, then removing all results whose sum is greater than $d$.
 	
 	\begin{lstlisting}[showstringspaces=false,language=Python,firstnumber = 1][frame=none]
-	def get_exponents(p,d):
-    	powers = np.arange(0, d+1, 1)
-    	powers = np.repeat(powers, p)
-    	exponents = list(permutations(powers, p))
-    	exponents = np.unique(exponents, axis = 0)
+        powers = np.arange(0, degree + 1, 1)
+        powers = np.repeat(powers, p)
+        exponents = list(permutations(powers, p))
+        exponents = np.unique(exponents, axis = 0)
 
-   	 	if p != 1:
-        	expo_sum = np.sum(exponents, axis = 1)
-        	valid_idx = np.where(np.less_equal(expo_sum, d))[0]
-        	exponents = np.array(exponents, dtype = np.int64)
-        	exponents = exponents[valid_idx]
-    	else:
-        	exponents = np.array(exponents, dtype = np.int64)
-
-    	return len(exponents)
+        if p != 1:
+            expo_sum = np.sum(exponents, axis = 1)
+            valid_idx = np.where(np.less_equal(expo_sum, degree))[0]
+            exponents = np.array(exponents, dtype = np.int64)
+            exponents = exponents[valid_idx]
+        else:
+            exponents = np.array(exponents, dtype = np.int64)
 	\end{lstlisting}
 
 	\subsection*{Ordinary Least-Squares (OLS) Regression}
@@ -220,7 +217,7 @@
 	To get a measure of success with respect to the implemented method and parameters, we can calculate the mean difference in the squares of each measured output $y_i$ and their respective predicted outputs $\hat{y}_i$:
 	
 	\begin{equation}
-	MSE(\mathbf{y}, \mathbf{\hat{y}}) = \frac{1}{N} \sum_{i=1}^{N} (y_i - \hat{y}_i)^2
+	MSE(\mathbf{y}, \mathbf{\hat{y}}) = \frac{1}{N} \sum_{i=1}^{N} (y_i - \hat{y}_i)^2 = \mathbb{E}\left[(\mathbf{y}-\hat{\mathbf{y}})^{2}\right]
 	\end{equation}
 	
 	The lower the $MSE$, the closer the polynomial approximation is to the original dataset.  If it is too low, however, we run the risk of overfitting our dataset, which is not desireable either – fortunately, this not an issue within the scope of this report.
@@ -237,19 +234,83 @@
 	
 	\subsection*{Bias-Variance Tradeoff}
 	
-	As a regression model increases in complexity\footnote{For a polynomial regression, this would refer to its \textit{degree}.}, it so happens that the \textit{variance} of a prediction increases.  Variance is defined as follows:
+	Before we continue, we can decompose the range of outputs $\mathbf{y}$ as follows:
 	
 	\begin{equation}
 	\label{eq_method_5}
-	\text{Var}(\mathbf{X}) = \frac{1}{n} \sum_{i=1}^{n} (x_i - \mathbb{E}[\mathbf{X}] )
+	\mathbf{y}(\mathbf{X}) = f(\mathbf{X}) + N(0, \sigma) 
+	\end{equation}
+	
+	Where $f(\mathbf{X})$ represents the \textit{actual} function used to generate the dataset, and $N(0,\sigma)$ is a Gaussian noise with a standard deviation of $\sigma$.
+	
+	As a regression model increases in complexity\footnote{For a polynomial regression, this would refer to its \textit{degree}.}, it so happens that the \textit{variance} of a prediction increases.  Variance is defined as follows:
+	
+	\begin{equation}
+	\label{eq_method_6}
+	\text{Var}(\mathbf{y}) = \frac{1}{n} \sum_{i=1}^{n} (y_i - \mathbb{E}[\mathbf{y}] )
 	\end{equation}
 	
 	On the other hand, we have that the \textit{bias} of the prediction decreases as the complexity increases.  We define the bias as:
 	
 	\begin{equation}
-	\label{eq_method_6}
-	\text{Bias}(\mathbf{X}) = 
+	\label{eq_method_7}
+	\text{Bias}(\mathbf{y}) = \frac{1}{n} \sum_{i=1}^{n} (f_i - \mathbb{E}[\mathbf{y}] )
 	\end{equation}
+	
+	Note that in order to calculate the bias, we need to know the original function $f$ used to generate $\mathbf{y}$.
+	
+	Interestingly enough, taking the sum of (\ref{eq_method_6}) and (\ref{eq_method_7}) as well as $\sigma^2$ will yield the \textit{mean squared error}.  We will show this to be the case in the following subsection.
+	
+	\subsubsection*{Derivation}
+
+	We wish to show that:
+	\begin{equation}
+	\label{eq_method_8}
+	\mathbb{E}\left[(\mathbf{y}-\hat{\mathbf{y}})^{2}\right]
+	=\frac{1}{n} \sum_{i=1}^{n}(f_{i}-\mathbb{E}[\hat{\mathbf{y}}])^{2}+\frac{1}{n} \sum_{i=1}^{n}(\hat{y}_{i}-\mathbb{E}[\hat{\mathbf{y}}])^{2}+\sigma^{2}
+	\end{equation}
+	
+	We begin by rewriting the $MSE$ into summation notation, decomposing the terms as defined in (\ref{eq_method_5}), and adding/subtracting a term $\mathbb{E}[\hat{\mathbf{y}}]$:
+	
+	\begin{align*}
+	 \mathbb{E}\left[(\mathbf{y}-\hat{\mathbf{y}})^{2}\right] &= \frac{1}{n} \sum_{i=1}^{n} ( y_i - \hat{y}_i )^2 = \frac{1}{n} \sum_{i=1}^{n} ( f_i + \varepsilon - \hat{y}_i )^2 \\
+	&= \frac{1}{n} \sum_{i=1}^{n} ( f_i + \varepsilon - \hat{y}_i  + \mathbb{E}[\hat{\mathbf{y}}] - \mathbb{E}[\hat{\mathbf{y}}] )^2
+	\end{align*}
+		
+	Next, we set $a \equiv f_i - \mathbb{E}[\hat{\mathbf{y}}] $ and $b \equiv \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}]$ and expand:
+	
+	\begin{equation*}
+	\frac{1}{n} \sum_{i=1}^{n} (a - b + \varepsilon )^2
+	= \frac{1}{n} \sum_{i=1}^{n} ( a^2 - 2ab + b^2 - 2b\varepsilon + \varepsilon^2 + 2a\varepsilon )
+	\end{equation*}
+	
+	The next few steps are messy, and require lots of algebraic manipulation:	
+	
+	\begin{align*}	
+	& \frac{1}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
+	+ \frac{1}{n} \sum_{i=1}^{n} ( \varepsilon^2 )
+	+ \frac{1}{n} \sum_{i=1}^{n} ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
+	- \frac{2}{n} \sum_{i=1}^{n} \varepsilon ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )
+	+ \\ &\frac{2}{n} \sum_{i=1}^{n} \varepsilon ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )
+	- \frac{2}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] ) ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )
+	= \\ & \frac{1}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
+	+ \frac{1}{n} \sum_{i=1}^{n} ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
+	+ \sigma^2
+	- \mathbb{E}[\varepsilon] \frac{2}{n} \sum_{i=1}^{n} ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )
+	+ \\ & \mathbb{E}[\varepsilon] \frac{2}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )
+	-\frac{2}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] ) ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )
+	\end{align*}
+	
+	Finally, we see that our original assumption given by (\ref{eq_method_8}) is correct.
+	
+	\begin{equation*}
+	= \frac{1}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
+	+ \frac{1}{n} \sum_{i=1}^{n} ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
+	+ \sigma^2 \qquad \square
+	\end{equation*}
+	
+	Where $\frac{1}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )$ is clearly the \textit{bias} and
+	$\frac{1}{n} \sum_{i=1}^{n} ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )^2$ is the \textit{variance}. 
 		
 \section*{Results}
 \label{sec:results}
