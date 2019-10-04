@@ -170,12 +170,12 @@ exponents = list(permutations(powers, p))
 exponents = np.unique(exponents, axis = 0)
 
 if p != 1:
-expo_sum = np.sum(exponents, axis = 1)
-valid_idx = np.where(np.less_equal(expo_sum, degree))[0]
-exponents = np.array(exponents, dtype = np.int64)
-exponents = exponents[valid_idx]
+	expo_sum = np.sum(exponents, axis = 1)
+	valid_idx = np.where(np.less_equal(expo_sum, degree))[0]
+	exponents = np.array(exponents, dtype = np.int64)
+	exponents = exponents[valid_idx]
 else:
-exponents = np.array(exponents, dtype = np.int64)
+	exponents = np.array(exponents, dtype = np.int64)
 \end{lstlisting}
 
 
