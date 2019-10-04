@@ -15,7 +15,7 @@ from utils.classes import Regression
 
 k_fold = 12          # k in k-fold
 min_deg = 1          # Minimum polynomial approximation degree
-max_deg = 9          # Maximum polynomial approximation degree
+max_deg = 5          # Maximum polynomial approximation degree
 split_test = 25      # Percentage of data to split into testing set
 sigma = 0.1          # Standard deviation of Gaussian noise in Franke function
 
@@ -36,7 +36,7 @@ cmap = cm.magma      # Colormap to use in 3-D surface plots
 alpha_3D = 0.5       # Transparency of 3-D surface plots, range -> [0,1]
 
 # Path of .tif file containing real terrain data
-terrain_data = "SRTM_data_Norway_1.tif"
+terrain_data = "SRTM_data_Norway_2.tif"
 
 # Generating array of dimensions
 d_vals = np.arange(min_deg, max_deg + 1, 1)
@@ -120,8 +120,9 @@ def part_A(R, save = False, plots = False):
             print(f"\r{np.round(100*d/max_deg):>3.0f}%", end = "")
         R.reset()
         R.poly(degree = d)
-        var.append(np.mean(R.variance()))
-        mse.append(R.mse())
+        Y_hat = R.predict()
+        var.append(np.mean((Y_hat - np.mean(Y_hat))**2))
+        mse.append(np.mean((R._Y - Y_hat)**2))
         R2.append(R.r_squared())
     print()
 
@@ -182,8 +183,6 @@ def part_B(R, save = False, plots = False):
 def part_C(R, f_xy = None, save = False, plots = False):
     bias = []
     var = []
-    mse = []
-    err = []
 
     cost_train = []
     cost_test = []
@@ -206,13 +205,9 @@ def part_C(R, f_xy = None, save = False, plots = False):
 
             bias_step = np.mean((f_test - np.mean(Y_hat_test))**2)
             var_step = np.mean((Y_hat_test - np.mean(Y_hat_test))**2)
-            mse_step = np.mean((R._Y_test - Y_hat_test)**2)
-            err_step = bias_step + var_step + mse_step
 
             bias.append(bias_step)
             var.append(var_step)
-            mse.append(mse_step)
-            err.append(err_step)
 
         cost_train_step = np.mean((R._Y - Y_hat_train)**2)
         cost_test_step = np.mean((R._Y_test - Y_hat_test)**2)
@@ -227,11 +222,9 @@ def part_C(R, f_xy = None, save = False, plots = False):
         if f_xy is not None:
             plt.plot(d_vals, bias)
             plt.plot(d_vals, var)
-            plt.plot(d_vals, mse)
-            plt.plot(d_vals, err)
             plt.xlabel("Polynomial Degree")
             plt.xlim(min_deg, max_deg)
-            plt.legend(["Bias", "Variance", "Mean Squared Error", "Total Error"])
+            plt.legend(["Bias", "Variance"])
             if save is False:
                 plt.show()
             else:
@@ -534,6 +527,10 @@ if __name__ == "__main__":
     save_dir = "real_output"
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
+
+    # Increasing the polynomial degree
+    max_deg = 9
+    d_vals = np.arange(min_deg, max_deg + 1, 1)
 
     x, y = part_F(save = save_all, plots = plots)
     R_real = Regression(x, y)
