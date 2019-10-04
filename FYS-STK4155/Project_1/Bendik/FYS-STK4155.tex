@@ -86,16 +86,17 @@ We will use real terrain data for Møsvatn Austfjell in Telemark, Norway, collec
 \section{Results}
 \label{sec:results}
 
-Would be usefull 
+\subsection{Franke-Function}
 
 %Part a and b:
 
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.9]{../franke_output/part_A.png}
+	\includegraphics[scale=0.63]{../franke_output/part_A.png}
+	\includegraphics[scale=0.63]{../franke_output/part_A_highdeg.png}
 	\caption{
-		A plot of the mean square error, the $R^2$-score and the $\sigma$ variance of the $\beta$-values against the polynomial degree after performing a standard least square regression analysis on the Franke-function
+		Plots of the mean square error, the $R^2$-score and the $\sigma$ variance of the $\beta$-values against the polynomial degree after performing a standard least square regression analysis on the Franke-function
 %		The resulting function after performing a standard least square regression analysis using polynomials in x and y up to fifth order on the Franke function
 	}
 	%Label gjør det enkelt å referere til ulike bilder.
@@ -105,10 +106,10 @@ Would be usefull
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.9]{../franke_output/part_B.png}
+	\includegraphics[scale=0.63]{../franke_output/part_B.png}
+	\includegraphics[scale=0.63]{../franke_output/part_B_highdeg.png}
 	\caption{
-		A plot of the mean square error and the $R^2$-score against the polynomial degree after performing a standard least square regression analysis on the Franke-function and and performing a $k$-fold cross-validation
-		%		The resulting function after performing a standard least square regression analysis using polynomials in x and y up to fifth order on the Franke function
+		Plots of the mean square error and the $R^2$-score against the polynomial degree after performing a standard least square regression analysis on the Franke-function and performing a $k$-fold cross-validation
 	}
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_b}
@@ -160,26 +161,119 @@ Would be usefull
 %\end{table}
 
 
+
+%Part c:
+
+\begin{figure}[H]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.63]{../franke_output/part_C_1.png}
+	\includegraphics[scale=0.63]{../franke_output/part_C_1_highdeg.png}
+	\caption{
+		Plots of the 
+	}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_c1}
+\end{figure}
+
+\begin{figure}[H]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.63]{../franke_output/part_C_2.png}
+	\includegraphics[scale=0.63]{../franke_output/part_C_2_highdeg.png}
+	\caption{
+		Plots of the 
+	}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_c2}
+\end{figure}
+
+
+
 %Part d:
 
 
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.6]{part_d_reg_MSE.pdf}
-	\caption{The Mean Squared Error for the Ridge method for different values of $\lambda$}
+	\includegraphics[scale=0.47]{../franke_output/part_D_1.png}
+	\includegraphics[scale=0.47]{../franke_output/part_D_1_highdeg.png}
+	\caption{
+		Plots of the varinace against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the Franke-function
+	}
 	%Label gjør det enkelt å referere til ulike bilder.
-	\label{part_d_MSE}
+	\label{part_d1}
 \end{figure}
 
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.6]{part_d_reg_R2.pdf}
-	\caption{$R^2$-score for the Ridge method for different values of $\lambda$}
+	\includegraphics[scale=0.47]{../franke_output/part_D_2.png}
+	\includegraphics[scale=0.47]{../franke_output/part_D_2_highdeg.png}
+	\caption{
+		Plots of the mean square error against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the Franke-function 
+	}
 	%Label gjør det enkelt å referere til ulike bilder.
-	\label{part_d_R2}
+	\label{part_d2}
 \end{figure}
+
+\begin{figure}[H]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.47]{../franke_output/part_D_3.png}
+	\includegraphics[scale=0.47]{../franke_output/part_D_3_highdeg.png}
+	\caption{
+		Plots of the $R^2$-score against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the Franke-function
+	}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_d3}
+\end{figure}
+
+\begin{figure}[H]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.47]{../franke_output/part_D_4.png}
+	\includegraphics[scale=0.47]{../franke_output/part_D_4_highdeg.png}
+	\caption{
+		Plots of the bias squared against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the Franke-function 
+	}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_d4}
+\end{figure}
+
+\begin{figure}[H]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.47]{../franke_output/part_D_5.png}
+	\includegraphics[scale=0.47]{../franke_output/part_D_5_highdeg.png}
+	\caption{
+		Plots of the total error against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the Franke-function 
+	}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_d5}
+\end{figure}
+
+
+
+%\begin{figure}[H]
+%	\centering 
+%	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+%	\includegraphics[scale=0.6]{part_d_reg_MSE.pdf}
+%	\caption{The Mean Squared Error for the Ridge method for different values of $\lambda$}
+%	%Label gjør det enkelt å referere til ulike bilder.
+%	\label{part_d_MSE}
+%\end{figure}
+%
+%\begin{figure}[H]
+%	\centering 
+%	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+%	\includegraphics[scale=0.6]{part_d_reg_R2.pdf}
+%	\caption{$R^2$-score for the Ridge method for different values of $\lambda$}
+%	%Label gjør det enkelt å referere til ulike bilder.
+%	\label{part_d_R2}
+%\end{figure}
+
+
 
 
 %Part e:
@@ -187,32 +281,215 @@ Would be usefull
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.6]{part_e_reg_MSE.pdf}
-	\caption{The Mean Squared Error for the Lasso method for different values of $\lambda$}
+	\includegraphics[scale=0.47]{../franke_output/part_E_1.png}
+	\includegraphics[scale=0.47]{../franke_output/part_E_1_highdeg.png}
+	\caption{
+		Plots of the varinace against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the Franke-function
+	}
 	%Label gjør det enkelt å referere til ulike bilder.
-	\label{part_e_MSE}
+	\label{part_e1}
 \end{figure}
 
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.6]{part_e_reg_R2.pdf}
-	\caption{$R^2$-score for the Lasso method for different values of $\lambda$}
+	\includegraphics[scale=0.47]{../franke_output/part_E_2.png}
+	\includegraphics[scale=0.47]{../franke_output/part_E_2_highdeg.png}
+	\caption{
+		Plots of the mean square error against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the Franke-function 
+	}
 	%Label gjør det enkelt å referere til ulike bilder.
-	\label{part_e_R2}
+	\label{part_e2}
 \end{figure}
+
+\begin{figure}[H]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.47]{../franke_output/part_E_3.png}
+	\includegraphics[scale=0.47]{../franke_output/part_E_3_highdeg.png}
+	\caption{
+		Plots of the $R^2$-score against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the Franke-function
+	}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_e3}
+\end{figure}
+
+\begin{figure}[H]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.47]{../franke_output/part_E_4.png}
+	\includegraphics[scale=0.47]{../franke_output/part_E_4_highdeg.png}
+	\caption{
+		Plots of the bias squared against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the Franke-function 
+	}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_e4}
+\end{figure}
+
+\begin{figure}[H]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.47]{../franke_output/part_E_5.png}
+	\includegraphics[scale=0.47]{../franke_output/part_E_5_highdeg.png}
+	\caption{
+		Plots of the total error against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the Franke-function 
+	}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_e5}
+\end{figure}
+
+
+
+
+
+%\begin{figure}[H]
+%	\centering 
+%	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+%	\includegraphics[scale=0.6]{part_e_reg_MSE.pdf}
+%	\caption{The Mean Squared Error for the Lasso method for different values of $\lambda$}
+%	%Label gjør det enkelt å referere til ulike bilder.
+%	\label{part_e_MSE}
+%\end{figure}
+%
+%\begin{figure}[H]
+%	\centering 
+%	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+%	\includegraphics[scale=0.6]{part_e_reg_R2.pdf}
+%	\caption{$R^2$-score for the Lasso method for different values of $\lambda$}
+%	%Label gjør det enkelt å referere til ulike bilder.
+%	\label{part_e_R2}
+%\end{figure}
+
+
+
+
 
 %part g
 
+\subsection{Real Data}
+
+
+%Part a and b:
+
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	%\includegraphics[scale=0.52]{part_g_input.pdf}
-	\includegraphics[scale=0.52]{part_g_input3d.pdf}
-	\caption{The terrain-data we are studying, from Møsvatn Austfjell in Norway}
+	\includegraphics[scale=0.7]{../real_output/part_A.png}
+	\caption{
+		A plot of the mean square error, the $R^2$-score and the $\sigma$ variance of the $\beta$-values against the polynomial degree after performing a standard least square regression analysis on the real terrain data of Møsvatn Austfjell
+		%		The resulting function after performing a standard least square regression analysis using polynomials in x and y up to fifth order on the Franke function
+	}
 	%Label gjør det enkelt å referere til ulike bilder.
-	\label{part_g_input}
+	\label{part_g_a}
 \end{figure}
+
+
+\begin{figure}[H]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.7]{../real_output/part_B.png}
+	\caption{
+		A plot of the mean square error and the $R^2$-score against the polynomial degree after performing a standard least square regression analysis on the real terrain data of Møsvatn Austfjell and performing a $k$-fold cross-validation
+	}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_g_b}
+\end{figure}
+
+
+\begin{figure}[H]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.7]{../real_output/part_C_2.png}
+	\caption{
+		A plot of the 
+	}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_g_c2}
+\end{figure}
+
+
+
+\begin{figure}[H]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.6]{../real_output/part_D_1.png}
+	\caption{
+		Plots of the varinace against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the real terrain data of Møsvatn Austfjell
+	}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_g_d1}
+\end{figure}
+
+\begin{figure}[H]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.6]{../real_output/part_D_2.png}
+	\caption{
+		Plots of the mean square error against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the real terrain data of Møsvatn Austfjell 
+	}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_g_d2}
+\end{figure}
+
+\begin{figure}[H]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.6]{../real_output/part_D_3.png}
+	\caption{
+		Plots of the $R^2$-score against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the real terrain data of Møsvatn Austfjell
+	}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_g_d3}
+\end{figure}
+
+
+
+\begin{figure}[H]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.6]{../real_output/part_E_1.png}
+	\caption{
+		Plots of the varinace against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the real terrain data of Møsvatn Austfjell
+	}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_g_e1}
+\end{figure}
+
+\begin{figure}[H]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.6]{../real_output/part_E_2.png}
+	\caption{
+		Plots of the mean square error against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the real terrain data of Møsvatn Austfjell 
+	}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_g_e2}
+\end{figure}
+
+\begin{figure}[H]
+	\centering 
+	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\includegraphics[scale=0.6]{../real_output/part_E_3.png}
+	\caption{
+		Plots of the $R^2$-score against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the real terrain data of Møsvatn Austfjell
+	}
+	%Label gjør det enkelt å referere til ulike bilder.
+	\label{part_g_e3}
+\end{figure}
+
+
+
+
+
+%\begin{figure}[H]
+%	\centering 
+%	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+%	%\includegraphics[scale=0.52]{part_g_input.pdf}
+%	\includegraphics[scale=0.52]{part_g_input3d.pdf}
+%	\caption{The terrain-data we are studying, from Møsvatn Austfjell in Norway}
+%	%Label gjør det enkelt å referere til ulike bilder.
+%	\label{part_g_input}
+%\end{figure}
 
 
 

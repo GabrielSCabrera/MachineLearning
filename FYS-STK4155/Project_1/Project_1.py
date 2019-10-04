@@ -316,8 +316,8 @@ def part_D(R, f_xy = None, save = False, plots = False, name = ""):
                 ax.plot([L[minimum]],[D[minimum]],[i[minimum]], "kv",
                 markersize = 50)
 
-                legend = (f"Minimum at\n$d$ = {D[minimum]:g}, $\\lambda$ = "
-                          f"{L[minimum]:g}")
+                legend = (f"Minimum at\n$d$ = {L[minimum]:g}, $\\lambda$ = "
+                          f"{D[minimum]:g}")
 
                 plt.legend([legend])
 
@@ -429,8 +429,8 @@ def part_E(R, f_xy = None, save = False, plots = False, name = ""):
                 ax.plot([L[minimum]],[D[minimum]],[i[minimum]], "kv",
                 markersize = 50)
 
-                legend = (f"Minimum at\n$d$ = {D[minimum]:g}, $\\lambda$ = "
-                          f"{L[minimum]:g}")
+                legend = (f"Minimum at\n$d$ = {L[minimum]:g}, $\\lambda$ = "
+                          f"{D[minimum]:g}")
 
                 plt.legend([legend])
 
