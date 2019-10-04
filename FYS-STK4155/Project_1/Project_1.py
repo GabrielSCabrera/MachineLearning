@@ -59,11 +59,37 @@ def generate_Franke_data(x_min = 0, x_max = 1, N = 100):
     # Calculating the values of the Franke function at each (x,y) coordinate
     Z = franke.FrankeFunction(X,Y)
     init_error = np.random.normal(0, globals()["sigma"], Z.shape)
+
+    fig = plt.figure()
+    ax = fig.gca(projection="3d")
+    fig.set_size_inches(8, 6)
+    fig.tight_layout()
+
+    ax.plot_surface(X, Y, Z, cmap = cmap, alpha = alpha_3D)
+    ax.set_xlabel("\n$x$", linespacing = 3)
+    ax.set_ylabel("\n$y$", linespacing = 3)
+    ax.set_zlabel("\n$f(x,y)$", linespacing = 3)
+
+    plt.savefig(f"{save_dir}/Franke.{extension}",  dpi = 250)
+    plt.close()
+
+    fig = plt.figure()
+    ax = fig.gca(projection="3d")
+    fig.set_size_inches(8, 6)
+    fig.tight_layout()
+
+    ax.plot_surface(X, Y, Z+init_error, cmap = cmap, alpha = alpha_3D)
+    ax.set_xlabel("\n$x$", linespacing = 3)
+    ax.set_ylabel("\n$y$", linespacing = 3)
+    ax.set_zlabel("\n$f(x,y)$", linespacing = 3)
+
+    plt.savefig(f"{save_dir}/Franke_noise.{extension}",  dpi = 250)
+    plt.close()
+
     # Normalizing Z
     Z = (Z - np.mean(Z))/np.std(Z)
     f_xy = Z.flatten().copy()
     Z = Z + init_error
-
 
     # Making compatible input arrays for Regression object
     x = np.zeros((X.shape[0]*X.shape[1], 2))

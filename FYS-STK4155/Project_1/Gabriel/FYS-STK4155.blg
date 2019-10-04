@@ -3,36 +3,36 @@ Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
 The top-level auxiliary file: FYS-STK4155.aux
 The style file: ieeetr.bst
 Database file #1: bib.bib
-You've used 2 entries,
+You've used 3 entries,
             1876 wiz_defined-function locations,
-            487 strings with 3890 characters,
-and the built_in function-call counts, 331 in all, are:
-= -- 28
-> -- 15
+            490 strings with 3947 characters,
+and the built_in function-call counts, 425 in all, are:
+= -- 35
+> -- 16
 < -- 0
-+ -- 6
++ -- 7
 - -- 4
-* -- 16
-:= -- 57
+* -- 18
+:= -- 64
 add.period$ -- 4
-call.type$ -- 2
-change.case$ -- 1
+call.type$ -- 3
+change.case$ -- 2
 chr.to.int$ -- 0
-cite$ -- 2
-duplicate$ -- 13
-empty$ -- 39
+cite$ -- 3
+duplicate$ -- 17
+empty$ -- 57
 format.name$ -- 4
-if$ -- 79
+if$ -- 106
 int.to.chr$ -- 0
-int.to.str$ -- 2
+int.to.str$ -- 3
 missing$ -- 2
-newline$ -- 11
+newline$ -- 14
 num.names$ -- 2
-pop$ -- 13
+pop$ -- 19
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 4
+skip$ -- 12
 stack$ -- 0
 substring$ -- 0
 swap$ -- 1
@@ -42,5 +42,5 @@ top$ -- 0
 type$ -- 0
 warning$ -- 0
 while$ -- 2
-width$ -- 3
-write$ -- 20
+width$ -- 4
+write$ -- 25

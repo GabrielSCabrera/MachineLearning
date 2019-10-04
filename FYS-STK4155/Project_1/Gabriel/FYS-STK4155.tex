@@ -15,6 +15,7 @@
 %\usepackage{amsmath,graphicx,varioref,verbatim,amsfonts,geometry,amssymb,dsfont,blindtext}
 \hypersetup{colorlinks=true}
 \usepackage{xcolor}
+\usepackage[export]{adjustbox}
 \definecolor{LightGray}{gray}{0.95}
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
@@ -65,6 +66,42 @@
 
 \section*{Data}
 \label{sec:method}
+
+	In this report, we will be working with two separate datasets.
+	
+	\subsection*{The Franke Function}
+	
+	The first dataset will be given by the \textit{Franke function}, which is defined as follows:
+	
+	\begin{align*}
+	f(x,y) &= \frac{3}{4} \exp \left( -\frac{(9x-2)^2}{4} -\frac{(9y-2)^2}{4} \right) + \frac{3}{4} \exp \left( -\frac{9x+1}{49} -\frac{9y+1}{10} \right) \\ &+ \frac{1}{2} \exp \left( -\frac{(9x-7)^2}{4} -\frac{(9y-3)^2}{4} \right) - \frac{1}{5} \exp \left( -(9x-4)^2 - (9y-7)^2 \right)
+	\end{align*}
+
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width = 0.8\textwidth, center]{Franke.png}
+		\caption{The \textit{Franke function} for $x$ and $y$ values ranging from zero to one. \label{fig_Franke}}
+	\end{figure}
+
+	We will be solving the Franke function for 100 $x$-values and 100 $y$-values in the range $[0,1]$, leaving us with a grid containing a total of 10000 $xy$ coordinate pairs.  This leaves us with the values plotted in Figure \ref{fig_Franke}.
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width = 0.8\textwidth, center]{Franke_noise.png}
+		\caption{The \textit{Franke function} for $x$ and $y$ values ranging from zero to one, with a Gaussian noise $N(0,0.01)$\label{fig_Franke_noise}}
+	\end{figure}
+	
+	In addition, we will also be adding \textit{Gaussian noise} to each value $f(x,y)$, such that we are left with values as seen in Figure \ref{fig_Franke_noise}.
+	
+	\subsection*{Møsvatn Austfjell}
+	
+	For our second dataset, we will be using real data taken from the \textit{U.S. Geological Survey} \cite{earthexplorer} official website \url{https://earthexplorer.usgs.gov/}.  More specifically, we will be using a \texttt{.tif} file containing altitude data for a rectangular region of Møsvatn Austfjell shown in Figure \ref{fig_austfjell}.
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width = 0.9\textwidth, center]{real_data.png}
+		\caption{Altitude data for Møsvatn Austfjell, from the USGS website \cite{earthexplorer}.\label{fig_austfjell}}
+	\end{figure}	
 
 \section*{Method}
 \label{sec:method}
@@ -310,8 +347,16 @@
 	\end{equation*}
 	
 	Where $\frac{1}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )$ is clearly the \textit{bias} and
-	$\frac{1}{n} \sum_{i=1}^{n} ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )^2$ is the \textit{variance}. 
-		
+	$\frac{1}{n} \sum_{i=1}^{n} ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )^2$ is the \textit{variance}.	
+	
+	\subsection*{Cross-Validation}
+	
+	So far, all our methods involving validation\footnote{This refers to calculating the $MSE$, variance, bias, and so on.} may have involved the separation of our data into a training and testing set, whereby the vector of coefficients is calculated using the \textit{training} set, and the validation is performed on the \textit{testing} set that remains.	There is however one more way to obtain a clearer picture of how well a model works: \textit{k-fold} cross validation.	
+	
+	In short, once the training and testing set have been separated, we can choose a value for $k$.  Next, we divide the training set into $k$ equally sized parts\footnote{We can have slightly unequal-sized parts without it being an issue, if the size of the dataset doesn't divide perfectly into $k$.}.  The next step is to be performed $k$ times; here we take $k-1$ of the parts and combine them into a temporary training set, and leave the last part as our testing set, and we perform validation on the testing set, and save the values.  During each iteration, we must shuffle our parts such that each step has a unique training-testing split.
+	
+	Finally, we can take all the calculated $MSE$ values, among others, and take their average.  This leaves us with a well-rounded result \textit{without} the need for more input data!
+	
 \section*{Results}
 \label{sec:results}
 
