@@ -1,4 +1,3 @@
-import seaborn
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from imageio import imread

@@ -108,7 +108,7 @@ def debug_title(letter):
 
 """Main Project Code"""
 
-def part_A(R, save = False, plots = False):
+def part_A(R, save = False, plots = False, name = ""):
     var = []
     mse = []
     R2 = []
@@ -136,7 +136,7 @@ def part_A(R, save = False, plots = False):
         if save is False:
             plt.show()
         else:
-            plt.savefig(f"{save_dir}/part_A.{extension}", dpi = 250)
+            plt.savefig(f"{save_dir}/part_A{name}.{extension}", dpi = 250)
             plt.close()
 
     if save is True:
@@ -146,7 +146,7 @@ def part_A(R, save = False, plots = False):
                         f"\nmean(var) = {i:g}\n")
                 outfile.write(temp)
 
-def part_B(R, save = False, plots = False):
+def part_B(R, save = False, plots = False, name = ""):
     mse = []
     R2 = []
 
@@ -171,7 +171,7 @@ def part_B(R, save = False, plots = False):
         if save is False:
             plt.show()
         else:
-            plt.savefig(f"{save_dir}/part_B.{extension}", dpi = 250)
+            plt.savefig(f"{save_dir}/part_B{name}.{extension}", dpi = 250)
             plt.close()
 
     if save is True:
@@ -180,7 +180,7 @@ def part_B(R, save = False, plots = False):
                 temp = f"{'_'*80}\nDegree {n+1:d}\n\nMSE = {i:g}\nR2 = {j:g}\n"
                 outfile.write(temp)
 
-def part_C(R, f_xy = None, save = False, plots = False):
+def part_C(R, f_xy = None, save = False, plots = False, name = ""):
     bias = []
     var = []
 
@@ -228,7 +228,7 @@ def part_C(R, f_xy = None, save = False, plots = False):
             if save is False:
                 plt.show()
             else:
-                plt.savefig(f"{save_dir}/part_C_1.{extension}", dpi = 250)
+                plt.savefig(f"{save_dir}/part_C_1{name}.{extension}", dpi = 250)
                 plt.close()
 
         plt.plot(d_vals, cost_train)
@@ -239,10 +239,10 @@ def part_C(R, f_xy = None, save = False, plots = False):
         if save is False:
             plt.show()
         else:
-            plt.savefig(f"{save_dir}/part_C_2.{extension}", dpi = 250)
+            plt.savefig(f"{save_dir}/part_C_2{name}.{extension}", dpi = 250)
             plt.close()
 
-def part_D(R, f_xy = None, save = False, plots = False):
+def part_D(R, f_xy = None, save = False, plots = False, name = ""):
 
     debug_title("D")
 
@@ -329,7 +329,7 @@ def part_D(R, f_xy = None, save = False, plots = False):
             if save is False:
                 plt.show()
             else:
-                plt.savefig(f"{save_dir}/part_D_{n+1:d}.{extension}",
+                plt.savefig(f"{save_dir}/part_D_{n+1:d}{name}.{extension}",
                 dpi = 250)
                 plt.close()
 
@@ -350,12 +350,12 @@ def part_D(R, f_xy = None, save = False, plots = False):
                 if save is False:
                     plt.show()
                 else:
-                    plt.savefig(f"{save_dir}/part_D_{len(data)+n+1:d}.{extension}",
+                    plt.savefig(f"{save_dir}/part_D_{len(data)+n+1:d}{name}.{extension}",
                     dpi = 250)
                     plt.close()
 
 @ignore_warnings(category = ConvergenceWarning)
-def part_E(R, f_xy = None, save = False, plots = False):
+def part_E(R, f_xy = None, save = False, plots = False, name = ""):
 
     debug_title("E")
 
@@ -442,7 +442,7 @@ def part_E(R, f_xy = None, save = False, plots = False):
             if save is False:
                 plt.show()
             else:
-                plt.savefig(f"{save_dir}/part_E_{n+1:d}.{extension}",
+                plt.savefig(f"{save_dir}/part_E_{n+1:d}{name}.{extension}",
                 dpi = 250)
                 plt.close()
 
@@ -463,7 +463,7 @@ def part_E(R, f_xy = None, save = False, plots = False):
                 if save is False:
                     plt.show()
                 else:
-                    plt.savefig(f"{save_dir}/part_E_{len(data)+n+1:d}.{extension}",
+                    plt.savefig(f"{save_dir}/part_E_{len(data)+n+1:d}{name}.{extension}",
                     dpi = 250)
                     plt.close()
 
@@ -518,6 +518,19 @@ if __name__ == "__main__":
     part_C(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
     part_D(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
     part_E(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
+    
+    
+    print("\n\n\t\tFRANKE FUNCTION HIGH DEGREE\n\n")
+    
+    # Increasing the polynomial degree
+    max_deg = 10
+    d_vals = np.arange(min_deg, max_deg + 1, 1)
+    
+    part_A(R = R_Franke, save = save_all, plots = plots, name="_highdeg")
+    part_B(R = R_Franke, save = save_all, plots = plots, name="_highdeg")
+    part_C(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots, name="_highdeg")
+    part_D(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots, name="_highdeg")
+    part_E(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots, name="_highdeg")
 
     """Parts f and g"""
 
