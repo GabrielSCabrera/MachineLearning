@@ -1,20 +1,25 @@
-%\documentclass[a4paper,10pt,english]{amsart}
 \documentclass[a4paper,10pt,english]{article}
 %\documentclass[12pt,preprint]{aastex}
 \usepackage[utf8]{inputenc}
 \usepackage[margin=0.3in]{geometry} % narrow margins
+\usepackage{amsfonts}
 \usepackage{graphicx}
 \usepackage{float}
+\usepackage{cite}
 \usepackage{amsmath}
 \usepackage{epsfig,floatflt}
 \usepackage{hyperref}
 \usepackage{listings}
 \usepackage[table,xcdraw]{xcolor}
 \usepackage{booktabs}
-\usepackage{amsmath,graphicx,varioref,verbatim,amsfonts,geometry,amssymb,dsfont,blindtext}
+\usepackage{subfig}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+%\usepackage{amsmath,graphicx,varioref,verbatim,amsfonts,geometry,amssymb,dsfont,blindtext}
 \hypersetup{colorlinks=true}
 \usepackage{xcolor}
 \usepackage{hhline}
+\usepackage[export]{adjustbox}
 \definecolor{LightGray}{gray}{0.95}
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
@@ -75,13 +80,305 @@ We will then implement them for some real terrain data for Møsvatn Austfjell in
 %the problem that is being studied in this paper.
 
 
+
 \section{Data}
 \label{sec:data}
 
-We will use real terrain data for Møsvatn Austfjell in Telemark, Norway, collected from \url{https://earthexplorer.usgs.gov}. 
+In this report, we will be working with two separate datasets.
+
+\subsection{The Franke Function}
+
+The first dataset will be given by the \textit{Franke function}, which is defined as follows:
+
+\begin{align*}
+f(x,y) &= \frac{3}{4} \exp \left( -\frac{(9x-2)^2}{4} -\frac{(9y-2)^2}{4} \right) + \frac{3}{4} \exp \left( -\frac{9x+1}{49} -\frac{9y+1}{10} \right) \\ &+ \frac{1}{2} \exp \left( -\frac{(9x-7)^2}{4} -\frac{(9y-3)^2}{4} \right) - \frac{1}{5} \exp \left( -(9x-4)^2 - (9y-7)^2 \right)
+\end{align*}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width = 0.8\textwidth, center]{Franke.png}
+	\caption{The \textit{Franke function} for $x$ and $y$ values ranging from zero to one. \label{fig_Franke}}
+\end{figure}
+
+We will be solving the Franke function for 100 $x$-values and 100 $y$-values in the range $[0,1]$, leaving us with a grid containing a total of 10000 $xy$ coordinate pairs.  This leaves us with the values plotted in Figure \ref{fig_Franke}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width = 0.8\textwidth, center]{Franke_noise.png}
+	\caption{The \textit{Franke function} for $x$ and $y$ values ranging from zero to one, with a Gaussian noise $N(0,0.01)$\label{fig_Franke_noise}}
+\end{figure}
+
+In addition, we will also be adding \textit{Gaussian noise} to each value $f(x,y)$, such that we are left with values as seen in Figure \ref{fig_Franke_noise}.
+
+
+\subsection{Møsvatn Austfjell}
+
+For our second dataset, we will be using real data taken from the \textit{U.S. Geological Survey} \cite{earthexplorer} official website \url{https://earthexplorer.usgs.gov/}.  More specifically, we will be using a \texttt{.tif} file containing altitude data for a rectangular region of Møsvatn Austfjell shown in Figure \ref{fig_austfjell}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width = 0.5\textwidth, center]{real_data.png}
+	\caption{Altitude data for Møsvatn Austfjell, from the USGS website \cite{earthexplorer}.\label{fig_austfjell}}
+\end{figure}	
+
+
 
 \section{Method}
 \label{sec:method}
+
+\subsection{Generalization of Multidimensional Polynomials}
+
+If we wish to construct a $p$-dimensional polynomial of degree $d$, we need to know what terms need to be included to give us a completely generalized polynomial.  For a 1-D polynomial of second degree, we would have three terms:
+
+\begin{equation*}
+f(x) = \beta_1 + \beta_2 x + \beta_3 x^2
+\end{equation*}
+
+Where $\beta$ is a vector containing each coefficient.	For a 2-D polynomial of second degree, we would have 6 terms:
+
+\begin{equation*}
+f(x,y) = \beta_1 + \beta_2 x + \beta_3 y + \beta_4 xy + \beta_5 x^2 + \beta_6 y^2
+\end{equation*}
+
+And for a 3-D polynomial of second degree, we would have 10 terms:
+
+\begin{equation*}
+f(x,y,z) = \beta_1 + \beta_2 x + \beta_3 y + \beta_4 z + \beta_5 xy + \beta_6 xz + \beta_7 yz + \beta_8 x^2 + \beta_9 y^2 + \beta_{10} z^2
+\end{equation*}
+
+There are many possible combinations of $p$ and $d$, and the number of terms blows up significantly as these values increase.  We can, however, create a general expression \cite{2482654} for any $p$ and $d$ using summation notation:
+
+\begin{equation}
+\label{eq_method_0}
+f(\mathbf{x}) = \sum_{\sum_{j = 1}^d i_j \leq p} \left( \beta_{i_1, i_2, \cdots, i_d} \prod_{k = 1}^d x_k^{i_k} \right)
+\end{equation}
+
+Alternatively, a simple \texttt{python} script can be used to find all the terms' exponents by calculating all permutations of the natural numbers from zero to $d$ in sets of length $p$, then removing all results whose sum is greater than $d$.
+
+\begin{lstlisting}[showstringspaces=false,language=Python,firstnumber = 1][frame=none]
+powers = np.arange(0, degree + 1, 1)
+powers = np.repeat(powers, p)
+exponents = list(permutations(powers, p))
+exponents = np.unique(exponents, axis = 0)
+
+if p != 1:
+expo_sum = np.sum(exponents, axis = 1)
+valid_idx = np.where(np.less_equal(expo_sum, degree))[0]
+exponents = np.array(exponents, dtype = np.int64)
+exponents = exponents[valid_idx]
+else:
+exponents = np.array(exponents, dtype = np.int64)
+\end{lstlisting}
+
+
+\subsection{Ordinary Least-Squares (OLS) Regression}
+
+We are given a $p+1$-dimensional dataset\footnote{Meaning a set of $p$ input features and 1 output.} consisting of $N$ datapoints per feature such that:
+
+\begin{equation}
+\label{eq_method_1}
+\mathbf{X} = \begin{bmatrix} X_{1,1} & X_{1,2} & \cdots & X_{1,p} \\ X_{2,1} & X_{2,2} & \cdots & X_{2,p} \\ \vdots & \vdots & \ddots & \vdots \\ X_{N,1} & X_{N,2} & \cdots & X_{N,p} \end{bmatrix} \qquad \mathbf{y} = \begin{bmatrix} y_1 \\ y_2 \\ \vdots \\ y_N \end{bmatrix}
+\end{equation}
+
+Where the $N \times p$ matrix $\mathbf{X}$ contains the dataset's \textit{input data}, and the $N$-vector $\mathbf{y}$ contains its \textit{output data}, such that each row in $\mathbf{X}$ corresponds to a single output in $\mathbf{y}$.
+
+Now, we wish to find a $p$-dimensional polynomial of degree $d$ which most closely matches our dataset. We will need a design matrix $\mathbf{A}$; this will require using the knowledge presented in (\ref{eq_method_0}), since a design matrix should contain each polynomial term as an individual column.
+
+Next, we will be using the method of \textit{least squares} \cite{hastie_tibshirani_friedman_2013}, whereby we attempt to minimize the \textit{residual sum of squares}:
+
+\begin{equation*}
+RSS(\beta) = \sum_{i=1}^N (y_i - \mathbf{A}_i^\textsc{t} \beta)^2 
+\end{equation*}
+
+Where $\mathbf{A}_i$ represents the $i$\textsuperscript{th} row in $\mathbf{A}$, and $beta$ is the set of coefficents in the aforementioned polynomial; in matrix form, this can be written more concisely:
+
+\begin{equation*}
+RSS(\beta) = (\mathbf{y} - \mathbf{A} \beta)^\textsc{t}(\mathbf{y} - \mathbf{A} \beta)
+\end{equation*}
+
+To minimize the $RSS$, we can differentiate it with respect to $\beta$ and set the right-hand side equal to zero – this allows us to solve for $\beta$, which will give us the coefficients to the polynomial that best matches our dataset:
+
+\begin{equation*}
+\mathbf{A}^\textsc{t} (\mathbf{y} - \mathbf{A} \beta) = 0 \iff \mathbf{A}^\textsc{t} y = \mathbf{A}^\textsc{t} \mathbf{A} \beta
+\end{equation*}
+
+Solving for $\beta$ then gives us our desired result:
+
+\begin{equation}
+\label{eq_method_2}
+\beta = (\mathbf{A}^\textsc{t} \mathbf{A} ) ^{-1} \mathbf{A}^\textsc{t} \mathbf{y}
+\end{equation}
+
+Using the set of coefficients given by (\ref{eq_method_2}), we can then match the dataset from (\ref{eq_method_1}) as effectively as possible.
+
+\subsection{Ridge Regression}
+
+The solution for $\beta$ given in (\ref{eq_method_2}) can be used without issue in many cases, but if the matrix $\mathbf{A}$ is singular\footnote{Meaning that $\text{det}(\mathbf{A}) = 0$}, we run into an issue – namely, we cannot take the inverse of a singular matrix!  As a result, we must look to more robust methods; one such method is called \textit{ridge regression}.  
+
+The process of obtaining our vector of coefficients $\beta$ via ridge regression is functionally very similar to that of OLS.  The main difference is that we include an extra term in the residual sum of squares:
+
+\begin{equation*}
+RSS(\beta) = \sum_{i=1}^N (y_i - \mathbf{A}_i^\textsc{t} \beta)^2 + \lambda \sum_{i=1}^N \beta^2
+\end{equation*}
+
+In matrix form, this can be rewritten:	
+
+\begin{equation*}
+RSS(\beta) = (\mathbf{y} - \mathbf{A} \beta)^\textsc{t}(\mathbf{y} - \mathbf{A} \beta) + \lambda \beta^\textsc{t} \beta
+\end{equation*}
+
+Where $\lambda$, known as the \textit{hyperparameter}, is a scalar value. Performing the same process as in the previous subsection, we are left with a solution similar to that in (\ref{eq_method_2}):
+
+\begin{equation}
+\label{eq_method_3}
+\beta = (\mathbf{A}^\textsc{t} \mathbf{A} + \lambda \mathbf{I}) ^{-1} \mathbf{A}^\textsc{t} \mathbf{y}
+\end{equation}
+
+In cases where $\mathbf{A}$ is singular, it is therefore possible to make very few changes to the OLS algorithm and still get a good result, one must simply optimize the hyperparameter and find a $\lambda$ that minimizes the \textit{mean squared error} (yet to be introduced) of our polynomial approximation.
+
+\subsection{LASSO Regression}
+
+The \textit{least absolute shrinkage and selection operator}, commonly abbreviated as \textit{LASSO}, is a method that implements the \textbf{L1} norm in place of the \textbf{L2} (or Euclidian) norm used in ridge regression.  The residual sum of squares is therefore given by:
+
+\begin{equation}
+\label{eq_method_4}
+RSS(\beta) = \sum_{i=1}^N (y_i - \mathbf{A}_i^\textsc{t} \beta)^2 + \lambda \sum_{i=1}^N |\beta|
+\end{equation}
+
+Unfortunately, differentiating the above with respect to $\beta$ will not work as intended, since we cannot take the matrix-form derivative of $\lambda \sum_{i=1}^N |\beta|$.  As a result, we must use an iterative \textit{gradient descent} method to minimize the right-hand side of (\ref{eq_method_4}).
+
+\begin{algorithm}[H]
+	\caption{The LASSO algorithm, over the course of $500$ iterations.}
+	\begin{algorithmic}[1]
+		\State $z = \sum_i A_i^2$
+		\State $i = 0$
+		\While{$i \leq 500$}
+		\State $i = i + 1$
+		\State $j = 0$
+		\While{j < p}
+		\State $\hat{y} = \sum_{k \neq j} \beta A_{*,k}$
+		\State $\rho = \sum_k A_{*,k} (\mathbf{y} - \mathbf{\hat{y}})$
+		\If {$\rho < -\lambda/2$}
+		\State $\beta_j = (\rho + \lambda/2)/z_j$
+		\ElsIf {$\rho > \lambda/2$}
+		\State $\beta_j = (\rho - \lambda/2)/z_j$
+		\Else
+		\State $\beta_j = 0$
+		\EndIf
+		\EndWhile		
+		\EndWhile
+	\end{algorithmic}
+\end{algorithm}
+
+\subsection{Mean Squared Error}
+
+To get a measure of success with respect to the implemented method and parameters, we can calculate the mean difference in the squares of each measured output $y_i$ and their respective predicted outputs $\hat{y}_i$:
+
+\begin{equation}
+MSE(\mathbf{y}, \mathbf{\hat{y}}) = \frac{1}{N} \sum_{i=1}^{N} (y_i - \hat{y}_i)^2 = \mathbb{E}\left[(\mathbf{y}-\hat{\mathbf{y}})^{2}\right]
+\end{equation}
+
+The lower the $MSE$, the closer the polynomial approximation is to the original dataset.  If it is too low, however, we run the risk of overfitting our dataset, which is not desireable either – fortunately, this not an issue within the scope of this report.
+
+\subsection{R\textsuperscript{2} Score}
+
+Another measure of success is the \textit{coefficient of determination}, colloquially known as the $R^2$ score, is given by the following expression:
+
+\begin{equation}
+R^2 = 1 - \frac{\sum_{i=1}^N (y_i - \hat{y}_i)^2 }{\sum_{i=1}^N (y_i - \bar{y}_i)^2 }
+\end{equation}
+
+The closer $R^2$ is to one, the closer the polynomial approximation is to the input/output dataset, although a perfect score can once again arise due to overfitting just as in the case of the $MSE$.
+
+\subsection{Bias-Variance Tradeoff}
+
+Before we continue, we can decompose the range of outputs $\mathbf{y}$ as follows:
+
+\begin{equation}
+\label{eq_method_5}
+\mathbf{y}(\mathbf{X}) = f(\mathbf{X}) + N(0, \sigma) 
+\end{equation}
+
+Where $f(\mathbf{X})$ represents the \textit{actual} function used to generate the dataset, and $N(0,\sigma)$ is a Gaussian noise with a standard deviation of $\sigma$.
+
+As a regression model increases in complexity\footnote{For a polynomial regression, this would refer to its \textit{degree}.}, it so happens that the \textit{variance} of a prediction increases.  Variance is defined as follows:
+
+\begin{equation}
+\label{eq_method_6}
+\text{Var}(\mathbf{y}) = \frac{1}{n} \sum_{i=1}^{n} (y_i - \mathbb{E}[\mathbf{y}] )
+\end{equation}
+
+On the other hand, we have that the \textit{bias} of the prediction decreases as the complexity increases.  We define the bias as:
+
+\begin{equation}
+\label{eq_method_7}
+\text{Bias}(\mathbf{y}) = \frac{1}{n} \sum_{i=1}^{n} (f_i - \mathbb{E}[\mathbf{y}] )
+\end{equation}
+
+Note that in order to calculate the bias, we need to know the original function $f$ used to generate $\mathbf{y}$.
+
+Interestingly enough, taking the sum of (\ref{eq_method_6}) and (\ref{eq_method_7}) as well as $\sigma^2$ will yield the \textit{mean squared error}.  We will show this to be the case in the following subsection.
+
+\subsubsection{Derivation}
+
+We wish to show that:
+\begin{equation}
+\label{eq_method_8}
+\mathbb{E}\left[(\mathbf{y}-\hat{\mathbf{y}})^{2}\right]
+=\frac{1}{n} \sum_{i=1}^{n}(f_{i}-\mathbb{E}[\hat{\mathbf{y}}])^{2}+\frac{1}{n} \sum_{i=1}^{n}(\hat{y}_{i}-\mathbb{E}[\hat{\mathbf{y}}])^{2}+\sigma^{2}
+\end{equation}
+
+We begin by rewriting the $MSE$ into summation notation, decomposing the terms as defined in (\ref{eq_method_5}), and adding/subtracting a term $\mathbb{E}[\hat{\mathbf{y}}]$:
+
+\begin{align*}
+\mathbb{E}\left[(\mathbf{y}-\hat{\mathbf{y}})^{2}\right] &= \frac{1}{n} \sum_{i=1}^{n} ( y_i - \hat{y}_i )^2 = \frac{1}{n} \sum_{i=1}^{n} ( f_i + \varepsilon - \hat{y}_i )^2 \\
+&= \frac{1}{n} \sum_{i=1}^{n} ( f_i + \varepsilon - \hat{y}_i  + \mathbb{E}[\hat{\mathbf{y}}] - \mathbb{E}[\hat{\mathbf{y}}] )^2
+\end{align*}
+
+Next, we set $a \equiv f_i - \mathbb{E}[\hat{\mathbf{y}}] $ and $b \equiv \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}]$ and expand:
+
+\begin{equation*}
+\frac{1}{n} \sum_{i=1}^{n} (a - b + \varepsilon )^2
+= \frac{1}{n} \sum_{i=1}^{n} ( a^2 - 2ab + b^2 - 2b\varepsilon + \varepsilon^2 + 2a\varepsilon )
+\end{equation*}
+
+The next few steps are messy, and require lots of algebraic manipulation:	
+
+\begin{align*}	
+& \frac{1}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
++ \frac{1}{n} \sum_{i=1}^{n} ( \varepsilon^2 )
++ \frac{1}{n} \sum_{i=1}^{n} ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
+- \frac{2}{n} \sum_{i=1}^{n} \varepsilon ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )
++ \\ &\frac{2}{n} \sum_{i=1}^{n} \varepsilon ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )
+- \frac{2}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] ) ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )
+= \\ & \frac{1}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
++ \frac{1}{n} \sum_{i=1}^{n} ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
++ \sigma^2
+- \mathbb{E}[\varepsilon] \frac{2}{n} \sum_{i=1}^{n} ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )
++ \\ & \mathbb{E}[\varepsilon] \frac{2}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )
+-\frac{2}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] ) ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )
+\end{align*}
+
+Finally, we see that our original assumption given by (\ref{eq_method_8}) is correct.
+
+\begin{equation*}
+= \frac{1}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
++ \frac{1}{n} \sum_{i=1}^{n} ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
++ \sigma^2 \qquad \square
+\end{equation*}
+
+Where $\frac{1}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )$ is clearly the \textit{bias} and
+$\frac{1}{n} \sum_{i=1}^{n} ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )^2$ is the \textit{variance}.	
+
+\subsection{Cross-Validation}
+
+So far, all our methods involving validation\footnote{This refers to calculating the $MSE$, variance, bias, and so on.} may have involved the separation of our data into a training and testing set, whereby the vector of coefficients is calculated using the \textit{training} set, and the validation is performed on the \textit{testing} set that remains.	There is however one more way to obtain a clearer picture of how well a model works: \textit{k-fold} cross validation.	
+
+In short, once the training and testing set have been separated, we can choose a value for $k$.  Next, we divide the training set into $k$ equally sized parts\footnote{We can have slightly unequal-sized parts without it being an issue, if the size of the dataset doesn't divide perfectly into $k$.}.  The next step is to be performed $k$ times; here we take $k-1$ of the parts and combine them into a temporary training set, and leave the last part as our testing set, and we perform validation on the testing set, and save the values.  During each iteration, we must shuffle our parts such that each step has a unique training-testing split.
+
+Finally, we can take all the calculated $MSE$ values, among others, and take their average.  This leaves us with a well-rounded result \textit{without} the need for more input data!
+
+
 
 \section{Results}
 \label{sec:results}
@@ -511,45 +808,8 @@ We will use real terrain data for Møsvatn Austfjell in Telemark, Norway, collec
 \section{Appendix}
 \label{sec:appendix}
 	
-\subsection{Part c math}
-
-We are too show that 
-\begin{align}
-C(\boldsymbol{X}, \boldsymbol{\beta})=\frac{1}{n} \sum_{i=0}^{n-1}\left(y_{i}-\tilde{y}_{i}\right)^{2}
-= \mathbf{E}\left[(\boldsymbol{y}-\tilde{\boldsymbol{y}})^{2}\right]
-=\frac{1}{n} \sum_{i}\left(f_{i}-\mathbf{E}[\tilde{\boldsymbol{y}}]\right)^{2}+\frac{1}{n} \sum_{i}\left(\tilde{y}_{i}-\mathbf{E}[\tilde{\boldsymbol{y}}]\right)^{2}+\sigma^{2}
-\end{align}
-
-\begin{align}
-\mathbf{E}\left[(\boldsymbol{y}-\tilde{\boldsymbol{y}})^{2}\right] 
-=& \frac{1}{n} \sum_{i} \left( y_i - \tilde{y}_i \right)^2
-= \frac{1}{n} \sum_{i} \left( f_i + \varepsilon - \tilde{y}_i \right)^2 \\
-=& \frac{1}{n} \sum_{i} \left( f_i + \varepsilon - \tilde{y}_i  + \mathbf{E}[\tilde{\boldsymbol{y}}] - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)^2 \hspace{0.9cm} 
-| \hspace{0.1cm} \text{introduce $a = f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] $ and $b = \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}]$}\\
-=& \frac{1}{n} \sum_{i} \left( a - b + \varepsilon \right)^2
-= \frac{1}{n} \sum_{i} \left( a^2 - 2ab + b^2 - 2b\varepsilon + \varepsilon^2 + 2a\varepsilon \right)\\
-=& \frac{1}{n} \sum_{i} \left( f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)^2 
-+ \frac{1}{n} \sum_{i} \left( \varepsilon^2 \right)
-+ \frac{1}{n} \sum_{i} \left( \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)^2 
-- 2\frac{1}{n} \sum_{i} \varepsilon \left( \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)
-+ 2\frac{1}{n} \sum_{i} \varepsilon \left( f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)\\
-&- 2\frac{1}{n} \sum_{i} \left( f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right) \left( \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)\\
-=& \frac{1}{n} \sum_{i} \left( f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)^2 
-+ \frac{1}{n} \sum_{i} \left( \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)^2 
-+ \sigma^2
-- 2 \mathbf{E}[\varepsilon] \frac{1}{n} \sum_{i} \left( \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)
-+ 2 \mathbf{E}[\varepsilon] \frac{1}{n} \sum_{i} \left( f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)\\
-&- 2\frac{1}{n} \sum_{i} \left( f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right) \left( \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)\\
-=& \frac{1}{n} \sum_{i} \left( f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)^2 
-+ \frac{1}{n} \sum_{i} \left( \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)^2 
-+ \sigma^2 \hspace{0.3cm} \blacksquare
-\end{align}
-
-Where $\frac{1}{n} \sum_{i} \left( f_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)$ is the bias and
-$\frac{1}{n} \sum_{i} \left( \tilde{y}_i - \mathbf{E}[\tilde{\boldsymbol{y}}] \right)^2$ is the variance. 
-
-(skal vi gjøre noe annet og?)
-
+\bibliography{bib}{}
+\bibliographystyle{ieeetr}
 
 
 \end{document}
