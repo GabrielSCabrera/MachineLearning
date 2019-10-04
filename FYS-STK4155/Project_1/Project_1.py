@@ -14,17 +14,17 @@ from utils.classes import Regression
 """Preparing Global Settings"""
 
 k_fold = 12          # k in k-fold
-min_deg = 2          # Minimum polynomial approximation degree
-max_deg = 10         # Maximum polynomial approximation degree
-split_test = 33      # Percentage of data to split into testing set
+min_deg = 1          # Minimum polynomial approximation degree
+max_deg = 9          # Maximum polynomial approximation degree
+split_test = 25      # Percentage of data to split into testing set
 sigma = 0.1          # Standard deviation of Gaussian noise in Franke function
 
-alpha_min_R = 1E-12  # Minimum Lambda in Ridge
+alpha_min_R = 2E-2   # Minimum Lambda in Ridge
 alpha_max_R = 1E0    # Maximum lambda in Ridge
-alpha_min_L = 1E-12  # Minimum Lambda in LASSO
-alpha_max_L = 1E-4   # Maximum lambda in LASSO
-N_alpha_R = 100      # Number of lambdas to check for with Ridge in Part d)
-N_alpha_L = 100      # Number of lambdas to check for with LASSO in Part e)
+alpha_min_L = 2E-2   # Minimum lambda in LASSO
+alpha_max_L = 1E0    # Maximum lambda in LASSO
+N_alpha_R = 50       # Number of lambdas to check for with Ridge in Part d)
+N_alpha_L = 50       # Number of lambdas to check for with LASSO in Part e)
 
 save_dir = "output"  # Default directory in which to save output files
 plots = True         # Whether to generate plots
@@ -49,7 +49,7 @@ np.random.seed(69420666)
 
 """Helper Functions"""
 
-def generate_Franke_data(x_min = 0, x_max = 1, N = 100, sigma = 0.01):
+def generate_Franke_data(x_min = 0, x_max = 1, N = 100):
 
     # Generating NxN meshgrid of x,y values in range [0, 1]
     x_min, x_max, N = 0, 1, 100
@@ -59,10 +59,11 @@ def generate_Franke_data(x_min = 0, x_max = 1, N = 100, sigma = 0.01):
     # Calculating the values of the Franke function at each (x,y) coordinate
     Z = franke.FrankeFunction(X,Y)
     init_error = np.random.normal(0, globals()["sigma"], Z.shape)
-    Z = Z + init_error
-
     # Normalizing Z
     Z = (Z - np.mean(Z))/np.std(Z)
+    f_xy = Z.flatten().copy()
+    Z = Z + init_error
+
 
     # Making compatible input arrays for Regression object
     x = np.zeros((X.shape[0]*X.shape[1], 2))
@@ -70,7 +71,7 @@ def generate_Franke_data(x_min = 0, x_max = 1, N = 100, sigma = 0.01):
     x[:,1] = Y.flatten()
     y = Z.flatten()
 
-    return x, y
+    return x, y, f_xy
 
 def debug_title(letter):
     if globals()["debug_mode"] is True:
@@ -152,10 +153,12 @@ def part_B(R, save = False, plots = False):
                 temp = f"{'_'*80}\nDegree {n+1:d}\n\nMSE = {i:g}\nR2 = {j:g}\n"
                 outfile.write(temp)
 
-def part_C(R, save = False, plots = False):
+def part_C(R, f_xy = None, save = False, plots = False):
     bias = []
     var = []
     mse = []
+    err = []
+
     cost_train = []
     cost_test = []
 
@@ -168,12 +171,22 @@ def part_C(R, save = False, plots = False):
         arg_idx = R.split(test_size = split_test)
         R.poly(degree = d)
 
-        Y_hat_train = R.predict(X = R._X)
+        Y_hat_train = R.predict()
         Y_hat_test = R.predict(X = R._X_test)
 
-        mse_step = R.mse(split = True)
-        bias_step = np.mean(Y_hat_test) - np.mean(R._Y_test)
-        var_step = np.mean(Y_hat_test**2) - np.mean(Y_hat_test)**2
+        if f_xy is not None:
+            f_train = f_xy[arg_idx[0]]
+            f_test = f_xy[arg_idx[1]]
+
+            bias_step = np.mean((f_test - np.mean(Y_hat_test))**2)
+            var_step = np.mean((Y_hat_test - np.mean(Y_hat_test))**2)
+            mse_step = np.mean((R._Y_test - Y_hat_test)**2)
+            err_step = bias_step + var_step + mse_step
+
+            bias.append(bias_step)
+            var.append(var_step)
+            mse.append(mse_step)
+            err.append(err_step)
 
         cost_train_step = np.mean((R._Y - Y_hat_train)**2)
         cost_test_step = np.mean((R._Y_test - Y_hat_test)**2)
@@ -181,38 +194,36 @@ def part_C(R, save = False, plots = False):
         cost_train.append(cost_train_step)
         cost_test.append(cost_test_step)
 
-        mse.append(mse_step)
-        bias.append(bias_step**2)
-        var.append(var_step)
 
     print()
 
     if plots is True:
-        plt.plot(d_vals, mse)
-        plt.plot(d_vals, bias)
-        plt.plot(d_vals, var)
-        plt.xlabel("Polynomial Degree")
-        plt.xlim(min_deg, max_deg)
-        plt.legend(["$MSE$", "Bias", "Variance"])
-        if save is False:
-            plt.show()
-        else:
-            plt.savefig(f"{save_dir}/part_C_1.{extension}", dpi = 250)
-            plt.close()
+        if f_xy is not None:
+            plt.plot(d_vals, bias)
+            plt.plot(d_vals, var)
+            plt.plot(d_vals, mse)
+            plt.plot(d_vals, err)
+            plt.xlabel("Polynomial Degree")
+            plt.xlim(min_deg, max_deg)
+            plt.legend(["Bias", "Variance", "Mean Squared Error", "Total Error"])
+            if save is False:
+                plt.show()
+            else:
+                plt.savefig(f"{save_dir}/part_C_1.{extension}", dpi = 250)
+                plt.close()
 
         plt.plot(d_vals, cost_train)
         plt.plot(d_vals, cost_test)
         plt.xlabel("Polynomial Degree")
         plt.xlim(min_deg, max_deg)
-        plt.legend([r"$C(\mathbf{X}_{train},\beta)$",
-                    r"$C(\mathbf{X}_{test},\beta)$"])
+        plt.legend([r"$MSE(\mathbf{X}_{train})$", r"$MSE(\mathbf{X}_{test})$"])
         if save is False:
             plt.show()
         else:
             plt.savefig(f"{save_dir}/part_C_2.{extension}", dpi = 250)
             plt.close()
 
-def part_D(R, save = False, plots = False):
+def part_D(R, f_xy = None, save = False, plots = False):
 
     debug_title("D")
 
@@ -222,39 +233,57 @@ def part_D(R, save = False, plots = False):
     mse = []
     R2 = []
     bias = []
+    err = []
 
     for m,l in enumerate(lambda_vals):
         var_step = []
         mse_step = []
         R2_step = []
         bias_step = []
+        err_step = []
 
         for n,d in enumerate(d_vals):
             if globals()["debug_mode"] is True:
                 print(f"\r{(100*(n + m*len(d_vals) + 1)/(len(d_vals)*len(lambda_vals))):>3.0f}%", end = "")
             R.reset()
-            R.split(test_size = split_test)
+            arg_idx = R.split(test_size = split_test)
             R.poly(degree = d, alpha = l)
-            Y_hat = R.predict()
-            var_step.append(np.mean(R.variance(split = True)))
+
+            Y_hat_test = R.predict(X = R._X_test)
+
+            var_step.append(np.mean((Y_hat_test - np.mean(Y_hat_test))**2))
             mse_step.append(R.mse(split = True))
             R2_step.append(R.r_squared(split = True))
-            bias_step.append(np.mean(Y_hat) - np.mean(R._Y))
+
+            if f_xy is not None:
+                f_test = f_xy[arg_idx[1]]
+                bias_step.append(np.mean((f_test - np.mean(Y_hat_test))**2))
+                err_step.append(bias_step[-1] + var_step[-1] + mse_step[-1])
+            else:
+                bias_step.append(0)
+                err_step.append(0)
 
         var.append(var_step)
         mse.append(mse_step)
         R2.append(R2_step)
         bias.append(bias_step)
+        err.append(err_step)
 
     print()
 
     L,D = np.meshgrid(d_vals, lambda_vals)
-    var, mse, R2, bias = \
-    np.array(var), np.array(mse), np.array(R2), np.array(bias)**2
+    var, mse, R2, bias, err = \
+    np.array(var), np.array(mse), np.array(R2), np.array(bias), np.array(err)
 
     if plots is True:
-        data = [var, mse, R2, bias]
-        data_labels = ["Variance", "$MSE$", "$R^2$", "Bias²"]
+
+        if f_xy is None:
+            data = [var, mse, R2]
+            data_labels = ["Variance", "$MSE$", "$R^2$"]
+        else:
+            data = [var, mse, R2, bias, err]
+            data_labels = ["Variance", "$MSE$", "$R^2$", "Bias²", "Total Error"]
+
         xlabel = "Polynomial Degree"
         ylabel = r"Hyperparameter $\lambda$"
 
@@ -262,6 +291,16 @@ def part_D(R, save = False, plots = False):
             fig = plt.figure()
             ax = fig.gca(projection="3d")
             fig.set_size_inches(8, 6)
+
+            if j == "Total Error":
+                minimum = np.unravel_index(i.argmin(), i.shape)
+                ax.plot([L[minimum]],[D[minimum]],[i[minimum]], "kv",
+                markersize = 50)
+
+                legend = (f"Minimum at\n$d$ = {D[minimum]:g}, $\\lambda$ = "
+                          f"{L[minimum]:g}")
+
+                plt.legend([legend])
 
             ax.plot_surface(L, D, i, cmap = cmap, alpha = alpha_3D)
             ax.set_xlabel("\n\n\n" + xlabel, linespacing = 3)
@@ -277,26 +316,27 @@ def part_D(R, save = False, plots = False):
 
         """Bias-Variance Curves"""
 
-        s = len(lambda_vals)//globals()["bv_plots"]
-        for n,(i,j,k) in enumerate(zip(bias[::s], var[::s], mse[::s])):
-            plt.plot(d_vals, i, label = "Bias²")
-            plt.plot(d_vals, j, label = "Variance")
-            plt.plot(d_vals, k, label = "$MSE$")
-            plt.legend()
-            plt.xlabel(xlabel)
-            plt.text(np.median(d_vals), 2*(np.max([i,j,k])-np.min([i,j,k]))/3,
-             f"$\\lambda = {lambda_vals[s*n]:.2E}$")
-            plt.xlim([min_deg, max_deg])
+        if f_xy is not None:
+            s = len(lambda_vals)//globals()["bv_plots"]
+            for n,(i,j,k) in enumerate(zip(bias[::s], var[::s], err[::s])):
+                plt.plot(d_vals, i, label = "Bias²")
+                plt.plot(d_vals, j, label = "Variance")
+                plt.plot(d_vals, k, label = "Total Error")
+                plt.legend()
+                plt.xlabel(xlabel)
+                plt.text(np.median(d_vals), 2*(np.max([i,j,k])-np.min([i,j,k]))/3,
+                 f"$\\lambda = {lambda_vals[s*n]:.2E}$")
+                plt.xlim([min_deg, max_deg])
 
-            if save is False:
-                plt.show()
-            else:
-                plt.savefig(f"{save_dir}/part_D_{len(data)+n+1:d}.{extension}",
-                dpi = 250)
-                plt.close()
+                if save is False:
+                    plt.show()
+                else:
+                    plt.savefig(f"{save_dir}/part_D_{len(data)+n+1:d}.{extension}",
+                    dpi = 250)
+                    plt.close()
 
 @ignore_warnings(category = ConvergenceWarning)
-def part_E(R, save = False, plots = False):
+def part_E(R, f_xy = None, save = False, plots = False):
 
     debug_title("E")
 
@@ -306,39 +346,57 @@ def part_E(R, save = False, plots = False):
     mse = []
     R2 = []
     bias = []
+    err = []
 
     for m,l in enumerate(lambda_vals):
         var_step = []
         mse_step = []
         R2_step = []
         bias_step = []
+        err_step = []
 
         for n,d in enumerate(d_vals):
             if globals()["debug_mode"] is True:
                 print(f"\r{(100*(n + m*len(d_vals) + 1)/(len(d_vals)*len(lambda_vals))):>3.0f}%", end = "")
             R.reset()
-            R.split(test_size = split_test)
+            arg_idx = R.split(test_size = split_test)
             R.lasso(degree = d, alpha = l)
-            Y_hat = R.predict(X = R._X_test)
-            var_step.append(np.mean(Y_hat**2) - np.mean(Y_hat)**2)
-            mse_step.append(R.mse())
-            R2_step.append(R.r_squared())
-            bias_step.append(np.mean(Y_hat) - np.mean(R._Y_test))
+
+            Y_hat_test = R.predict(X = R._X_test)
+
+            var_step.append(np.mean((Y_hat_test - np.mean(Y_hat_test))**2))
+            mse_step.append(R.mse(split = True))
+            R2_step.append(R.r_squared(split = True))
+
+            if f_xy is not None:
+                f_test = f_xy[arg_idx[1]]
+                bias_step.append(np.mean((f_test - np.mean(Y_hat_test))**2))
+                err_step.append(bias_step[-1] + var_step[-1] + mse_step[-1])
+            else:
+                bias_step.append(0)
+                err_step.append(0)
 
         var.append(var_step)
         mse.append(mse_step)
         R2.append(R2_step)
         bias.append(bias_step)
+        err.append(err_step)
 
     print()
 
     L,D = np.meshgrid(d_vals, lambda_vals)
-    var, mse, R2, bias = \
-    np.array(var), np.array(mse), np.array(R2), np.array(bias)**2
+    var, mse, R2, bias, err = \
+    np.array(var), np.array(mse), np.array(R2), np.array(bias), np.array(err)
 
     if plots is True:
-        data = [var, mse, R2, bias]
-        data_labels = ["Variance", "$MSE$", "$R^2$", "Bias²"]
+
+        if f_xy is None:
+            data = [var, mse, R2]
+            data_labels = ["Variance", "$MSE$", "$R^2$"]
+        else:
+            data = [var, mse, R2, bias, err]
+            data_labels = ["Variance", "$MSE$", "$R^2$", "Bias²", "Total Error"]
+
         xlabel = "Polynomial Degree"
         ylabel = r"Hyperparameter $\lambda$"
 
@@ -346,6 +404,16 @@ def part_E(R, save = False, plots = False):
             fig = plt.figure()
             ax = fig.gca(projection="3d")
             fig.set_size_inches(8, 6)
+
+            if j == "Total Error":
+                minimum = np.unravel_index(i.argmin(), i.shape)
+                ax.plot([L[minimum]],[D[minimum]],[i[minimum]], "kv",
+                markersize = 50)
+
+                legend = (f"Minimum at\n$d$ = {D[minimum]:g}, $\\lambda$ = "
+                          f"{L[minimum]:g}")
+
+                plt.legend([legend])
 
             ax.plot_surface(L, D, i, cmap = cmap, alpha = alpha_3D)
             ax.set_xlabel("\n\n\n" + xlabel, linespacing = 3)
@@ -361,23 +429,24 @@ def part_E(R, save = False, plots = False):
 
         """Bias-Variance Curves"""
 
-        s = len(lambda_vals)//globals()["bv_plots"]
-        for n,(i,j,k) in enumerate(zip(bias[::s], var[::s], mse[::s])):
-            plt.plot(d_vals, i, label = "Bias²")
-            plt.plot(d_vals, j, label = "Variance")
-            plt.plot(d_vals, k, label = "$MSE$")
-            plt.legend()
-            plt.xlabel(xlabel)
-            plt.text(np.median(d_vals), 2*(np.max([i,j,k])-np.min([i,j,k]))/3,
-             f"$\\lambda = {lambda_vals[s*n]:.2E}$")
-            plt.xlim([min_deg, max_deg])
+        if f_xy is not None:
+            s = len(lambda_vals)//globals()["bv_plots"]
+            for n,(i,j,k) in enumerate(zip(bias[::s], var[::s], err[::s])):
+                plt.plot(d_vals, i, label = "Bias²")
+                plt.plot(d_vals, j, label = "Variance")
+                plt.plot(d_vals, k, label = "Total Error")
+                plt.legend()
+                plt.xlabel(xlabel)
+                plt.text(np.median(d_vals), 2*(np.max([i,j,k])-np.min([i,j,k]))/3,
+                 f"$\\lambda = {lambda_vals[s*n]:.2E}$")
+                plt.xlim([min_deg, max_deg])
 
-            if save is False:
-                plt.show()
-            else:
-                plt.savefig(f"{save_dir}/part_E_{len(data)+n+1:d}.{extension}",
-                dpi = 250)
-                plt.close()
+                if save is False:
+                    plt.show()
+                else:
+                    plt.savefig(f"{save_dir}/part_E_{len(data)+n+1:d}.{extension}",
+                    dpi = 250)
+                    plt.close()
 
 def part_F(save = False, plots = False):
 
@@ -418,7 +487,7 @@ if __name__ == "__main__":
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
 
-    x, y = generate_Franke_data(sigma = sigma)
+    x, y, f_xy = generate_Franke_data()
     R_Franke = Regression(x, y)
 
     """Parts a – e"""
@@ -427,9 +496,9 @@ if __name__ == "__main__":
 
     part_A(R = R_Franke, save = save_all, plots = plots)
     part_B(R = R_Franke, save = save_all, plots = plots)
-    part_C(R = R_Franke, save = save_all, plots = plots)
-    part_D(R = R_Franke, save = save_all, plots = plots)
-    part_E(R = R_Franke, save = save_all, plots = plots)
+    part_C(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
+    part_D(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
+    part_E(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
 
     """Parts f and g"""
 

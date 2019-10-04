@@ -1,6 +1,7 @@
 \documentclass[a4paper,10pt,english]{article}
 %\documentclass[12pt,preprint]{aastex}
 \usepackage[utf8]{inputenc}
+\usepackage{amsfonts}
 \usepackage{graphicx}
 \usepackage{cite}
 \usepackage{float}
@@ -233,6 +234,22 @@
 	\end{equation}
 	
 	The closer $R^2$ is to one, the closer the polynomial approximation is to the input/output dataset, although a perfect score can once again arise due to overfitting just as in the case of the $MSE$.
+	
+	\subsection*{Bias-Variance Tradeoff}
+	
+	As a regression model increases in complexity\footnote{For a polynomial regression, this would refer to its \textit{degree}.}, it so happens that the \textit{variance} of a prediction increases.  Variance is defined as follows:
+	
+	\begin{equation}
+	\label{eq_method_5}
+	\text{Var}(\mathbf{X}) = \frac{1}{n} \sum_{i=1}^{n} (x_i - \mathbb{E}[\mathbf{X}] )
+	\end{equation}
+	
+	On the other hand, we have that the \textit{bias} of the prediction decreases as the complexity increases.  We define the bias as:
+	
+	\begin{equation}
+	\label{eq_method_6}
+	\text{Bias}(\mathbf{X}) = 
+	\end{equation}
 		
 \section*{Results}
 \label{sec:results}
