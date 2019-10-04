@@ -1,7 +1,7 @@
 \documentclass[a4paper,10pt,english]{article}
 %\documentclass[12pt,preprint]{aastex}
 \usepackage[utf8]{inputenc}
-\usepackage[margin=0.3in]{geometry} % narrow margins
+\usepackage[margin=0.5in]{geometry} % narrow margins
 \usepackage{amsfonts}
 \usepackage{graphicx}
 \usepackage{float}
@@ -45,7 +45,15 @@
 	%tabsize=3
 }
 
-
+%\usepackage[english]{babel}
+%\usepackage{fancyhdr}
+%\usepackage{lastpage}
+%
+%\pagestyle{fancy}
+%\fancyhf{}
+%
+%\rfoot{Page \thepage \hspace{1pt} of \pageref{LastPage}}
+\pagenumbering{arabic}
 
 \begin{document}
 %\twocolumn
@@ -390,8 +398,8 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.63]{../franke_output/part_A.png}
-	\includegraphics[scale=0.63]{../franke_output/part_A_highdeg.png}
+	\includegraphics[scale=0.6]{../franke_output/part_A.png}
+	\includegraphics[scale=0.6]{../franke_output/part_A_highdeg.png}
 	\caption{
 		Plots of the mean square error, the $R^2$-score and the $\sigma$ variance of the $\beta$-values against the polynomial degree after performing a standard least square regression analysis on the Franke-function
 %		The resulting function after performing a standard least square regression analysis using polynomials in x and y up to fifth order on the Franke function
@@ -403,8 +411,8 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.63]{../franke_output/part_B.png}
-	\includegraphics[scale=0.63]{../franke_output/part_B_highdeg.png}
+	\includegraphics[scale=0.6]{../franke_output/part_B.png}
+	\includegraphics[scale=0.6]{../franke_output/part_B_highdeg.png}
 	\caption{
 		Plots of the mean square error and the $R^2$-score against the polynomial degree after performing a standard least square regression analysis on the Franke-function and performing a $k$-fold cross-validation
 	}
@@ -464,8 +472,8 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.63]{../franke_output/part_C_1.png}
-	\includegraphics[scale=0.63]{../franke_output/part_C_1_highdeg.png}
+	\includegraphics[scale=0.6]{../franke_output/part_C_1.png}
+	\includegraphics[scale=0.6]{../franke_output/part_C_1_highdeg.png}
 	\caption{
 		Plots of the bias and the varince against the polynomial degree after performing a standard least square regression analysis on the Franke-function
 	}
@@ -476,8 +484,8 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.63]{../franke_output/part_C_2.png}
-	\includegraphics[scale=0.63]{../franke_output/part_C_2_highdeg.png}
+	\includegraphics[scale=0.6]{../franke_output/part_C_2.png}
+	\includegraphics[scale=0.6]{../franke_output/part_C_2_highdeg.png}
 	\caption{
 		Plots of the mean square error for the training data and the testing data, against the polynomial degree after performing a standard least square regression analysis on the Franke-function
 	}
@@ -493,8 +501,8 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.47]{../franke_output/part_D_1.png}
-	\includegraphics[scale=0.47]{../franke_output/part_D_1_highdeg.png}
+	\includegraphics[scale=0.45]{../franke_output/part_D_1.png}
+	\includegraphics[scale=0.45]{../franke_output/part_D_1_highdeg.png}
 	\caption{
 		Plots of the varinace against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the Franke-function
 	}
@@ -505,8 +513,8 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.47]{../franke_output/part_D_2.png}
-	\includegraphics[scale=0.47]{../franke_output/part_D_2_highdeg.png}
+	\includegraphics[scale=0.45]{../franke_output/part_D_2.png}
+	\includegraphics[scale=0.45]{../franke_output/part_D_2_highdeg.png}
 	\caption{
 		Plots of the mean square error against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the Franke-function 
 	}
@@ -517,8 +525,8 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.47]{../franke_output/part_D_3.png}
-	\includegraphics[scale=0.47]{../franke_output/part_D_3_highdeg.png}
+	\includegraphics[scale=0.45]{../franke_output/part_D_3.png}
+	\includegraphics[scale=0.45]{../franke_output/part_D_3_highdeg.png}
 	\caption{
 		Plots of the $R^2$-score against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the Franke-function
 	}
@@ -529,8 +537,8 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.47]{../franke_output/part_D_4.png}
-	\includegraphics[scale=0.47]{../franke_output/part_D_4_highdeg.png}
+	\includegraphics[scale=0.45]{../franke_output/part_D_4.png}
+	\includegraphics[scale=0.45]{../franke_output/part_D_4_highdeg.png}
 	\caption{
 		Plots of the bias squared against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the Franke-function 
 	}
@@ -541,8 +549,8 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.47]{../franke_output/part_D_5.png}
-	\includegraphics[scale=0.47]{../franke_output/part_D_5_highdeg.png}
+	\includegraphics[scale=0.45]{../franke_output/part_D_5.png}
+	\includegraphics[scale=0.45]{../franke_output/part_D_5_highdeg.png}
 	\caption{
 		Plots of the total error against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the Franke-function 
 	}
@@ -578,8 +586,8 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.47]{../franke_output/part_E_1.png}
-	\includegraphics[scale=0.47]{../franke_output/part_E_1_highdeg.png}
+	\includegraphics[scale=0.45]{../franke_output/part_E_1.png}
+	\includegraphics[scale=0.45]{../franke_output/part_E_1_highdeg.png}
 	\caption{
 		Plots of the varinace against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the Franke-function
 	}
@@ -590,8 +598,8 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.47]{../franke_output/part_E_2.png}
-	\includegraphics[scale=0.47]{../franke_output/part_E_2_highdeg.png}
+	\includegraphics[scale=0.45]{../franke_output/part_E_2.png}
+	\includegraphics[scale=0.45]{../franke_output/part_E_2_highdeg.png}
 	\caption{
 		Plots of the mean square error against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the Franke-function 
 	}
@@ -602,8 +610,8 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.47]{../franke_output/part_E_3.png}
-	\includegraphics[scale=0.47]{../franke_output/part_E_3_highdeg.png}
+	\includegraphics[scale=0.45]{../franke_output/part_E_3.png}
+	\includegraphics[scale=0.45]{../franke_output/part_E_3_highdeg.png}
 	\caption{
 		Plots of the $R^2$-score against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the Franke-function
 	}
@@ -614,8 +622,8 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.47]{../franke_output/part_E_4.png}
-	\includegraphics[scale=0.47]{../franke_output/part_E_4_highdeg.png}
+	\includegraphics[scale=0.45]{../franke_output/part_E_4.png}
+	\includegraphics[scale=0.45]{../franke_output/part_E_4_highdeg.png}
 	\caption{
 		Plots of the bias squared against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the Franke-function 
 	}
@@ -626,8 +634,8 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[scale=0.47]{../franke_output/part_E_5.png}
-	\includegraphics[scale=0.47]{../franke_output/part_E_5_highdeg.png}
+	\includegraphics[scale=0.45]{../franke_output/part_E_5.png}
+	\includegraphics[scale=0.45]{../franke_output/part_E_5_highdeg.png}
 	\caption{
 		Plots of the total error against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the Franke-function 
 	}
