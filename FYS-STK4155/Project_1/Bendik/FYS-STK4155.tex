@@ -573,17 +573,17 @@ osv...
 	\label{part_d4}
 \end{figure}
 
-\begin{figure}[H]
-	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_D_5.png}
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_D_5_highdeg.png}
-	\caption{
-		Plots of the total error against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the Franke-function 
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
-	\label{part_d5}
-\end{figure}
+%\begin{figure}[H]
+%	\centering 
+%	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+%	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_D_5.png}
+%	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_D_5_highdeg.png}
+%	\caption{
+%		Plots of the total error against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the Franke-function 
+%	}
+%	%Label gjør det enkelt å referere til ulike bilder.
+%	\label{part_d5}
+%\end{figure}
 
 
 
@@ -658,17 +658,17 @@ osv...
 	\label{part_e4}
 \end{figure}
 
-\begin{figure}[H]
-	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_5.png}
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_5_highdeg.png}
-	\caption{
-		Plots of the total error against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the Franke-function 
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
-	\label{part_e5}
-\end{figure}
+%\begin{figure}[H]
+%	\centering 
+%	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+%	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_5.png}
+%	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_5_highdeg.png}
+%	\caption{
+%		Plots of the total error against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the Franke-function 
+%	}
+%	%Label gjør det enkelt å referere til ulike bilder.
+%	\label{part_e5}
+%\end{figure}
 
 
 
@@ -837,13 +837,65 @@ osv...
 
 
 
-%we could have a plot of made from the betas at the smalest MSE
+
 
 \section{Discussion}
 \label{sec:discussion}
 
+\subsection{franke}
+
+Figure \ref{part_a}: varinace increases (bad?) as $n$ increases , but MSE$\rightarrow 0$ and $R^2\rightarrow 1$ (good). For $n=10$ we get overflow and weird results.
+
+Figure \ref{part_b}: pretty similar results, no cross-validation give sligthly better reults, except at $n=9$, and cross-validation dosen't get overflow at $n=10$.
+
+Figure \ref{part_c1}: not sure how to interpret this one. Also gives different results at $n=1$, which it shouldn't. Bias and variance differs, not quite sure what result is desirable.
+
+Figure \ref{part_c2}: Pretty similar results for test and training, which I think is good, though train is slightly lower. Both have a minimum at $n=9$ and start increasing after that, as in figure \ref{part_b}. 
+
+Figure \ref{part_d1}: Not moch to say here, the variance seems to flatten out as $n$ increases, suggesting diminishing returns. Much difference in result based on $\lambda$.
+
+Figure \ref{part_d2}: Much the same as in figure \ref{part_d1}. Minimum MSE happens at $n=9$, which is before the overflow, suggesting that this is the highest $n$ can be before overflow. Minimum is also at lowest $\lambda$, suggesting that an even lower value could give even better results.
+
+Figure \ref{part_d3}: Difference in results flattens out as $n$ increases. Not much difference in result based on $\lambda$, but best result happens at lower values, with a seeming spike at the lowest, coinsiding with the MSE. 
+
+Figure \ref{part_d4}: Can't see any particular pattern here.
+
+Figure \ref{part_e1}: Reults flattens out as $\lambda$ suggesting diminising results, but are highest for low $\lambda$. $n$ dosen't seem to have a large impact on variance.
+
+Figure \ref{part_e2}: $n$ has a small impact on results. MSE drops quickly for lower $\lambda$. Best value at highest $n$ and lowest $\lambda$, suggesting a better result could be found for higher $n$ and lower $\lambda$.
+
+Figure \ref{part_e3}: $n$ has a small impact on results. Best value at lower $\lambda$, coninciding with MSE. 
+
+Figure \ref{part_e4}: Same as figure \ref{part_d4}.
+
+OLS$>$Ridge$>$Lasso for MSE of Franke data. OLS and ridge best at $n=9$, Lasso at $n=10$. Best values at lowest $\lambda$ as well.
 
 
+\subsubsection{real}
+
+Figure \ref{part_g_a}: Pretty much what was expected, variance and MSE increases and $R^2$ decrases as $n$ increases. Total values are lower than for Franke, meaning higher uncertainty/data that is harder to interpret/fit to polynomial, makes sense as it's real life data. More or less exact overlap between variance and $R^2$.
+
+Figure \ref{part_g_b}: Results are slightly better than without cross-validation.
+
+Figure \ref{part_g_c2}: MSE of train and test is pretty close, though more variance in test.
+
+Figure \ref{part_g_d1}: Unlike Franke, the data dosen't flatten out for any particular variable
+
+Figure \ref{part_g_d2}: Best result not at a extreme for $\lambda$, suggesting either that the best result is within tested $\lambda$-values or relativley low impact from $\lambda$. Best result is at highest tested $n$, but there's unlikely to be a beter result as $n=10$ gave overflow. Minimum MSE is smaller than for Franke, as figure \ref{part_g_a}. 
+
+Figure \ref{part_g_d3}: Same as figure \ref{part_g_d1}.
+
+Figure \ref{part_g_e1}: More spikes/variance than Ridge. 
+
+Figure \ref{part_g_e2}: Best MSE is neither for lowest $\lambda$ or highest $n$.
+
+Figure \ref{part_g_e3}: 
+
+
+Ridge$>$OLS$>$Lasso for real data. OLS and Ridge at $n=9$ and Lasso at $n=8$.
+
+
+we should maybe have a plot of made from the betas at the smalest MSE
 
 \newpage
 
@@ -855,6 +907,20 @@ osv...
 
 
 \end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

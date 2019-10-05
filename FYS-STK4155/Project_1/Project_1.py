@@ -501,11 +501,11 @@ if __name__ == "__main__":
 
     print("\n\n\t\tFRANKE FUNCTION\n\n")
 
-#    part_A(R = R_Franke, save = save_all, plots = plots)
-#    part_B(R = R_Franke, save = save_all, plots = plots)
-#    part_C(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
-#    part_D(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
-#    part_E(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
+    part_A(R = R_Franke, save = save_all, plots = plots)
+    part_B(R = R_Franke, save = save_all, plots = plots)
+    part_C(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
+    part_D(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
+    part_E(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
 
 
     print("\n\n\t\tFRANKE FUNCTION HIGH DEGREE\n\n")
@@ -514,11 +514,11 @@ if __name__ == "__main__":
     max_deg = 10
     d_vals = np.arange(min_deg, max_deg + 1, 1)
 
-#    part_A(R = R_Franke, save = save_all, plots = plots, name="_highdeg")
-#    part_B(R = R_Franke, save = save_all, plots = plots, name="_highdeg")
-#    part_C(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots, name="_highdeg")
-#    part_D(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots, name="_highdeg")
-#    part_E(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots, name="_highdeg")
+    part_A(R = R_Franke, save = save_all, plots = plots, name="_highdeg")
+    part_B(R = R_Franke, save = save_all, plots = plots, name="_highdeg")
+    part_C(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots, name="_highdeg")
+    part_D(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots, name="_highdeg")
+    part_E(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots, name="_highdeg")
 
     """Parts f and g"""
 
@@ -529,7 +529,7 @@ if __name__ == "__main__":
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
 
-    # Increasing the polynomial degree
+    # Decreasing the polynomial degree
     max_deg = 9
     d_vals = np.arange(min_deg, max_deg + 1, 1)
 
