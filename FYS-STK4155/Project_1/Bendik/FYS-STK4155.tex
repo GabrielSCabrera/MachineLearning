@@ -56,37 +56,50 @@
 \pagenumbering{arabic}
 
 \begin{document}
-\twocolumn
-
 \title{FYS-STK4155 Project 1}
 \author{Bendik Steinsvåg Dalen \& Gabriel Sigurd Cabrera}
+%\maketitle
+
+\twocolumn[
 \maketitle
-
 \begin{abstract}
-	dtcfvgbjhkgvfcdxszeasxrdtgyubhnijhugfvcdfguhij ftufykubhk nj jkdsi jkjk dsjknslj fd,nøj ka n,sdf jknm bnjdsajk nmnj mbfdjksa ,nfdsa mn n,asdf
+	dtcfvgbjhkgvfcdxszeasxrdtgyubhnijhugfvcdfguhij ftufykubhk nj jkdsi jkjk dsjknslj fd,nøj ka n,sdf jknm bnjdsajk nmnj mbfdjksa ,nfdsa mn n,asdf\\\\
 \end{abstract}
+]
 
+
+%\begin{@twocolumnfalse}
+%%	\maketitle
+%	\begin{abstract}
+%		dtcfvgbjhkgvfcdxszeasxrdtgyubhnijhugfvcdfguhij ftufykubhk nj jkdsi jkjk dsjknslj fd,nøj ka n,sdf jknm bnjdsajk nmnj mbfdjksa ,nfdsa mn n,asdf
+%	\end{abstract}
+%\end{@twocolumnfalse}
 
 \section{Introduction}
 \label{sec:introduction}
 
-Things we need to write about:
+The purpose of this report is to analyze the performance of several regression methods – Ordinary Least Squares (OLS), Ridge Regression, and LASSO\footnote{Short for \textit{least absolute shrinkage and selection operator}.} Regression.  In addition to implementing these regression methods, we will be validating (and cross-validating) our results by calculating the \textit{mean squared error}, \textit{bias}, and \textit{variance}, giving us an understanding of how these models' predictive capabilities vary as functions of complexity.
 
-Background on regression analysis and resampling methods.
-Mention:
-OLS
-Ridge
-Lasso
-k-fold cross-validation
-Bias-Variance trade of?
+Once we have a clear picture of how these regression models behave, we hope to determine which model best fits our input data.  This will require analyzing our validation data and determining what complexity and hyperparameter minimizes our total error.
 
-We will first study how they preform for the two dimensional Franke-function. (A bit about the Franke-function, maybe a tldr for the method).
-
-We will then implement them for some real terrain data for Møsvatn Austfjell in Norway. mm. (biggest lake in Norway ) %\cite{https://no.wikipedia.org/wiki/Møsvatn}
+%Things we need to write about:
+%
+%Background on regression analysis and resampling methods.
+%Mention:
+%	OLS
+%	Ridge
+%	Lasso
+%	k-fold cross-validation
+%	Bias-Variance trade of?
+%
+%We will first study how they preform for the two dimensional Franke-function. (A bit about the Franke-function, maybe a tldr for the method).
+%
+%We will then implement them for some real terrain data for Møsvatn Austfjell in Norway. mm. (biggest lake in Norway ) %\cite{https://no.wikipedia.org/wiki/Møsvatn}
 
 
 %Discuss background, physical importance and possibly some history of
 %the problem that is being studied in this paper.
+
 
 
 
