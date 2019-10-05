@@ -314,7 +314,7 @@ def part_D(R, f_xy = None, save = False, plots = False, name = ""):
             if j == "Total Error":
                 minimum = np.unravel_index(i.argmin(), i.shape)
                 ax.plot([L[minimum]],[D[minimum]],[i[minimum]], "kv",
-                markersize = 50)
+                markersize = 10)
 
                 legend = (f"Minimum at\n$d$ = {L[minimum]:g}, $\\lambda$ = "
                           f"{D[minimum]:g}")
@@ -427,7 +427,7 @@ def part_E(R, f_xy = None, save = False, plots = False, name = ""):
             if j == "Total Error":
                 minimum = np.unravel_index(i.argmin(), i.shape)
                 ax.plot([L[minimum]],[D[minimum]],[i[minimum]], "kv",
-                markersize = 50)
+                markersize = 10)
 
                 legend = (f"Minimum at\n$d$ = {L[minimum]:g}, $\\lambda$ = "
                           f"{D[minimum]:g}")
@@ -518,14 +518,14 @@ if __name__ == "__main__":
     part_C(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
     part_D(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
     part_E(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
-    
-    
+
+
     print("\n\n\t\tFRANKE FUNCTION HIGH DEGREE\n\n")
-    
+
     # Increasing the polynomial degree
     max_deg = 10
     d_vals = np.arange(min_deg, max_deg + 1, 1)
-    
+
     part_A(R = R_Franke, save = save_all, plots = plots, name="_highdeg")
     part_B(R = R_Franke, save = save_all, plots = plots, name="_highdeg")
     part_C(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots, name="_highdeg")

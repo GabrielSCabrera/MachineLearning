@@ -1,12 +1,46 @@
-This is BibTeX, Version 0.99dThe top-level auxiliary file: FYS-STK4155.aux
-I couldn't open database file bib.bib
----line 116 of file FYS-STK4155.aux
- : \bibdata{bib
- :             }
-I'm skipping whatever remains of this command
+This is BibTeX, Version 0.99d (TeX Live 2017/Debian)
+Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
+The top-level auxiliary file: FYS-STK4155.aux
 The style file: ieeetr.bst
-I found no database files---while reading file FYS-STK4155.aux
-Warning--I didn't find a database entry for "earthexplorer"
-Warning--I didn't find a database entry for "2482654"
-Warning--I didn't find a database entry for "hastie_tibshirani_friedman_2013"
-(There were 2 error messages)
+Database file #1: bib.bib
+You've used 3 entries,
+            1876 wiz_defined-function locations,
+            490 strings with 3947 characters,
+and the built_in function-call counts, 425 in all, are:
+= -- 35
+> -- 16
+< -- 0
++ -- 7
+- -- 4
+* -- 18
+:= -- 64
+add.period$ -- 4
+call.type$ -- 3
+change.case$ -- 2
+chr.to.int$ -- 0
+cite$ -- 3
+duplicate$ -- 17
+empty$ -- 57
+format.name$ -- 4
+if$ -- 106
+int.to.chr$ -- 0
+int.to.str$ -- 3
+missing$ -- 2
+newline$ -- 14
+num.names$ -- 2
+pop$ -- 19
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 12
+stack$ -- 0
+substring$ -- 0
+swap$ -- 1
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 0
+while$ -- 2
+width$ -- 4
+write$ -- 25
