@@ -69,19 +69,23 @@
 \section{Introduction}
 \label{sec:introduction}
 
-Things we need to write about:
+The purpose of this report is to analyze the performance of several regression methods – Ordinary Least Squares (OLS), Ridge Regression, and LASSO\footnote{Short for \textit{least absolute shrinkage and selection operator}.} Regression.  In addition to implementing these regression methods, we will be validating (and cross-validating) our results by calculating the \textit{mean squared error}, \textit{bias}, and \textit{variance}, giving us an understanding of how these models' predictive capabilities vary as functions of complexity.
 
-Background on regression analysis and resampling methods.
-Mention:
-	OLS
-	Ridge
-	Lasso
-	k-fold cross-validation
-	Bias-Variance trade of?
+Once we have a clear picture of how these regression models behave, we hope to determine which model best fits our input data.  This will require analyzing our validation data and determining what complexity and hyperparameter minimizes our total error.
 
-We will first study how they preform for the two dimensional Franke-function. (A bit about the Franke-function, maybe a tldr for the method).
-
-We will then implement them for some real terrain data for Møsvatn Austfjell in Norway. mm. (biggest lake in Norway ) %\cite{https://no.wikipedia.org/wiki/Møsvatn}
+%Things we need to write about:
+%
+%Background on regression analysis and resampling methods.
+%Mention:
+%	OLS
+%	Ridge
+%	Lasso
+%	k-fold cross-validation
+%	Bias-Variance trade of?
+%
+%We will first study how they preform for the two dimensional Franke-function. (A bit about the Franke-function, maybe a tldr for the method).
+%
+%We will then implement them for some real terrain data for Møsvatn Austfjell in Norway. mm. (biggest lake in Norway ) %\cite{https://no.wikipedia.org/wiki/Møsvatn}
 
 
 %Discuss background, physical importance and possibly some history of
@@ -421,8 +425,6 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 	\label{part_b}
 \end{figure}
 
-
-
 %\begin{table}[H]
 %%	\centering
 %	\begin{tabular}{|>{\columncolor[HTML]{EFEFEF}}c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
@@ -453,8 +455,6 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 %	\caption{MSE and R2 for a and b}
 %\end{table}
 
-
-
 %\begin{table}[H]
 %	\centering
 %	\begin{tabular}{|c|c|c|}
@@ -465,8 +465,6 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 %	\end{tabular}
 %	\caption{MSE and R2 for a and b}
 %\end{table}
-
-
 
 %Part c:
 
@@ -494,11 +492,7 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 	\label{part_c2}
 \end{figure}
 
-
-
 %Part d:
-
-
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
@@ -559,8 +553,6 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 	\label{part_d5}
 \end{figure}
 
-
-
 %\begin{figure}[H]
 %	\centering 
 %	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
@@ -578,9 +570,6 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 %	%Label gjør det enkelt å referere til ulike bilder.
 %	\label{part_d_R2}
 %\end{figure}
-
-
-
 
 %Part e:
 
@@ -644,10 +633,6 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 	\label{part_e5}
 \end{figure}
 
-
-
-
-
 %\begin{figure}[H]
 %	\centering 
 %	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
@@ -666,14 +651,9 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 %	\label{part_e_R2}
 %\end{figure}
 
-
-
-
-
 %part g
 
 \subsection{Real Data}
-
 
 %Part a and b:
 
@@ -689,7 +669,6 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 	\label{part_g_a}
 \end{figure}
 
-
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
@@ -701,7 +680,6 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 	\label{part_g_b}
 \end{figure}
 
-
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
@@ -712,8 +690,6 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_g_c2}
 \end{figure}
-
-
 
 \begin{figure}[H]
 	\centering 
@@ -748,8 +724,6 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 	\label{part_g_d3}
 \end{figure}
 
-
-
 \begin{figure}[H]
 	\centering 
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
@@ -783,10 +757,6 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 	\label{part_g_e3}
 \end{figure}
 
-
-
-
-
 %\begin{figure}[H]
 %	\centering 
 %	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
@@ -797,8 +767,6 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 %	\label{part_g_input}
 %\end{figure}
 
-
-
 %\begin{figure}[H]
 %	\centering 
 %	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
@@ -808,9 +776,10 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 %	\label{plot}
 %\end{figure}
 
-
 \section{Discussion}
 \label{sec:discussion}
+
+
 
 \newpage
 
