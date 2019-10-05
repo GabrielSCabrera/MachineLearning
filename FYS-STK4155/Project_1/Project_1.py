@@ -19,9 +19,9 @@ max_deg = 5          # Maximum polynomial approximation degree
 split_test = 25      # Percentage of data to split into testing set
 sigma = 0.1          # Standard deviation of Gaussian noise in Franke function
 
-alpha_min_R = 2E-2   # Minimum Lambda in Ridge
+alpha_min_R = 1E-10  # Minimum Lambda in Ridge
 alpha_max_R = 1E0    # Maximum lambda in Ridge
-alpha_min_L = 2E-2   # Minimum lambda in LASSO
+alpha_min_L = 1E-10  # Minimum lambda in LASSO
 alpha_max_L = 1E0    # Maximum lambda in LASSO
 N_alpha_R = 50       # Number of lambdas to check for with Ridge in Part d)
 N_alpha_L = 50       # Number of lambdas to check for with LASSO in Part e)
@@ -252,14 +252,12 @@ def part_D(R, f_xy = None, save = False, plots = False, name = ""):
     mse = []
     R2 = []
     bias = []
-    err = []
 
     for m,l in enumerate(lambda_vals):
         var_step = []
         mse_step = []
         R2_step = []
         bias_step = []
-        err_step = []
 
         for n,d in enumerate(d_vals):
             if globals()["debug_mode"] is True:
@@ -277,22 +275,19 @@ def part_D(R, f_xy = None, save = False, plots = False, name = ""):
             if f_xy is not None:
                 f_test = f_xy[arg_idx[1]]
                 bias_step.append(np.mean((f_test - np.mean(Y_hat_test))**2))
-                err_step.append(bias_step[-1] + var_step[-1] + mse_step[-1])
             else:
                 bias_step.append(0)
-                err_step.append(0)
 
         var.append(var_step)
         mse.append(mse_step)
         R2.append(R2_step)
         bias.append(bias_step)
-        err.append(err_step)
 
     print()
 
     L,D = np.meshgrid(d_vals, lambda_vals)
-    var, mse, R2, bias, err = \
-    np.array(var), np.array(mse), np.array(R2), np.array(bias), np.array(err)
+    var, mse, R2, bias = \
+    np.array(var), np.array(mse), np.array(R2), np.array(bias)
 
     if plots is True:
 
@@ -300,8 +295,8 @@ def part_D(R, f_xy = None, save = False, plots = False, name = ""):
             data = [var, mse, R2]
             data_labels = ["Variance", "$MSE$", "$R^2$"]
         else:
-            data = [var, mse, R2, bias, err]
-            data_labels = ["Variance", "$MSE$", "$R^2$", "Bias²", "Total Error"]
+            data = [var, mse, R2, bias]
+            data_labels = ["Variance", "$MSE$", "$R^2$", "Bias²"]
 
         xlabel = "Polynomial Degree"
         ylabel = r"Hyperparameter $\lambda$"
@@ -311,12 +306,12 @@ def part_D(R, f_xy = None, save = False, plots = False, name = ""):
             ax = fig.gca(projection="3d")
             fig.set_size_inches(8, 6)
 
-            if j == "Total Error":
+            if j == "$MSE$":
                 minimum = np.unravel_index(i.argmin(), i.shape)
                 ax.plot([L[minimum]],[D[minimum]],[i[minimum]], "kv",
                 markersize = 10)
 
-                legend = (f"Minimum at\n$d$ = {L[minimum]:g}, $\\lambda$ = "
+                legend = (f"Minimum MSE = {i[minimum]:g} at\n$d$ = {L[minimum]:g}, $\\lambda$ = "
                           f"{D[minimum]:g}")
 
                 plt.legend([legend])
@@ -337,13 +332,12 @@ def part_D(R, f_xy = None, save = False, plots = False, name = ""):
 
         if f_xy is not None:
             s = len(lambda_vals)//globals()["bv_plots"]
-            for n,(i,j,k) in enumerate(zip(bias[::s], var[::s], err[::s])):
+            for n,(i,j) in enumerate(zip(bias[::s], var[::s])):
                 plt.plot(d_vals, i, label = "Bias²")
                 plt.plot(d_vals, j, label = "Variance")
-                plt.plot(d_vals, k, label = "Total Error")
                 plt.legend()
                 plt.xlabel(xlabel)
-                plt.text(np.median(d_vals), 2*(np.max([i,j,k])-np.min([i,j,k]))/3,
+                plt.text(np.median(d_vals), 2*(np.max([i,j])-np.min([i,j]))/3,
                  f"$\\lambda = {lambda_vals[s*n]:.2E}$")
                 plt.xlim([min_deg, max_deg])
 
@@ -359,20 +353,18 @@ def part_E(R, f_xy = None, save = False, plots = False, name = ""):
 
     debug_title("E")
 
-    lambda_vals = np.linspace(alpha_min_L, alpha_max_L, N_alpha_L)
+    lambda_vals = np.linspace(alpha_min_R, alpha_max_R, N_alpha_R)
 
     var = []
     mse = []
     R2 = []
     bias = []
-    err = []
 
     for m,l in enumerate(lambda_vals):
         var_step = []
         mse_step = []
         R2_step = []
         bias_step = []
-        err_step = []
 
         for n,d in enumerate(d_vals):
             if globals()["debug_mode"] is True:
@@ -390,22 +382,19 @@ def part_E(R, f_xy = None, save = False, plots = False, name = ""):
             if f_xy is not None:
                 f_test = f_xy[arg_idx[1]]
                 bias_step.append(np.mean((f_test - np.mean(Y_hat_test))**2))
-                err_step.append(bias_step[-1] + var_step[-1] + mse_step[-1])
             else:
                 bias_step.append(0)
-                err_step.append(0)
 
         var.append(var_step)
         mse.append(mse_step)
         R2.append(R2_step)
         bias.append(bias_step)
-        err.append(err_step)
 
     print()
 
     L,D = np.meshgrid(d_vals, lambda_vals)
-    var, mse, R2, bias, err = \
-    np.array(var), np.array(mse), np.array(R2), np.array(bias), np.array(err)
+    var, mse, R2, bias = \
+    np.array(var), np.array(mse), np.array(R2), np.array(bias)
 
     if plots is True:
 
@@ -413,8 +402,8 @@ def part_E(R, f_xy = None, save = False, plots = False, name = ""):
             data = [var, mse, R2]
             data_labels = ["Variance", "$MSE$", "$R^2$"]
         else:
-            data = [var, mse, R2, bias, err]
-            data_labels = ["Variance", "$MSE$", "$R^2$", "Bias²", "Total Error"]
+            data = [var, mse, R2, bias]
+            data_labels = ["Variance", "$MSE$", "$R^2$", "Bias²"]
 
         xlabel = "Polynomial Degree"
         ylabel = r"Hyperparameter $\lambda$"
@@ -424,12 +413,12 @@ def part_E(R, f_xy = None, save = False, plots = False, name = ""):
             ax = fig.gca(projection="3d")
             fig.set_size_inches(8, 6)
 
-            if j == "Total Error":
+            if j == "$MSE$":
                 minimum = np.unravel_index(i.argmin(), i.shape)
                 ax.plot([L[minimum]],[D[minimum]],[i[minimum]], "kv",
                 markersize = 10)
 
-                legend = (f"Minimum at\n$d$ = {L[minimum]:g}, $\\lambda$ = "
+                legend = (f"Minimum MSE = {i[minimum]:g} at\n$d$ = {L[minimum]:g}, $\\lambda$ = "
                           f"{D[minimum]:g}")
 
                 plt.legend([legend])
@@ -450,13 +439,12 @@ def part_E(R, f_xy = None, save = False, plots = False, name = ""):
 
         if f_xy is not None:
             s = len(lambda_vals)//globals()["bv_plots"]
-            for n,(i,j,k) in enumerate(zip(bias[::s], var[::s], err[::s])):
+            for n,(i,j) in enumerate(zip(bias[::s], var[::s])):
                 plt.plot(d_vals, i, label = "Bias²")
                 plt.plot(d_vals, j, label = "Variance")
-                plt.plot(d_vals, k, label = "Total Error")
                 plt.legend()
                 plt.xlabel(xlabel)
-                plt.text(np.median(d_vals), 2*(np.max([i,j,k])-np.min([i,j,k]))/3,
+                plt.text(np.median(d_vals), 2*(np.max([i,j])-np.min([i,j]))/3,
                  f"$\\lambda = {lambda_vals[s*n]:.2E}$")
                 plt.xlim([min_deg, max_deg])
 
