@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from imageio import imread
 from matplotlib import cm
 import sys, franke, os
+from time import time
 import numpy as np
 import matplotlib
 
@@ -13,7 +14,7 @@ from utils.classes import Regression
 
 """Preparing Global Settings"""
 
-k_fold = 12          # k in k-fold
+k_fold = 8           # k in k-fold
 min_deg = 1          # Minimum polynomial approximation degree
 max_deg = 10         # Maximum polynomial approximation degree
 split_test = 25      # Percentage of data to split into testing set
@@ -85,7 +86,7 @@ def plot_Franke(x_min = 0, x_max = 1, N = 100):
     plt.savefig(f"{save_dir}/Franke_noise.{extension}",  dpi = 250)
     plt.close()
 
-def generate_Franke_data(x_min = 0, x_max = 1, N = 100):
+def generate_Franke_data(x_min = 0, x_max = 1, N = 150):
 
     # Generating NxN meshgrid of x,y values in range [x_min, x_max]
     X = np.random.random((N,N))*(x_max-x_min) + x_min
@@ -96,8 +97,9 @@ def generate_Franke_data(x_min = 0, x_max = 1, N = 100):
     init_error = np.random.normal(0, globals()["sigma"], Z.shape)
 
     # Normalizing Z
-    Z = (Z - np.mean(Z))/np.std(Z)
-    f_xy = Z.flatten().copy()
+    # Z = (Z - np.mean(Z)) /np.std(Z)
+    # Z = (Z - np.min(Z))/(np.max(Z)-np.min(Z))
+    f_xy = Z.copy().flatten()
     Z = Z + init_error
 
     # Making compatible input arrays for Regression object
@@ -195,6 +197,7 @@ def part_B(R, save = False, plots = False, name = ""):
 def part_C(R, f_xy = None, save = False, plots = False, name = ""):
     bias = []
     var = []
+    mse = []
 
     cost_train = []
     cost_test = []
@@ -205,21 +208,27 @@ def part_C(R, f_xy = None, save = False, plots = False, name = ""):
         if globals()["debug_mode"] is True:
             print(f"\r{np.round(100*(n+1)/len(d_vals)):>3.0f}%", end = "")
         R.reset()
+
+        if f_xy is not None:
+            R2_step, mse_step, var_step, bias_step = \
+            R.k_fold(k = k_fold, degree = d, f_xy = f_xy)
+            bias.append(bias_step)
+            var.append(var_step)
+        else:
+            R2_step, mse_step, var_step = R.k_fold(k = k_fold, degree = d)
+
+        R.reset()
         arg_idx = R.split(test_size = split_test)
         R.poly(degree = d)
-
         Y_hat_train = R.predict()
         Y_hat_test = R.predict(X = R._X_test)
 
-        if f_xy is not None:
-            f_train = f_xy[arg_idx[0]]
-            f_test = f_xy[arg_idx[1]]
-
-            bias_step = np.mean((f_test - np.mean(Y_hat_test))**2)
-            var_step = np.mean((Y_hat_test - np.mean(Y_hat_test))**2)
-
-            bias.append(bias_step)
-            var.append(var_step)
+        # if f_xy is not None:
+        #     f_train = f_xy[arg_idx[0]]
+        #     f_test = f_xy[arg_idx[1]]
+        #
+        #     bias_step = np.mean((f_test - np.mean(Y_hat_test))**2)
+        #     var_step = np.mean((Y_hat_test - np.mean(Y_hat_test))**2)
 
         cost_train_step = np.mean((R._Y - Y_hat_train)**2)
         cost_test_step = np.mean((R._Y_test - Y_hat_test)**2)
@@ -275,18 +284,30 @@ def part_D(R, f_xy = None, save = False, plots = False, name = ""):
                 print(f"\r{(100*(n + m*len(d_vals) + 1)/(len(d_vals)*len(lambda_vals))):>3.0f}%", end = "")
             R.reset()
             arg_idx = R.split(test_size = split_test)
-            R.poly(degree = d, alpha = l)
-
-            Y_hat_test = R.predict(X = R._X_test)
-
-            var_step.append(np.mean((Y_hat_test - np.mean(Y_hat_test))**2))
-            mse_step.append(R.mse(split = True))
-            R2_step.append(R.r_squared(split = True))
 
             if f_xy is not None:
-                f_test = f_xy[arg_idx[1]]
-                bias_step.append(np.mean((f_test - np.mean(Y_hat_test))**2))
+                R2_step_2, mse_step_2, var_step_2, bias_step_2 = \
+                R.k_fold(k = k_fold, degree = d, f_xy = f_xy, alpha = l)
+                bias_step.append(bias_step_2)
+                var_step.append(var_step_2)
+                mse_step.append(mse_step_2)
+                R2_step.append(R2_step_2)
             else:
+                R2_step_2, mse_step_2, var_step_2 = \
+                R.k_fold(k = k_fold, degree = d, alpha = l)
+                var_step.append(var_step_2)
+                mse_step.append(mse_step_2)
+                R2_step.append(R2_step_2)
+
+            # R.poly(degree = d, alpha = l)
+
+            # Y_hat_test = R.predict(X = R._X_test)
+
+            # var_step.append(np.mean((Y_hat_test - np.mean(Y_hat_test))**2))
+            # mse_step.append(R.mse(split = True))
+            # R2_step.append(R.r_squared(split = True))
+
+            if f_xy is None:
                 bias_step.append(0)
 
         var.append(var_step)
@@ -317,15 +338,19 @@ def part_D(R, f_xy = None, save = False, plots = False, name = ""):
             ax = fig.gca(projection="3d")
             fig.set_size_inches(8, 6)
 
-            if j == "$MSE$":
-                minimum = np.unravel_index(i.argmin(), i.shape)
-                ax.plot([L[minimum]],[D[minimum]],[i[minimum]], "kv",
-                markersize = 10)
+            if j in ["$MSE$", "Bias²","Variance"]:
+                minmax = "Minimum"
+                idx = np.unravel_index(i.argmin(), i.shape)
+            else:
+                minmax = "Maximum"
+                idx = np.unravel_index(i.argmax(), i.shape)
+            ax.plot([L[idx]],[D[idx]],[i[idx]], marker = "X",
+            markersize = 10, markeredgecolor = "k", markerfacecolor = "g")
 
-                legend = (f"Minimum MSE = {i[minimum]:g} at\n$d$ = {L[minimum]:g}, $\\lambda$ = "
-                          f"{D[minimum]:g}")
+            legend = (f"{minmax} {j} = {i[idx]:g} at\n$d$ = {L[idx]:g}, $\\lambda$ = "
+                      f"{D[idx]:g}")
 
-                plt.legend([legend])
+            plt.legend([legend])
 
             ax.plot_surface(L, D, i, cmap = cmap, alpha = alpha_3D)
             ax.set_xlabel("\n\n\n" + xlabel, linespacing = 3)
@@ -365,7 +390,7 @@ def part_E(R, f_xy = None, save = False, plots = False, name = ""):
 
     debug_title("E")
 
-    lambda_vals = np.linspace(alpha_min_R, alpha_max_R, N_alpha_R)
+    lambda_vals = np.linspace(alpha_min_L, alpha_max_L, N_alpha_L)
 
     var = []
     mse = []
@@ -383,18 +408,30 @@ def part_E(R, f_xy = None, save = False, plots = False, name = ""):
                 print(f"\r{(100*(n + m*len(d_vals) + 1)/(len(d_vals)*len(lambda_vals))):>3.0f}%", end = "")
             R.reset()
             arg_idx = R.split(test_size = split_test)
-            R.lasso(degree = d, alpha = l)
-
-            Y_hat_test = R.predict(X = R._X_test)
-
-            var_step.append(np.mean((Y_hat_test - np.mean(Y_hat_test))**2))
-            mse_step.append(R.mse(split = True))
-            R2_step.append(R.r_squared(split = True))
 
             if f_xy is not None:
-                f_test = f_xy[arg_idx[1]]
-                bias_step.append(np.mean((f_test - np.mean(Y_hat_test))**2))
+                R2_step_2, mse_step_2, var_step_2, bias_step_2 = \
+                R.k_fold_lasso(k = k_fold, degree = d, f_xy = f_xy, alpha = l)
+                bias_step.append(bias_step_2)
+                var_step.append(var_step_2)
+                mse_step.append(mse_step_2)
+                R2_step.append(R2_step_2)
             else:
+                R2_step_2, mse_step_2, var_step_2 = \
+                R.k_fold_lasso(k = k_fold, degree = d, alpha = l)
+                var_step.append(var_step_2)
+                mse_step.append(mse_step_2)
+                R2_step.append(R2_step_2)
+
+            # R.poly(degree = d, alpha = l)
+
+            # Y_hat_test = R.predict(X = R._X_test)
+
+            # var_step.append(np.mean((Y_hat_test - np.mean(Y_hat_test))**2))
+            # mse_step.append(R.mse(split = True))
+            # R2_step.append(R.r_squared(split = True))
+
+            if f_xy is None:
                 bias_step.append(0)
 
         var.append(var_step)
@@ -425,15 +462,19 @@ def part_E(R, f_xy = None, save = False, plots = False, name = ""):
             ax = fig.gca(projection="3d")
             fig.set_size_inches(8, 6)
 
-            if j == "$MSE$":
-                minimum = np.unravel_index(i.argmin(), i.shape)
-                ax.plot([L[minimum]],[D[minimum]],[i[minimum]], "kv",
-                markersize = 10)
+            if j in ["$MSE$", "Bias²"]:
+                minmax = "Minimum"
+                idx = np.unravel_index(i.argmin(), i.shape)
+            else:
+                minmax = "Maximum"
+                idx = np.unravel_index(i.argmax(), i.shape)
+            ax.plot([L[idx]],[D[idx]],[i[idx]], marker = "X",
+            markersize = 10, markeredgecolor = "k", markerfacecolor = "g")
 
-                legend = (f"Minimum MSE = {i[minimum]:g} at\n$d$ = {L[minimum]:g}, $\\lambda$ = "
-                          f"{D[minimum]:g}")
+            legend = (f"{minmax} {j} = {i[idx]:g} at\n$d$ = {L[idx]:g}, $\\lambda$ = "
+                      f"{D[idx]:g}")
 
-                plt.legend([legend])
+            plt.legend([legend])
 
             ax.plot_surface(L, D, i, cmap = cmap, alpha = alpha_3D)
             ax.set_xlabel("\n\n\n" + xlabel, linespacing = 3)
@@ -456,8 +497,9 @@ def part_E(R, f_xy = None, save = False, plots = False, name = ""):
                 plt.plot(d_vals, j, label = "Variance")
                 plt.legend()
                 plt.xlabel(xlabel)
-                plt.text(np.median(d_vals), 2*(np.max([i,j])-np.min([i,j]))/3,
-                 f"$\\lambda = {lambda_vals[s*n]:.2E}$")
+                plt.text((np.max(d_vals)-np.min(d_vals))/2 + np.min(d_vals),
+                         2*(np.max([i,j])-np.min([i,j]))/3,
+                         f"$\\lambda = {lambda_vals[s*n]:.2E}$")
                 plt.xlim([min_deg, max_deg])
 
                 if save is False:
@@ -475,7 +517,7 @@ def part_F(save = False, plots = False):
         # Importing the data
         terrain_data = imread(globals()["terrain_data"])
         # Resizing the data
-        terrain_data = terrain_data[::10,::10]
+        terrain_data = terrain_data[::15,::15]
         # Normalizing the data
         terrain_data = (terrain_data - np.mean(terrain_data))\
                        / np.std(terrain_data)
@@ -500,6 +542,8 @@ def part_F(save = False, plots = False):
     return X_regr, Y_regr
 
 if __name__ == "__main__":
+
+    t1 = time()
 
     # Creating a directory to save the Franke function data
     save_dir = "franke_output"
@@ -539,3 +583,6 @@ if __name__ == "__main__":
     part_C(R = R_real, save = save_all, plots = plots)
     part_D(R = R_real, save = save_all, plots = plots)
     part_E(R = R_real, save = save_all, plots = plots)
+
+    dt = time() - t1
+    print(f"Elapsed time: {dt:} seconds")

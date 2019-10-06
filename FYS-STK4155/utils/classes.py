@@ -85,6 +85,7 @@ class Regression():
         self._split = False
         self._N = self._X.shape[0]
         self._p = self._X.shape[1]
+        self._max_iter = 1E3
 
         # Cleans out all attributes in case of reset
         if not hasattr(self, '_dir_backup'):
@@ -301,7 +302,7 @@ class Regression():
 
         A, exponents = self._design(self._X, degree, "lasso")
 
-        clf = skl.Lasso(alpha=alpha, max_iter = 2E3)
+        clf = skl.Lasso(alpha=alpha, max_iter = self._max_iter)
         clf.fit(A, self._Y)
         beta = clf.coef_
         self._beta = beta
@@ -732,7 +733,149 @@ class Regression():
         Y_split = Y_shuffle.reshape((k, N_subsample))
         if f_xy is not None:
             f_shuffle = f_xy[idx_shuffle]
-            f_split = f_xy.reshape((k, N_subsample, self._p))
+            f_split = f_shuffle.reshape((k, N_subsample))
+
+        MSE = np.zeros(k)
+        R2 = np.zeros(k)
+        variance = np.zeros(k)
+        bias = np.zeros(k)
+
+        for i in range(k):
+            X_test = X_split[i].copy()
+            # X_train = np.delete(X_split, i, axis = 0)
+            # X_train = X_train.reshape(((k-1)*N_subsample, 2))
+
+            if f_xy is not None:
+                f_test = f_split[i].copy()
+                f_train = np.delete(f_split, i, axis = 0)
+                f_train = f_train.reshape((k-1)*N_subsample)
+
+            Y_test = Y_split[i].copy()
+            # Y_train = np.delete(Y_split, i, axis = 0)
+            # Y_train = Y_train.reshape((k-1)*N_subsample)
+
+            beta, var, exponents = \
+            self._internal_poly(X_train, Y_train, degree, "k_fold", alpha)
+
+            Y_hat = self._internal_predict(X_test, beta, degree)
+
+            R2[i] = 1 - (np.sum((Y_test - Y_hat)**2))/\
+                            (np.sum((Y_test - np.mean(Y_test))**2))
+
+            MSE[i] = np.mean((Y_test - Y_hat)**2)
+            variance[i] = np.mean((Y_hat - np.mean(Y_hat))**2)
+
+            if f_xy is not None:
+                bias[i] = np.mean((f_test - np.mean(Y_hat))**2)
+
+        if f_xy is not None:
+            return np.mean(R2), np.mean(MSE), np.mean(variance), np.mean(bias)
+        else:
+            return np.mean(R2), np.mean(MSE), np.mean(variance)
+
+    def k_fold_lasso(self, k, degree, alpha, sigma = None, f_xy = None):
+        """
+            ---PURPOSE------------------------------------
+
+            Implements k-fold cross-validation with LASSO
+
+            ---INPUT--------------------------------------
+
+            k               Integer greater than 1
+            degree          Integer greater than zero, or array of integers
+                            greater than zero
+
+            ---OPTIONAL-INPUT-----------------------------
+
+            sigma           Scalar value
+            alpha           Real number greater than zero
+
+            ---OUTPUT-------------------------------------
+
+            R2              Float
+            MSE             Float
+            variance        1-D array
+
+            ---NOTES--------------------------------------
+
+            If the dataset has been split, will apply k-fold to the training
+            set.  If not, it will apply it to the entire dataset.
+
+            The parameter <sigma> is representative of the standard deviation
+            in a Gaussian noise that is expected to exist in the dataset.  It
+            is assumed that the dataset output is a function of the form:
+
+                        y = f(x_1, x_2, ..., x_p) + N(0, sigma)
+
+            Where N(mu, sigma) is a normal distribution with a mean value of mu
+            and a standard deviation of sigma.
+        """
+
+        try:
+            if degree == int(degree) and degree > 0:
+                degree = int(degree)
+        except ValueError:
+            error_msg = (f"\n\nParameter <degree> in <Regression.k_fold> "
+                         f"must be an integer greater than zero\n\t"
+                         f"type(degree) = {type(degree)}")
+            raise ValueError(error_msg)
+
+        if alpha is not None:
+            try:
+                if alpha > 0:
+                    alpha = float(alpha)
+                elif alpha <= 0:
+                    raise ValueError()
+            except TypeError:
+                error_msg = (f"\n\nParameter <alpha> in <Regression.k_fold> "
+                             f"must be a number greater than zero\n\t"
+                             f"type(alpha) = {type(alpha)}")
+                raise TypeError(error_msg)
+            except ValueError:
+                error_msg = (f"\n\nParameter <alpha> in <Regression.k_fold> "
+                             f"must be a number greater than zero\n\t"
+                             f"alpha = {alpha} --> suggest changing to: alpha "
+                             f"= 1E-5")
+                raise ValueError(error_msg)
+
+        error_msg = (f"\n\nParameter <k> in method <Regression.k_fold> must be"
+                     f" an integer greater than one\n\t")
+
+        if not isinstance(k, int):
+            error_msg += f"type(k) = {type(k)}"
+            raise TypeError(error_msg)
+        elif k < 2:
+            error_msg += f"k = {k}"
+            if self._N >= 500:
+                error_msg += " --> suggest changing to: k = 10"
+            raise ValueError(error_msg)
+
+        N_subsample = self._X.shape[0]//k
+        N_remain = self._X.shape[0]%k
+        N_tot = self._X.shape[0] - N_remain
+
+        if N_subsample < 10:
+            warning_msg = (f"Implementing k-fold cross-validation in method "
+                           f"<Regression.k_fold> with k = {k} leads to "
+                           f"subsamples of size {N_subsample}, which are small"
+                           f", and may thus lead to misleading results.")
+            warnings.warn(warning_msg)
+        elif N_subsample <= 1:
+            error_msg = (f"Implementing k-fold cross-validation in method "
+                           f"<Regression.k_fold> with k = {k} leads to "
+                           f"subsamples of size {N_subsample}.\n\nSubsamples "
+                           f"must contain more than one element.")
+
+            raise ValueError(error_msg)
+
+        idx_shuffle = np.random.permutation(N_tot)
+        X_shuffle = self._X[idx_shuffle]
+        Y_shuffle = self._Y[idx_shuffle]
+        X_split = X_shuffle.reshape((k, N_subsample, self._p))
+        Y_split = Y_shuffle.reshape((k, N_subsample))
+        if f_xy is not None:
+            f_shuffle = f_xy[idx_shuffle]
+            f_split = f_shuffle.reshape((k, N_subsample))
 
         MSE = np.zeros(k)
         R2 = np.zeros(k)
@@ -745,15 +888,16 @@ class Regression():
             X_train = X_train.reshape(((k-1)*N_subsample, 2))
 
             if f_xy is not None:
-                f_test = f_split[i]
+                f_test = f_split[i].copy()
                 f_train = np.delete(f_split, i, axis = 0)
+                f_train = f_train.reshape((k-1)*N_subsample)
 
             Y_test = Y_split[i].copy()
             Y_train = np.delete(Y_split, i, axis = 0)
             Y_train = Y_train.reshape((k-1)*N_subsample)
 
-            beta, var, exponents = \
-            self._internal_poly(X_train, Y_train, degree, "k_fold", alpha)
+            beta, exponents = \
+            self._internal_lasso(X_train, Y_train, degree, "k_fold_lasso", alpha)
 
             Y_hat = self._internal_predict(X_test, beta, degree)
 
@@ -1103,6 +1247,36 @@ class Regression():
                 raise np.linalg.LinAlgError(error_msg)
 
         return beta, variance, exponents
+
+    def _internal_lasso(self, X, y, degree, method, alpha):
+        """
+            ---PURPOSE------------------------------------
+
+            Implements regression for a multidimensional polynomial of the
+            given <degree> for the k-fold algorithm method.
+
+            ---INPUT--------------------------------------
+
+            X               2-D NumPy array of shape (N, p)
+            y               1-D NumPy array of shape (N,)
+            degree          Integer greater than zero
+            method          String
+            alpha           Real number greater than zero or None
+
+            ---OUTPUT-------------------------------------
+
+            beta
+            variance
+            exponents
+        """
+
+        A, exponents = self._design(X, degree, method)
+        clf = skl.Lasso(alpha=alpha, max_iter = self._max_iter)
+        clf.fit(A, y)
+        beta = clf.coef_
+        beta[0] = clf.intercept_
+
+        return beta, exponents
 
     def _internal_predict(self, X, beta, degree):
         """
