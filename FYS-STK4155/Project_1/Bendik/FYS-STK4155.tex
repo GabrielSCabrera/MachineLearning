@@ -433,276 +433,94 @@ Figure \ref{part_e4} shows the squared bias.
 %Part a and b:
 
 \begin{figure}[H]
-	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
+	\centering  
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_A.png}
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_A_highdeg.png}
-	\caption{
-		Plots of the mean square error, the $R^2$-score and the $\sigma$ variance of the $\beta$-values against the polynomial degree after performing a ordinary least square regression analysis on the Franke-function
-		%		The resulting function after performing a ordinary least square regression analysis using polynomials in x and y up to fifth order on the Franke function
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The $MSE$, the $R^2$-score, and the variance $\sigma$ in the vector of coefficients $\beta$, as functions of the polynomial degree after performing OLS on the Franke-function}
 	\label{part_a}
 \end{figure}
 
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_B.png}
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_B_highdeg.png}
-	\caption{
-		Plots of the mean square error and the $R^2$-score against the polynomial degree after performing a ordinary least square regression analysis on the Franke-function and performing a $k$-fold cross-validation
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The $MSE$, the $R^2$-score, and the variance $\sigma$ in the vector of coefficients $\beta$ as functions of the polynomial degree after performing \textit{OLS} on the Franke-function.  Using $12$-fold cross validation.}
 	\label{part_b}
 \end{figure}
-
-
-
-%\begin{table}[H]
-%%	\centering
-%	\begin{tabular}{|>{\columncolor[HTML]{EFEFEF}}c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
-%		\hline
-%		\cellcolor[HTML]{9B9B9B} & \cellcolor[HTML]{EFEFEF}$\beta_0$ & \cellcolor[HTML]{EFEFEF}$\beta_1$ & \cellcolor[HTML]{EFEFEF}$\beta_2$ & \cellcolor[HTML]{EFEFEF}$\beta_3$ & \cellcolor[HTML]{EFEFEF}$\beta_4$ & \cellcolor[HTML]{EFEFEF}$\beta_5$ & \cellcolor[HTML]{EFEFEF}$\beta_6$ & \cellcolor[HTML]{EFEFEF}$\beta_7$ & \cellcolor[HTML]{EFEFEF}$\beta_8$ & \cellcolor[HTML]{EFEFEF}$\beta_9$ & \cellcolor[HTML]{EFEFEF}$\beta_{10}$ & \cellcolor[HTML]{EFEFEF}$\beta_{11}$ & \cellcolor[HTML]{EFEFEF}$\beta_{12}$ & \cellcolor[HTML]{EFEFEF}$\beta_{13}$ & \cellcolor[HTML]{EFEFEF}$\beta_{14}$ & \cellcolor[HTML]{EFEFEF}$\beta_{15}$ & \cellcolor[HTML]{EFEFEF}$\beta_{16}$  \\ \hline
-%		SLS & 0.00789 & 0.322 & 2.46 & 4.81 & 5.61 & 1.76 & 0.322 & 1.85 & 4.3 & 5.97 & 2.83 & 2.46 & 4.3 & 5.97 & 4.23 & 4.81 & 5.97  \\ \hline
-%		$k$-fold & 0.0321 & 4.03 & 94 & 474 & 517 & 79.5 & 4.03 & 57.3 & 260 & 301 & 60.1 & 93.9 & 260 & 261 & 57.1 & 474 & 301 \\ \hline
-%	\end{tabular}
-%
-%	\begin{tabular}{|>{\columncolor[HTML]{EFEFEF}}c|c|c|c|c|}
-%		\hline
-%		\cellcolor[HTML]{9B9B9B} & \cellcolor[HTML]{EFEFEF}$\beta_{17}$ & \cellcolor[HTML]{EFEFEF}$\beta_{18}$ & \cellcolor[HTML]{EFEFEF}$\beta_{19}$ & \cellcolor[HTML]{EFEFEF}$\beta_{20}$ \\ \hline
-%		SLS & 4.23 & 5.61 & 2.83 & 1.76  \\ \hline
-%		$k$-fold &  57.1 & 517 & 60.1 & 79.5  \\ \hline
-%	\end{tabular}
-%	\caption{The variance of $\beta$ for the ordinary least square regression and for $k$-fold validation}
-%\end{table}
-%
-%\begin{table}[H]
-%	\centering
-%	\begin{tabular}{|
-%			>{\columncolor[HTML]{EFEFEF}}c |c|c|}
-%		\hline
-%		\cellcolor[HTML]{9B9B9B} & \cellcolor[HTML]{EFEFEF}MSE & \cellcolor[HTML]{EFEFEF}$R^2$ \\ \hline
-%		SLS                      & 0.015                       & 0.84                          \\ \hline
-%		$k$-fold                 & 0.012                       & 0.87                          \\ \hline
-%	\end{tabular}
-%	\caption{MSE and R2 for a and b}
-%\end{table}
-
-
-
-%\begin{table}[H]
-%	\centering
-%	\begin{tabular}{|c|c|c|}
-%		\hline
-%		& MSE & \\ \hline
-%		SLS                      & 0.015                       & 0.84                          \\ \hline
-%		$k$-fold                 & 0.012                       & 0.87                          \\ \hline
-%	\end{tabular}
-%	\caption{MSE and R2 for a and b}
-%\end{table}
-
-
 
 %Part c:
 
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_C_1.png}
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_C_1_highdeg.png}
-	\caption{
-		Plots of the bias and the varince against the polynomial degree after performing a ordinary least square regression analysis on the Franke-function
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The \textit{bias} and \textit{variance} as functions of the polynomial degree after performing \textit{OLS} on the Franke-function}
 	\label{part_c1}
 \end{figure}
 
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_C_2.png}
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_C_2_highdeg.png}
-	\caption{
-		Plots of the mean square error for the training data and the testing data, against the polynomial degree after performing a ordinary least square regression analysis on the Franke-function
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The $MSE$ for the \textit{training data} and the \textit{testing data}, as a function of the polynomial degree after performing \textit{OLS} on the Franke-function}
 	\label{part_c2}
 \end{figure}
 
-
-
 %Part d:
-
 
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_D_1.png}
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_D_1_highdeg.png}
-	\caption{
-		Plots of the varinace against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the Franke-function
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The \textit{variance} as a function of polynomial degree and hyperparameter $\lambda$, after performing \textit{Ridge regression} on the Franke-function}
 	\label{part_d1}
 \end{figure}
 
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_D_2.png}
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_D_2_highdeg.png}
-	\caption{
-		Plots of the mean square error against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the Franke-function 
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The $MSE$ as a function of the polynomial degree and hyperparameter $\lambda$ after performing \textit{Ridge regression} on the Franke-function}
 	\label{part_d2}
 \end{figure}
 
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_D_3.png}
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_D_3_highdeg.png}
-	\caption{
-		Plots of the $R^2$-score against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the Franke-function
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The $R^2$-score as a function of the polynomial degree and hyperparameter $\lambda$ after performing \textit{Ridge regression} on the Franke-function}
 	\label{part_d3}
 \end{figure}
 
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_D_4.png}
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_D_4_highdeg.png}
-	\caption{
-		Plots of the bias squared against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the Franke-function 
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The \textit{squared bias} as a function of the polynomial degree and hyperparameter $\lambda$ after performing \textit{Ridge regression} on the Franke-function}
 	\label{part_d4}
 \end{figure}
-
-%\begin{figure}[H]
-%	\centering 
-%	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-%	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_D_5.png}
-%	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_D_5_highdeg.png}
-%	\caption{
-%		Plots of the total error against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the Franke-function 
-%	}
-%	%Label gjør det enkelt å referere til ulike bilder.
-%	\label{part_d5}
-%\end{figure}
-
-
-
-%\begin{figure}[H]
-%	\centering 
-%	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-%	\includegraphics[scale=0.6]{part_d_reg_MSE.pdf}
-%	\caption{The Mean Squared Error for the Ridge method for different values of $\lambda$}
-%	%Label gjør det enkelt å referere til ulike bilder.
-%	\label{part_d_MSE}
-%\end{figure}
-%
-%\begin{figure}[H]
-%	\centering 
-%	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-%	\includegraphics[scale=0.6]{part_d_reg_R2.pdf}
-%	\caption{$R^2$-score for the Ridge method for different values of $\lambda$}
-%	%Label gjør det enkelt å referere til ulike bilder.
-%	\label{part_d_R2}
-%\end{figure}
-
-
-
 
 %Part e:
 
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_1.png}
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_1_highdeg.png}
-	\caption{
-		Plots of the varinace against the polyonomial degree and the hyperparameter $\lambda$ after performing LASSO regression on the Franke-function
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The \textit{variance} as a function of the polynomial degree and hyperparameter $\lambda$ after performing \textit{LASSO regression} on the Franke-function}
 	\label{part_e1}
 \end{figure}
 
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_2.png}
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_2_highdeg.png}
-	\caption{
-		Plots of the mean square error against the polyonomial degree and the hyperparameter $\lambda$ after performing LASSO regression on the Franke-function 
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The $MSE$ as a function of the polynomial degree and hyperparameter $\lambda$ after performing \textit{LASSO regression} on the Franke-function}
 	\label{part_e2}
 \end{figure}
 
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_3.png}
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_3_highdeg.png}
-	\caption{
-		Plots of the $R^2$-score against the polyonomial degree and the hyperparameter $\lambda$ after performing LASSO regression on the Franke-function
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The $R^2$-score as a function of the polynomial degree and hyperparameter $\lambda$ after performing \textit{LASSO regression} on the Franke-function}
 	\label{part_e3}
 \end{figure}
 
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_4.png}
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_4_highdeg.png}
-	\caption{
-		Plots of the bias squared against the polyonomial degree and the hyperparameter $\lambda$ after performing LASSO regression on the Franke-function 
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The \textit{squared bias} as a function of the polynomial degree and hyperparameter $\lambda$ after performing \textit{LASSO regression} on the Franke-function}
 	\label{part_e4}
 \end{figure}
-
-%\begin{figure}[H]
-%	\centering 
-%	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-%	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_5.png}
-%	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_5_highdeg.png}
-%	\caption{
-%		Plots of the total error against the polyonomial degree and the hyperparameter $\lambda$ after performing LASSO regression on the Franke-function 
-%	}
-%	%Label gjør det enkelt å referere til ulike bilder.
-%	\label{part_e5}
-%\end{figure}
-
-
-
-
-
-%\begin{figure}[H]
-%	\centering 
-%	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-%	\includegraphics[scale=0.6]{part_e_reg_MSE.pdf}
-%	\caption{The Mean Squared Error for the LASSO method for different values of $\lambda$}
-%	%Label gjør det enkelt å referere til ulike bilder.
-%	\label{part_e_MSE}
-%\end{figure}
-%
-%\begin{figure}[H]
-%	\centering 
-%	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-%	\includegraphics[scale=0.6]{part_e_reg_R2.pdf}
-%	\caption{$R^2$-score for the LASSO method for different values of $\lambda$}
-%	%Label gjør det enkelt å referere til ulike bilder.
-%	\label{part_e_R2}
-%\end{figure}
-
-
 
 
 
@@ -711,7 +529,7 @@ Figure \ref{part_e4} shows the squared bias.
 \subsection{Real Data}
 
 
-Following bellow is several plots we made of our result after studying regression on the real terrain data. All the plots shows the results for 1 to 9 polynomil degrees.
+Following bellow is several plots we made of our result after studying regression on the real terrain data. All the plots shows the results for 1 to 10 polynomil degrees.
 
 Figure \ref{part_g_a} to \ref{part_g_c2} details the ordinary least square method.
 Figure \ref{part_g_a} shows the variance, mean square error and the $R^2$-score.
@@ -734,136 +552,66 @@ Figure \ref{part_g_e3} shows the $R^2$-score.
 
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../real_output/part_A.png}
-	\caption{
-		A plot of the mean square error, the $R^2$-score and the $\sigma$ variance of the $\beta$-values against the polynomial degree after performing a ordinary least square regression analysis on the real terrain data of Møsvatn Austfjell
-		%		The resulting function after performing a ordinary least square regression analysis using polynomials in x and y up to fifth order on the Franke function
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The $MSE$, $R^2$-score and variance $\sigma$ of the vector of coefficients $\beta$ as a function of the polynomial degree after performing \textit{OLS} on real terrain data from \textit{Møsvatn Austfjell}}
 	\label{part_g_a}
 \end{figure}
 
-
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../real_output/part_B.png}
-	\caption{
-		A plot of the mean square error and the $R^2$-score against the polynomial degree after performing a ordinary least square regression analysis on the real terrain data of Møsvatn Austfjell and performing a $k$-fold cross-validation
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The $MSE$, $R^2$-score and variance $\sigma$ of the vector of coefficients $\beta$ as a function of the polynomial degree after performing \textit{OLS} on real terrain data from \textit{Møsvatn Austfjell}. Using $12$-fold cross validation.}
 	\label{part_g_b}
 \end{figure}
 
-
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../real_output/part_C_2.png}
-	\caption{
-		A plot of the mean square error for the training data and the testing data, against the polynomial degree after performing a ordinary least square regression analysis on the real terrain data of Møsvatn Austfjell
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The $MSE$ for the \textit{training data} and the \textit{testing data}, as a function of the polynomial degree after performing \textit{OLS} on real terrain data from \textit{Møsvatn Austfjell}}
 	\label{part_g_c2}
 \end{figure}
 
-
-
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../real_output/part_D_1.png}
-	\caption{
-		Plots of the varinace against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the real terrain data of Møsvatn Austfjell
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The \textit{variance} as a function of the polynomial degree and hyperparameter $\lambda$ after performing \textit{Ridge regression} on real terrain data from \textit{Møsvatn Austfjell}}
 	\label{part_g_d1}
 \end{figure}
 
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../real_output/part_D_2.png}
-	\caption{
-		Plots of the mean square error against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the real terrain data of Møsvatn Austfjell 
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The $MSE$ as a function of the polynomial degree and the hyperparameter $\lambda$ after performing \textit{Ridge regression} on real terrain data from \textit{Møsvatn Austfjell}}
 	\label{part_g_d2}
 \end{figure}
 
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../real_output/part_D_3.png}
-	\caption{
-		Plots of the $R^2$-score against the polyonomial degree and the hyperparameter $\lambda$ after performing Ridge regression on the real terrain data of Møsvatn Austfjell
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The $R^2$-score as a function of the polynomial degree and hyperparameter $\lambda$ after performing \textit{Ridge regression} on real terrain data from \textit{Møsvatn Austfjell}}
 	\label{part_g_d3}
 \end{figure}
 
-
-
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../real_output/part_E_1.png}
-	\caption{
-		Plots of the varinace against the polyonomial degree and the hyperparameter $\lambda$ after performing LASSO regression on the real terrain data of Møsvatn Austfjell
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The \textit{variance} as a function of the polynomial degree and hyperparameter $\lambda$ after performing \textit{LASSO regression} on real terrain data from \textit{Møsvatn Austfjell}}
 	\label{part_g_e1}
 \end{figure}
 
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../real_output/part_E_2.png}
-	\caption{
-		Plots of the mean square error against the polyonomial degree and the hyperparameter $\lambda$ after performing LASSO regression on the real terrain data of Møsvatn Austfjell 
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{Plots of the $MSE$ as a function of the polynomial degree and hyperparameter $\lambda$ after performing \textit{LASSO regression} on real terrain data from \textit{Møsvatn Austfjell}}
 	\label{part_g_e2}
 \end{figure}
 
 \begin{figure}[H]
 	\centering 
-	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../real_output/part_E_3.png}
-	\caption{
-		Plots of the $R^2$-score against the polyonomial degree and the hyperparameter $\lambda$ after performing LASSO regression on the real terrain data of Møsvatn Austfjell
-	}
-	%Label gjør det enkelt å referere til ulike bilder.
+	\caption{The $R^2$-score as a function of the polynomial degre and hyperparameter $\lambda$ after performing \textit{LASSO regression} on real terrain data from \textit{Møsvatn Austfjell}}
 	\label{part_g_e3}
 \end{figure}
-
-
-
-
-
-%\begin{figure}[H]
-%	\centering 
-%	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-%	%\includegraphics[scale=0.52]{part_g_input.pdf}
-%	\includegraphics[scale=0.52]{part_g_input3d.pdf}
-%	\caption{The terrain-data we are studying, from Møsvatn Austfjell in Norway}
-%	%Label gjør det enkelt å referere til ulike bilder.
-%	\label{part_g_input}
-%\end{figure}
-
-
-
-%\begin{figure}[H]
-%	\centering 
-%	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
-%	\includegraphics[scale=0.6]{plot.pdf}
-%	\caption{A plot of $PL$ against the dimensionless temperature $T_k$, using both the model for a large and small $T$	}
-%	%Label gjør det enkelt å referere til ulike bilder.
-%	\label{plot}
-%\end{figure}
-
-
 
 
 
