@@ -742,8 +742,8 @@ class Regression():
 
         for i in range(k):
             X_test = X_split[i].copy()
-            # X_train = np.delete(X_split, i, axis = 0)
-            # X_train = X_train.reshape(((k-1)*N_subsample, 2))
+            X_train = np.delete(X_split, i, axis = 0)
+            X_train = X_train.reshape(((k-1)*N_subsample, 2))
 
             if f_xy is not None:
                 f_test = f_split[i].copy()
@@ -751,8 +751,8 @@ class Regression():
                 f_train = f_train.reshape((k-1)*N_subsample)
 
             Y_test = Y_split[i].copy()
-            # Y_train = np.delete(Y_split, i, axis = 0)
-            # Y_train = Y_train.reshape((k-1)*N_subsample)
+            Y_train = np.delete(Y_split, i, axis = 0)
+            Y_train = Y_train.reshape((k-1)*N_subsample)
 
             beta, var, exponents = \
             self._internal_poly(X_train, Y_train, degree, "k_fold", alpha)

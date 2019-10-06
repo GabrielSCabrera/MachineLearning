@@ -14,18 +14,18 @@ from utils.classes import Regression
 
 """Preparing Global Settings"""
 
-k_fold = 8           # k in k-fold
+k_fold = 12          # k in k-fold
 min_deg = 1          # Minimum polynomial approximation degree
 max_deg = 10         # Maximum polynomial approximation degree
 split_test = 25      # Percentage of data to split into testing set
-sigma = 0.1          # Standard deviation of Gaussian noise in Franke function
+sigma = 0.01         # Standard deviation of Gaussian noise in Franke function
 
-alpha_min_R = 1E-12  # Minimum Lambda in Ridge
-alpha_max_R = 1E-3   # Maximum lambda in Ridge
-alpha_min_L = 1E-12  # Minimum lambda in LASSO
+alpha_min_R = 1E-16  # Minimum Lambda in Ridge
+alpha_max_R = 1E0    # Maximum lambda in Ridge
+alpha_min_L = 1E-16  # Minimum lambda in LASSO
 alpha_max_L = 1E-3   # Maximum lambda in LASSO
-N_alpha_R = 20       # Number of lambdas to check for with Ridge in Part d)
-N_alpha_L = 20       # Number of lambdas to check for with LASSO in Part e)
+N_alpha_R = 30       # Number of lambdas to check for with Ridge in Part d)
+N_alpha_L = 30       # Number of lambdas to check for with LASSO in Part e)
 
 save_dir = "output"  # Default directory in which to save output files
 plots = True         # Whether to generate plots
@@ -299,14 +299,6 @@ def part_D(R, f_xy = None, save = False, plots = False, name = ""):
                 mse_step.append(mse_step_2)
                 R2_step.append(R2_step_2)
 
-            # R.poly(degree = d, alpha = l)
-
-            # Y_hat_test = R.predict(X = R._X_test)
-
-            # var_step.append(np.mean((Y_hat_test - np.mean(Y_hat_test))**2))
-            # mse_step.append(R.mse(split = True))
-            # R2_step.append(R.r_squared(split = True))
-
             if f_xy is None:
                 bias_step.append(0)
 
@@ -317,7 +309,7 @@ def part_D(R, f_xy = None, save = False, plots = False, name = ""):
 
     print()
 
-    L,D = np.meshgrid(d_vals, lambda_vals)
+    D,L = np.meshgrid(d_vals, lambda_vals)
     var, mse, R2, bias = \
     np.array(var), np.array(mse), np.array(R2), np.array(bias)
 
@@ -344,15 +336,16 @@ def part_D(R, f_xy = None, save = False, plots = False, name = ""):
             else:
                 minmax = "Maximum"
                 idx = np.unravel_index(i.argmax(), i.shape)
-            ax.plot([L[idx]],[D[idx]],[i[idx]], marker = "X",
+
+            ax.plot([D[idx]],[L[idx]],[i[idx]], marker = "X",
             markersize = 10, markeredgecolor = "k", markerfacecolor = "g")
 
-            legend = (f"{minmax} {j} = {i[idx]:g} at\n$d$ = {L[idx]:g}, $\\lambda$ = "
-                      f"{D[idx]:g}")
+            legend = (f"{minmax} {j} = {i[idx]:g} at\n$d$ = {D[idx]:g}, $\\lambda$ = "
+                      f"{L[idx]:g}")
 
             plt.legend([legend])
 
-            ax.plot_surface(L, D, i, cmap = cmap, alpha = alpha_3D)
+            ax.plot_surface(D, L, i, cmap = cmap, alpha = alpha_3D)
             ax.set_xlabel("\n\n\n" + xlabel, linespacing = 3)
             ax.set_ylabel("\n\n\n" + ylabel, linespacing = 3)
             ax.set_zlabel("\n\n\n" + j, linespacing = 3)
@@ -423,14 +416,6 @@ def part_E(R, f_xy = None, save = False, plots = False, name = ""):
                 mse_step.append(mse_step_2)
                 R2_step.append(R2_step_2)
 
-            # R.poly(degree = d, alpha = l)
-
-            # Y_hat_test = R.predict(X = R._X_test)
-
-            # var_step.append(np.mean((Y_hat_test - np.mean(Y_hat_test))**2))
-            # mse_step.append(R.mse(split = True))
-            # R2_step.append(R.r_squared(split = True))
-
             if f_xy is None:
                 bias_step.append(0)
 
@@ -441,7 +426,7 @@ def part_E(R, f_xy = None, save = False, plots = False, name = ""):
 
     print()
 
-    L,D = np.meshgrid(d_vals, lambda_vals)
+    D,L = np.meshgrid(d_vals, lambda_vals)
     var, mse, R2, bias = \
     np.array(var), np.array(mse), np.array(R2), np.array(bias)
 
@@ -462,21 +447,21 @@ def part_E(R, f_xy = None, save = False, plots = False, name = ""):
             ax = fig.gca(projection="3d")
             fig.set_size_inches(8, 6)
 
-            if j in ["$MSE$", "Bias²"]:
+            if j in ["$MSE$", "Bias²", "Variance"]:
                 minmax = "Minimum"
                 idx = np.unravel_index(i.argmin(), i.shape)
             else:
                 minmax = "Maximum"
                 idx = np.unravel_index(i.argmax(), i.shape)
-            ax.plot([L[idx]],[D[idx]],[i[idx]], marker = "X",
+            ax.plot([D[idx]],[L[idx]],[i[idx]], marker = "X",
             markersize = 10, markeredgecolor = "k", markerfacecolor = "g")
 
-            legend = (f"{minmax} {j} = {i[idx]:g} at\n$d$ = {L[idx]:g}, $\\lambda$ = "
-                      f"{D[idx]:g}")
+            legend = (f"{minmax} {j} = {i[idx]:g} at\n$d$ = {D[idx]:g}, $\\lambda$ = "
+                      f"{L[idx]:g}")
 
             plt.legend([legend])
 
-            ax.plot_surface(L, D, i, cmap = cmap, alpha = alpha_3D)
+            ax.plot_surface(D, L, i, cmap = cmap, alpha = alpha_3D)
             ax.set_xlabel("\n\n\n" + xlabel, linespacing = 3)
             ax.set_ylabel("\n\n\n" + ylabel, linespacing = 3)
             ax.set_zlabel("\n\n\n" + j, linespacing = 3)
