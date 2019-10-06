@@ -15,16 +15,16 @@ from utils.classes import Regression
 
 k_fold = 12          # k in k-fold
 min_deg = 1          # Minimum polynomial approximation degree
-max_deg = 5          # Maximum polynomial approximation degree
+max_deg = 10         # Maximum polynomial approximation degree
 split_test = 25      # Percentage of data to split into testing set
 sigma = 0.1          # Standard deviation of Gaussian noise in Franke function
 
-alpha_min_R = 1E-10  # Minimum Lambda in Ridge
-alpha_max_R = 1E0    # Maximum lambda in Ridge
-alpha_min_L = 1E-10  # Minimum lambda in LASSO
-alpha_max_L = 1E0    # Maximum lambda in LASSO
-N_alpha_R = 50       # Number of lambdas to check for with Ridge in Part d)
-N_alpha_L = 50       # Number of lambdas to check for with LASSO in Part e)
+alpha_min_R = 1E-12  # Minimum Lambda in Ridge
+alpha_max_R = 1E-3   # Maximum lambda in Ridge
+alpha_min_L = 1E-12  # Minimum lambda in LASSO
+alpha_max_L = 1E-3   # Maximum lambda in LASSO
+N_alpha_R = 20       # Number of lambdas to check for with Ridge in Part d)
+N_alpha_L = 20       # Number of lambdas to check for with LASSO in Part e)
 
 save_dir = "output"  # Default directory in which to save output files
 plots = True         # Whether to generate plots
@@ -49,8 +49,7 @@ np.random.seed(69420666)
 
 """Helper Functions"""
 
-def generate_Franke_data(x_min = 0, x_max = 1, N = 100):
-
+def plot_Franke(x_min = 0, x_max = 1, N = 100):
     # Generating NxN meshgrid of x,y values in range [0, 1]
     x_min, x_max, N = 0, 1, 100
     x = np.linspace(x_min, x_max, int(N))
@@ -85,6 +84,16 @@ def generate_Franke_data(x_min = 0, x_max = 1, N = 100):
 
     plt.savefig(f"{save_dir}/Franke_noise.{extension}",  dpi = 250)
     plt.close()
+
+def generate_Franke_data(x_min = 0, x_max = 1, N = 100):
+
+    # Generating NxN meshgrid of x,y values in range [x_min, x_max]
+    X = np.random.random((N,N))*(x_max-x_min) + x_min
+    Y = np.random.random((N,N))*(x_max-x_min) + x_min
+
+    # Calculating the values of the Franke function at each (x,y) coordinate
+    Z = franke.FrankeFunction(X,Y)
+    init_error = np.random.normal(0, globals()["sigma"], Z.shape)
 
     # Normalizing Z
     Z = (Z - np.mean(Z))/np.std(Z)
@@ -149,6 +158,7 @@ def part_A(R, save = False, plots = False, name = ""):
 def part_B(R, save = False, plots = False, name = ""):
     mse = []
     R2 = []
+    var = []
 
     debug_title("B")
 
@@ -156,18 +166,20 @@ def part_B(R, save = False, plots = False, name = ""):
         if globals()["debug_mode"] is True:
             print(f"\r{np.round(100*d/max_deg):>3.0f}%", end = "")
         R.reset()
-        R2_step, mse_step = R.k_fold(k = k_fold, degree = d)
+        R2_step, mse_step, var_step = R.k_fold(k = k_fold, degree = d)
         mse.append(mse_step)
         R2.append(R2_step)
+        var.append(var_step)
 
     print()
 
     if plots is True:
+        plt.plot(d_vals, var)
         plt.plot(d_vals, mse)
         plt.plot(d_vals, R2)
         plt.xlabel("Polynomial Degree")
         plt.xlim(min_deg, max_deg)
-        plt.legend(["$MSE$", "$R^2$"])
+        plt.legend(["Variance", "$MSE$", "$R^2$"])
         if save is False:
             plt.show()
         else:
@@ -214,7 +226,6 @@ def part_C(R, f_xy = None, save = False, plots = False, name = ""):
 
         cost_train.append(cost_train_step)
         cost_test.append(cost_test_step)
-
 
     print()
 
@@ -337,8 +348,9 @@ def part_D(R, f_xy = None, save = False, plots = False, name = ""):
                 plt.plot(d_vals, j, label = "Variance")
                 plt.legend()
                 plt.xlabel(xlabel)
-                plt.text(np.median(d_vals), 2*(np.max([i,j])-np.min([i,j]))/3,
-                 f"$\\lambda = {lambda_vals[s*n]:.2E}$")
+                plt.text((np.max(d_vals)-np.min(d_vals))/2 + np.min(d_vals),
+                         2*(np.max([i,j])-np.min([i,j]))/3,
+                         f"$\\lambda = {lambda_vals[s*n]:.2E}$")
                 plt.xlim([min_deg, max_deg])
 
                 if save is False:
@@ -494,6 +506,9 @@ if __name__ == "__main__":
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
 
+    if plots is True:
+        plot_Franke(x_min = 0, x_max = 1, N = 100)
+
     x, y, f_xy = generate_Franke_data()
     R_Franke = Regression(x, y)
 
@@ -507,19 +522,6 @@ if __name__ == "__main__":
     part_D(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
     part_E(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
 
-
-    print("\n\n\t\tFRANKE FUNCTION HIGH DEGREE\n\n")
-
-    # Increasing the polynomial degree
-    max_deg = 10
-    d_vals = np.arange(min_deg, max_deg + 1, 1)
-
-    part_A(R = R_Franke, save = save_all, plots = plots, name="_highdeg")
-    part_B(R = R_Franke, save = save_all, plots = plots, name="_highdeg")
-    part_C(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots, name="_highdeg")
-    part_D(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots, name="_highdeg")
-    part_E(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots, name="_highdeg")
-
     """Parts f and g"""
 
     print("\n\n\t\tREAL DATA\n\n")
@@ -528,10 +530,6 @@ if __name__ == "__main__":
     save_dir = "real_output"
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
-
-    # Decreasing the polynomial degree
-    max_deg = 9
-    d_vals = np.arange(min_deg, max_deg + 1, 1)
 
     x, y = part_F(save = save_all, plots = plots)
     R_real = Regression(x, y)

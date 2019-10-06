@@ -630,7 +630,7 @@ class Regression():
 
         return r_squared
 
-    def k_fold(self, k, degree, sigma = None, alpha = None):
+    def k_fold(self, k, degree, sigma = None, alpha = None, f_xy = None):
         """
             ---PURPOSE------------------------------------
 
@@ -730,24 +730,30 @@ class Regression():
         Y_shuffle = self._Y[idx_shuffle]
         X_split = X_shuffle.reshape((k, N_subsample, self._p))
         Y_split = Y_shuffle.reshape((k, N_subsample))
+        if f_xy is not None:
+            f_shuffle = f_xy[idx_shuffle]
+            f_split = f_xy.reshape((k, N_subsample, self._p))
 
         MSE = np.zeros(k)
         R2 = np.zeros(k)
-        variance = []
+        variance = np.zeros(k)
+        bias = np.zeros(k)
 
         for i in range(k):
+            X_test = X_split[i].copy()
             X_train = np.delete(X_split, i, axis = 0)
             X_train = X_train.reshape(((k-1)*N_subsample, 2))
-            X_test = X_split[i]
 
+            if f_xy is not None:
+                f_test = f_split[i]
+                f_train = np.delete(f_split, i, axis = 0)
+
+            Y_test = Y_split[i].copy()
             Y_train = np.delete(Y_split, i, axis = 0)
             Y_train = Y_train.reshape((k-1)*N_subsample)
-            Y_test = Y_split[i]
 
             beta, var, exponents = \
             self._internal_poly(X_train, Y_train, degree, "k_fold", alpha)
-
-            variance.append(var)
 
             Y_hat = self._internal_predict(X_test, beta, degree)
 
@@ -755,8 +761,15 @@ class Regression():
                             (np.sum((Y_test - np.mean(Y_test))**2))
 
             MSE[i] = np.mean((Y_test - Y_hat)**2)
+            variance[i] = np.mean((Y_hat - np.mean(Y_hat))**2)
 
-        return np.mean(R2), np.mean(MSE)
+            if f_xy is not None:
+                bias[i] = np.mean((f_test - np.mean(Y_hat))**2)
+
+        if f_xy is not None:
+            return np.mean(R2), np.mean(MSE), np.mean(variance), np.mean(bias)
+        else:
+            return np.mean(R2), np.mean(MSE), np.mean(variance)
 
     def plot(self, detail = 0.5, xlabel = None, ylabel = None, zlabel = None,
     savename = None, plot_points = True):
