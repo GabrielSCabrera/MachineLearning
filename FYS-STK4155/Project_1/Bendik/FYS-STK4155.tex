@@ -88,7 +88,7 @@ Once we have a clear picture of how these regression models behave, we hope to d
 %Mention:
 %	OLS
 %	Ridge
-%	Lasso
+%	LASSO
 %	k-fold cross-validation
 %	Bias-Variance trade of?
 %
@@ -184,12 +184,12 @@ exponents = list(permutations(powers, p))
 exponents = np.unique(exponents, axis = 0)
 
 if p != 1:
-expo_sum = np.sum(exponents, axis = 1)
-valid_idx = np.where(np.less_equal(expo_sum, degree))[0]
-exponents = np.array(exponents, dtype = np.int64)
-exponents = exponents[valid_idx]
+	expo_sum = np.sum(exponents, axis = 1)
+	valid_idx = np.where(np.less_equal(expo_sum, degree))[0]
+	exponents = np.array(exponents, dtype = np.int64)
+	exponents = exponents[valid_idx]
 else:
-exponents = np.array(exponents, dtype = np.int64)
+	exponents = np.array(exponents, dtype = np.int64)
 \end{lstlisting}
 
 
@@ -322,7 +322,7 @@ Before we continue, we can decompose the range of outputs $\mathbf{y}$ as follow
 \mathbf{y}(\mathbf{X}) = f(\mathbf{X}) + N(0, \sigma) 
 \end{equation}
 
-Where $f(\mathbf{X})$ represents the \textit{actual} function used to generate the dataset, and $N(0,\sigma)$ is a Gaussian noise with a standard deviation of $\sigma$.
+Where $f(\mathbf{X})$ represents the \textit{actual} function used to generate the dataset, and $N(0,\sigma)$ is a Gaussian noise with a standard deviation of $\sigma$ and mean 0.
 
 As a regression model increases in complexity\footnote{For a polynomial regression, this would refer to its \textit{degree}.}, it so happens that the \textit{variance} of a prediction increases.  Variance is defined as follows:
 
@@ -340,7 +340,7 @@ On the other hand, we have that the \textit{bias} of the prediction decreases as
 
 Note that in order to calculate the bias, we need to know the original function $f$ used to generate $\mathbf{y}$.
 
-Interestingly enough, taking the sum of (\ref{eq_method_6}) and (\ref{eq_method_7}) as well as $\sigma^2$ will yield the \textit{mean squared error}.  We will show this to be the case in the following subsection.
+Interestingly enough, taking the squared sum of (\ref{eq_method_6}) and (\ref{eq_method_7}) as well as $\sigma^2$ will yield the \textit{mean squared error}.  We will show this to be the case in the following subsection.
 
 \subsubsection{Derivation}
 
@@ -374,7 +374,7 @@ The next few steps are messy, and require lots of algebraic manipulation:
 \\&- \frac{2}{n} \sum_{i=1}^{n} \varepsilon ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )
 + \frac{2}{n} \sum_{i=1}^{n} \varepsilon ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )
 \\&- \frac{2}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] ) ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )
-= \frac{1}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
+\\&= \frac{1}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
 \\&+ \frac{1}{n} \sum_{i=1}^{n} ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
 + \sigma^2
 - \mathbb{E}[\varepsilon] \frac{2}{n} \sum_{i=1}^{n} ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )
@@ -408,7 +408,7 @@ Finally, we can take all the calculated $MSE$ values, among others, and take the
 
 \subsection{Franke-Function}
 
-Following bellow ia several plots we made of our result after studying regression on the Franke-function. All the plots shows the results for both 1 to 5 polynomil degrees and 1 to 10 polynomial degrees. %kanskje noe om hvorfor
+Following bellow is several plots we made of our result after studying regression on the Franke-function. All the plots shows the results for both 1 to 5 polynomil degrees and 1 to 10 polynomial degrees. %kanskje noe om hvorfor
 
 Figure \ref{part_a} to \ref{part_c2} details the ordinary least square method.
 Figure \ref{part_a} shows the variance, mean square error and the $R^2$-score.
@@ -416,9 +416,19 @@ Figure \ref{part_b} shows the mean square error and the $R^2$-score after perfor
 Figure \ref{part_c1} shows the bias and the variance. 
 Figure \ref{part_c2} compares the MSE of the training set and the testing set.
 
-Figure \ref{part_d1} to \ref{part_d5} detail the Ridge method.
-osv...
-%ha tilsvarende på real data
+Figure \ref{part_d1} to \ref{part_d4} details the Ridge method. Here we also have plotted the results with $\lambda$ differing between $10^{-10}$ and $1$.
+Figure \ref{part_d1} shows the varinace.
+Figure \ref{part_d2} shows the mean squared error, as well as where the minimum value was found.
+Figure \ref{part_d3} shows the $R^2$-score.
+Figure \ref{part_d4} shows the squared bias. 
+
+Figure \ref{part_e1} to \ref{part_e4} details the LASSO method. Here we also have plotted the results with $\lambda$ differing between $10^{-10}$ and $1$.
+Figure \ref{part_e1} shows the varinace.
+Figure \ref{part_e2} shows the mean squared error, as well as where the minimum value was found.
+Figure \ref{part_e3} shows the $R^2$-score.
+Figure \ref{part_e4} shows the squared bias. 
+
+
 
 %Part a and b:
 
@@ -428,8 +438,8 @@ osv...
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_A.png}
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_A_highdeg.png}
 	\caption{
-		Plots of the mean square error, the $R^2$-score and the $\sigma$ variance of the $\beta$-values against the polynomial degree after performing a standard least square regression analysis on the Franke-function
-		%		The resulting function after performing a standard least square regression analysis using polynomials in x and y up to fifth order on the Franke function
+		Plots of the mean square error, the $R^2$-score and the $\sigma$ variance of the $\beta$-values against the polynomial degree after performing a ordinary least square regression analysis on the Franke-function
+		%		The resulting function after performing a ordinary least square regression analysis using polynomials in x and y up to fifth order on the Franke function
 	}
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_a}
@@ -441,7 +451,7 @@ osv...
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_B.png}
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_B_highdeg.png}
 	\caption{
-		Plots of the mean square error and the $R^2$-score against the polynomial degree after performing a standard least square regression analysis on the Franke-function and performing a $k$-fold cross-validation
+		Plots of the mean square error and the $R^2$-score against the polynomial degree after performing a ordinary least square regression analysis on the Franke-function and performing a $k$-fold cross-validation
 	}
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_b}
@@ -464,7 +474,7 @@ osv...
 %		SLS & 4.23 & 5.61 & 2.83 & 1.76  \\ \hline
 %		$k$-fold &  57.1 & 517 & 60.1 & 79.5  \\ \hline
 %	\end{tabular}
-%	\caption{The variance of $\beta$ for the standard least square regression and for $k$-fold validation}
+%	\caption{The variance of $\beta$ for the ordinary least square regression and for $k$-fold validation}
 %\end{table}
 %
 %\begin{table}[H]
@@ -502,7 +512,7 @@ osv...
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_C_1.png}
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_C_1_highdeg.png}
 	\caption{
-		Plots of the bias and the varince against the polynomial degree after performing a standard least square regression analysis on the Franke-function
+		Plots of the bias and the varince against the polynomial degree after performing a ordinary least square regression analysis on the Franke-function
 	}
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_c1}
@@ -514,7 +524,7 @@ osv...
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_C_2.png}
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_C_2_highdeg.png}
 	\caption{
-		Plots of the mean square error for the training data and the testing data, against the polynomial degree after performing a standard least square regression analysis on the Franke-function
+		Plots of the mean square error for the training data and the testing data, against the polynomial degree after performing a ordinary least square regression analysis on the Franke-function
 	}
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_c2}
@@ -616,7 +626,7 @@ osv...
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_1.png}
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_1_highdeg.png}
 	\caption{
-		Plots of the varinace against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the Franke-function
+		Plots of the varinace against the polyonomial degree and the hyperparameter $\lambda$ after performing LASSO regression on the Franke-function
 	}
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_e1}
@@ -628,7 +638,7 @@ osv...
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_2.png}
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_2_highdeg.png}
 	\caption{
-		Plots of the mean square error against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the Franke-function 
+		Plots of the mean square error against the polyonomial degree and the hyperparameter $\lambda$ after performing LASSO regression on the Franke-function 
 	}
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_e2}
@@ -640,7 +650,7 @@ osv...
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_3.png}
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_3_highdeg.png}
 	\caption{
-		Plots of the $R^2$-score against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the Franke-function
+		Plots of the $R^2$-score against the polyonomial degree and the hyperparameter $\lambda$ after performing LASSO regression on the Franke-function
 	}
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_e3}
@@ -652,7 +662,7 @@ osv...
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_4.png}
 	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_4_highdeg.png}
 	\caption{
-		Plots of the bias squared against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the Franke-function 
+		Plots of the bias squared against the polyonomial degree and the hyperparameter $\lambda$ after performing LASSO regression on the Franke-function 
 	}
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_e4}
@@ -664,7 +674,7 @@ osv...
 %	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_5.png}
 %	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_5_highdeg.png}
 %	\caption{
-%		Plots of the total error against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the Franke-function 
+%		Plots of the total error against the polyonomial degree and the hyperparameter $\lambda$ after performing LASSO regression on the Franke-function 
 %	}
 %	%Label gjør det enkelt å referere til ulike bilder.
 %	\label{part_e5}
@@ -678,7 +688,7 @@ osv...
 %	\centering 
 %	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 %	\includegraphics[scale=0.6]{part_e_reg_MSE.pdf}
-%	\caption{The Mean Squared Error for the Lasso method for different values of $\lambda$}
+%	\caption{The Mean Squared Error for the LASSO method for different values of $\lambda$}
 %	%Label gjør det enkelt å referere til ulike bilder.
 %	\label{part_e_MSE}
 %\end{figure}
@@ -687,7 +697,7 @@ osv...
 %	\centering 
 %	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 %	\includegraphics[scale=0.6]{part_e_reg_R2.pdf}
-%	\caption{$R^2$-score for the Lasso method for different values of $\lambda$}
+%	\caption{$R^2$-score for the LASSO method for different values of $\lambda$}
 %	%Label gjør det enkelt å referere til ulike bilder.
 %	\label{part_e_R2}
 %\end{figure}
@@ -701,6 +711,25 @@ osv...
 \subsection{Real Data}
 
 
+Following bellow is several plots we made of our result after studying regression on the real terrain data. All the plots shows the results for 1 to 9 polynomil degrees.
+
+Figure \ref{part_g_a} to \ref{part_g_c2} details the ordinary least square method.
+Figure \ref{part_g_a} shows the variance, mean square error and the $R^2$-score.
+Figure \ref{part_g_b} shows the mean square error and the $R^2$-score after performing $k$-fold cross validation. 
+Figure \ref{part_g_c2} compares the MSE of the training set and the testing set.
+
+Figure \ref{part_g_d1} to \ref{part_g_d3} details the Ridge method. Here we also have plotted the results with $\lambda$ differing between $10^{-10}$ and $1$.
+Figure \ref{part_g_d1} shows the varinace.
+Figure \ref{part_g_d2} shows the mean squared error, as well as where the minimum value was found.
+Figure \ref{part_g_d3} shows the $R^2$-score.
+
+Figure \ref{part_g_e1} to \ref{part_g_e3} details the LASSO method. Here we also have plotted the results with $\lambda$ differing between $10^{-10}$ and $1$.
+Figure \ref{part_g_e1} shows the varinace.
+Figure \ref{part_g_e2} shows the mean squared error, as well as where the minimum value was found.
+Figure \ref{part_g_e3} shows the $R^2$-score.
+
+
+
 %Part a and b:
 
 \begin{figure}[H]
@@ -708,8 +737,8 @@ osv...
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../real_output/part_A.png}
 	\caption{
-		A plot of the mean square error, the $R^2$-score and the $\sigma$ variance of the $\beta$-values against the polynomial degree after performing a standard least square regression analysis on the real terrain data of Møsvatn Austfjell
-		%		The resulting function after performing a standard least square regression analysis using polynomials in x and y up to fifth order on the Franke function
+		A plot of the mean square error, the $R^2$-score and the $\sigma$ variance of the $\beta$-values against the polynomial degree after performing a ordinary least square regression analysis on the real terrain data of Møsvatn Austfjell
+		%		The resulting function after performing a ordinary least square regression analysis using polynomials in x and y up to fifth order on the Franke function
 	}
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_g_a}
@@ -721,7 +750,7 @@ osv...
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../real_output/part_B.png}
 	\caption{
-		A plot of the mean square error and the $R^2$-score against the polynomial degree after performing a standard least square regression analysis on the real terrain data of Møsvatn Austfjell and performing a $k$-fold cross-validation
+		A plot of the mean square error and the $R^2$-score against the polynomial degree after performing a ordinary least square regression analysis on the real terrain data of Møsvatn Austfjell and performing a $k$-fold cross-validation
 	}
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_g_b}
@@ -733,7 +762,7 @@ osv...
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../real_output/part_C_2.png}
 	\caption{
-		A plot of the mean square error for the training data and the testing data, against the polynomial degree after performing a standard least square regression analysis on the real terrain data of Møsvatn Austfjell
+		A plot of the mean square error for the training data and the testing data, against the polynomial degree after performing a ordinary least square regression analysis on the real terrain data of Møsvatn Austfjell
 	}
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_g_c2}
@@ -781,7 +810,7 @@ osv...
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../real_output/part_E_1.png}
 	\caption{
-		Plots of the varinace against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the real terrain data of Møsvatn Austfjell
+		Plots of the varinace against the polyonomial degree and the hyperparameter $\lambda$ after performing LASSO regression on the real terrain data of Møsvatn Austfjell
 	}
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_g_e1}
@@ -792,7 +821,7 @@ osv...
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../real_output/part_E_2.png}
 	\caption{
-		Plots of the mean square error against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the real terrain data of Møsvatn Austfjell 
+		Plots of the mean square error against the polyonomial degree and the hyperparameter $\lambda$ after performing LASSO regression on the real terrain data of Møsvatn Austfjell 
 	}
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_g_e2}
@@ -803,7 +832,7 @@ osv...
 	%Scale angir størrelsen på bildet. Bildefilen må ligge i %samme mappe som tex-filen. 
 	\includegraphics[width = 0.5\textwidth, center]{../real_output/part_E_3.png}
 	\caption{
-		Plots of the $R^2$-score against the polyonomial degree and the hyperparameter $\lambda$ after performing Lasso regression on the real terrain data of Møsvatn Austfjell
+		Plots of the $R^2$-score against the polyonomial degree and the hyperparameter $\lambda$ after performing LASSO regression on the real terrain data of Møsvatn Austfjell
 	}
 	%Label gjør det enkelt å referere til ulike bilder.
 	\label{part_g_e3}
@@ -868,7 +897,7 @@ Figure \ref{part_e3}: $n$ has a small impact on results. Best value at lower $\l
 
 Figure \ref{part_e4}: Same as figure \ref{part_d4}.
 
-OLS$>$Ridge$>$Lasso for MSE of Franke data. OLS and ridge best at $n=9$, Lasso at $n=10$. Best values at lowest $\lambda$ as well.
+OLS$>$Ridge$>$LASSO for MSE of Franke data. OLS and ridge best at $n=9$, LASSO at $n=10$. Best values at lowest $\lambda$ as well.
 
 
 \subsubsection{real}
@@ -892,7 +921,7 @@ Figure \ref{part_g_e2}: Best MSE is neither for lowest $\lambda$ or highest $n$.
 Figure \ref{part_g_e3}: 
 
 
-Ridge$>$OLS$>$Lasso for real data. OLS and Ridge at $n=9$ and Lasso at $n=8$.
+Ridge$>$OLS$>$LASSO for real data. OLS and Ridge at $n=9$ and LASSO at $n=8$.
 
 
 we should maybe have a plot of made from the betas at the smalest MSE
