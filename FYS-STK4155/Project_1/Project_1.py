@@ -585,18 +585,16 @@ if __name__ == "__main__":
     
     R_Franke.reset()
     arg_idx = R_Franke.split(test_size = split_test)
-    R_Franke.poly(degree = 9, alpha = 1e-16)
-    
-    Y_hat = R_Franke.predict()
-    
-#    plt.plot(R_Franke._X, Y_hat)
-    
-#    fig = plt.figure()
-#    ax = fig.gca(projection="3d")
-#    ax.plot_surface(X, Y, Y_hat)
-#    plt.show()
-    
+    R_Franke.poly(degree = 9, alpha = 1e-16)    
+    Y_hat = R_Franke.predict()    
     R_Franke.plot(plot_points = False, xlabel = "x", ylabel = "y", zlabel = "f(x,y)", detail = 0.9)
+    
+    R_real.reset()
+    arg_idx = R_real.split(test_size = split_test)
+    R_real.poly(degree = 9, alpha = 0.387755)    
+    Y_hat = R_real.predict()    
+    R_real.plot(plot_points = False, xlabel = "x", ylabel = "y", zlabel = "f(x,y)", detail = 0.9)
+    
     
     
     
