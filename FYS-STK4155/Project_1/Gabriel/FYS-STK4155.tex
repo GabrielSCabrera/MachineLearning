@@ -250,14 +250,13 @@ RSS(\beta) = (\mathbf{y} - \mathbf{A} \beta)^\textsc{t}(\mathbf{y} - \mathbf{A} 
 
 Where $\lambda$, known as the \textit{hyperparameter}, is a scalar value. Performing the same process as in the previous subsection, we are left with a solution similar to that in (\ref{eq_method_2}):
 
-\begin{equation}
-\label{eq_method_3}
+\begin{equation*}
 \beta = (\mathbf{A}^\textsc{t} \mathbf{A} + \lambda \mathbf{I}) ^{-1} \mathbf{A}^\textsc{t} \mathbf{y}
-\end{equation}
+\end{equation*}
 
 In cases where $\mathbf{A}$ is singular, it is therefore possible to make very few changes to the OLS algorithm and still get a good result, one must simply optimize the hyperparameter and find a $\lambda$ that minimizes the \textit{mean squared error} (yet to be introduced) of our polynomial approximation.
 
-\subsection*{\textsc{lasso} Regression}
+\subsection*{LASSO Regression}
 
 \begin{algorithm}[H]
 	\caption{The \textsc{lasso} algorithm, over the course of $500$ iterations.}
@@ -296,9 +295,9 @@ Unfortunately, differentiating the above with respect to $\beta$ will not work a
 
 To get a measure of success with respect to the implemented method and parameters, we can calculate the mean difference in the squares of each measured output $y_i$ and their respective predicted outputs $\hat{y}_i$:
 
-\begin{equation}
+\begin{equation*}
 MSE(\mathbf{y}, \mathbf{\hat{y}}) = \frac{1}{N} \sum_{i=1}^{N} (y_i - \hat{y}_i)^2 = \mathbb{E}\left[(\mathbf{y}-\hat{\mathbf{y}})^{2}\right]
-\end{equation}
+\end{equation*}
 
 The lower the $MSE$, the closer the polynomial approximation is to the original dataset.  If it is too low, however, we run the risk of overfitting our dataset, which is not desireable either – fortunately, this not an issue within the scope of this report.
 
@@ -306,13 +305,13 @@ The lower the $MSE$, the closer the polynomial approximation is to the original 
 
 Another measure of success is the \textit{coefficient of determination}, colloquially known as the $R^2$ score, is given by the following expression:
 
-\begin{equation}
+\begin{equation*}
 R^2 = 1 - \frac{\sum_{i=1}^N (y_i - \hat{y}_i)^2 }{\sum_{i=1}^N (y_i - \bar{y}_i)^2 }
-\end{equation}
+\end{equation*}
 
 The closer $R^2$ is to one, the closer the polynomial approximation is to the input/output dataset, although a perfect score can once again arise due to overfitting just as in the case of the $MSE$.
 
-\subsection{Bias-Variance Tradeoff}
+\subsection*{Bias-Variance Tradeoff}
 
 Before we continue, we can decompose the range of outputs $\mathbf{y}$ as follows:
 
@@ -344,6 +343,7 @@ Interestingly enough, taking the sum of (\ref{eq_method_6}) and the square of (\
 \subsubsection*{Derivation}
 
 We wish to show that:
+
 \begin{equation}
 \label{eq_method_8}
 \mathbb{E}\left[(\mathbf{y}-\hat{\mathbf{y}})^{2}\right]
@@ -456,12 +456,12 @@ Using our \texttt{class Regression}, we implemented each aforementioned regressi
 	\label{fig_10}
 \end{figure}
 
-\begin{figure}[H]
-	\centering 
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_D_4.png}
-	\caption{The \textit{squared bias} as a function of the polynomial degree and hyperparameter $\lambda$ after performing \textit{Ridge regression} on the Franke function}
-	\label{fig_11}
-\end{figure}
+%\begin{figure}[H]
+%	\centering 
+%	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_D_4.png}
+%	\caption{The \textit{squared bias} as a function of the polynomial degree and hyperparameter $\lambda$ after performing \textit{Ridge regression} on the Franke function}
+%	\label{fig_11}
+%\end{figure}
 
 \begin{figure}[H]
 	\centering 
@@ -484,12 +484,12 @@ Using our \texttt{class Regression}, we implemented each aforementioned regressi
 	\label{fig_14}
 \end{figure}
 
-\begin{figure}[H]
-	\centering 
-	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_4.png}
-	\caption{The \textit{squared bias} as a function of the polynomial degree and hyperparameter $\lambda$ after performing \textit{\textsc{lasso} regression} on the Franke function}
-	\label{fig_15}
-\end{figure}
+%\begin{figure}[H]
+%	\centering 
+%	\includegraphics[width = 0.5\textwidth, center]{../franke_output/part_E_4.png}
+%	\caption{The \textit{squared bias} as a function of the polynomial degree and hyperparameter $\lambda$ after performing \textit{\textsc{lasso} regression} on the Franke function}
+%	\label{fig_15}
+%\end{figure}
 
 \subsection*{Møsvatn Austfjell}
 
@@ -563,46 +563,46 @@ Using our \texttt{class Regression}, we implemented each aforementioned regressi
 
 In Figure \ref{fig_4}, we see that the \textit{variance} increases as a function of complexity (as expected). It seems that the $R^2$-score also increases up until the polynomial degree reaches 10, where it begins to decrease.  Finally, we see that the $MSE$ decreases, though we will see this more clearly in Figure \ref{fig_7}.
  
-In Figure \ref{fig_5}, it appears that implementing cross-validation leaves our results mostly unchanged from those in Figure \ref{fig_4}, though the decrease in the $R^2$-score is somewhat less pronounced.
+In Figure \ref{fig_5}, it appears that implementing cross-validation leaves our results mostly unchanged from those in Figure \ref{fig_4}.
 
 Given that we know the \textit{Franke function}, we are able to calculate the \textit{bias} (with 12-fold cross-validation) in our model.  In Figure \ref{fig_6} We can see the \textit{bias-variance} tradeoff in action.  
 
 In Figure \ref{fig_7}, we see that the $MSE$, on average, decreases up until we perform a 9\textsuperscript{th}-degree polynomial regression with 12-fold cross-validation\footnote{It can be assumed henceforth that all our data is obtained via 12-fold cross-validation, unless stated otherwise.}, and that this holds for both the \textit{training set} and the \textit{testing set}.
 
-Once we begin to implement \textit{Ridge regression} for hyperparameters $\lambda \in [10^{-12}, 10^{-3}]$, we see that the variance in Figure \ref{fig_8} tends to increase at the same rate for most $\lambda$, with all diverging at degree 10.
+Once we begin to implement \textit{Ridge regression} for hyperparameters $\lambda \in [10^{-12}, 10^{-3}]$, we see that the variance in Figure \ref{fig_8} tends to increase at the same rate for most $\lambda$, with divergence occuring at low $\lambda$.
 
-In Figure \ref{fig_9}, we see that the $MSE$ decreases as a function of the polynomial degree up until it reaches 10, where it diverges at varying rates over $\lambda$.  In addition to this, we see that the best model for our system may be a 9\textsuperscript{th}-degree polynomial Ridge regression with $\lambda = 10^{-16}$; our $MSE$ is minimized at that point with a value of $2 \times 10^{-4}$.
+In Figure \ref{fig_9}, we see that the $MSE$ decreases as a function of the polynomial degree up until it reaches 10, where it begins to increase.  In addition to this, we see that the best model for our system may be a 9\textsuperscript{th}-degree polynomial Ridge regression with $\lambda = 10^{-16}$; our $MSE$ is minimized at that point with a value of $2 \times 10^{-4}$.
 
-The maximum $R^2$-score shown in Figure \ref{fig_10} also occurs at $d = 9$ with $\lambda = 10^{-16}$, which further confirm our previous assertions.
+The maximum $R^2$-score of 0.996 shown in Figure \ref{fig_10} also occurs at $d = 9$ with $\lambda = 10^{-16}$, which further confirm our previous assertions.
 
-The plot of the squared bias in Figure \ref{fig_11}, is essentially a flat plane with a value close to 0.0824.  
+%The plot of the squared bias in Figure \ref{fig_11}, is essentially a flat plane with a mean value close to 0.0824.  
 
 Our \textsc{lasso} results are somewhat different.  Here, we see that the variance in Figure \ref{fig_12} depends much more on $\lambda$ than it does in Figure \ref{fig_8}.
 
 The $MSE$ for \textsc{lasso} also differs from that of Ridge regression – in Figure \ref{fig_13}, we see that the optimal polynomial degree is 10, while the ideal $\lambda$ is still $10^{-16}$.
 However, this time the $MSE$ is much larger: $0.005$, nearly 20 times that found in Figure \ref{fig_9}.
 
-We see that the $R^2$-score in Figure \ref{fig_14} also performs worse than that in Figure \ref{fig_10}, with an optimal value of 0.94, whereas we have an optimal value of 0.99 in Figure \ref{fig_10}.  However, the ideal polynomial degree per $R^2$ is 9, rather than 10.
+We see that the $R^2$-score in Figure \ref{fig_14} also performs worse than that in Figure \ref{fig_10}, with an optimal value of 0.94, whereas we have an optimal value of 0.99 in Figure \ref{fig_10}.  The ideal polynomial degree per $R^2$ remains 10.
 
-The bias for \textsc{lasso} in Figure \ref{fig_15} behaves similarly to that of Ridge regression; as such it is not very important in our evaluation of methods.
+%The bias for \textsc{lasso} in Figure \ref{fig_15} behaves similarly to that of Ridge regression; as such it is not very important in our evaluation of methods.
 
 \subsection*{Møsvatn Austfjell}
 
 In Figure \ref{fig_16}, we see that the $MSE$, $R^2$-score, and variance each diverge when evaluated for a 10\textsuperscript{th}-degree polynomial regression.
 
-12-fold cross-validation gives us a clearer picture of what is happening, as seen in Figure \ref{fig_17}, where our variance, $MSE$, and $R^2$-score are much more modest than those we saw for the Franke function.
+12-fold cross-validation gives us a slightly clearer picture of what is happening, as seen in Figure \ref{fig_17}, where our variance, $MSE$, and $R^2$-score are much more modest than those we saw for the Franke function.
 
 A closer look at the $MSE$ (of both the \textit{training set} and the \textit{testing set}) in Figure \ref{fig_18} show that a polynomial of degree 9 is optimal when performing OLS.
 
 Figure \ref{fig_19}, which shows the variance as a function of polynomial degree and hyperparameter $\lambda$, behaves differently than it's Franke function counterpart\footnote{Seen in Figure \ref{fig_8}}; instead of flattening out, the variance consistently grows as the polynomial degree is increased\footnote{Though it is mostly constant with respect to $\lambda$.}
 
-Interestingly enough, we see that the optimal polynomial degree in Figure \ref{fig_20} is 9, just as for the Franke function \footnote{Seen in Figure \ref{fig_9}.}.  However, the minimum $MSE$ is much larger than that of the Franke function, at 0.23, and the optimal hyperparameter is now $\lambda = 0.655$.
+Interestingly enough, we see that the optimal polynomial degree in Figure \ref{fig_20} is 9, just as for the Franke function\footnote{Seen in Figure \ref{fig_9}.}.  However, the minimum $MSE$ is much larger than that of the Franke function, at 0.23, and the optimal hyperparameter is now $\lambda = 0.388$.
 
-Figure \ref{fig_21} suggests a different hyperparameter of $\lambda = 0.31$, but continues to select 9 as the optimal polynomial degree.
+Figure \ref{fig_21} suggests a different hyperparameter of $\lambda = 0.184$, but continues to select 9 as the optimal polynomial degree.
 
-Our implementation of \textsc{lasso} yields very different results now when dealing with this real life data.  We see in Figure \ref{fig_22} that there is much less stability in this variance, than that of the corresponding Figure \ref{fig_19}.
+Our implementation of \textsc{lasso} yields very different results now when dealing with real life data.  We see in Figure \ref{fig_22} that there is much less stability in the variance, than that of the corresponding Figure \ref{fig_19}; one thing to note is that the variance appears to reach a near-plateau (with a slight increasing incline) for polynomial degrees of four and greater.
 
-As for the optimal $MSE$ of our \textsc{lasso} regression, we see in Figure \ref{fig_23} that a polynomial of 10\textsuperscript{th} degree is optimal, with a minimum $MSE$ of 0.348. 
+As for the optimal $MSE$ of our \textsc{lasso} regression, we see in Figure \ref{fig_23} that a polynomial of 10\textsuperscript{th} degree is optimal, with a minimum $MSE$ of 0.350. 
 
 Finally, we see that our $R^2$-score in Figure \ref{fig_24} has an optimal value of 0.651, while still suggesting that a polynomial of degree 10 would give us the best results.
 
@@ -616,15 +616,9 @@ Interestingly enough, it seems as though our bias does not decrease as much as e
 
 We assume the reason that the $MSE$ begins to diverge once we perform a 10\textsuperscript{th}-degree polynomial regression is due to floating-point errors.
 
-It is likely numerical instability that leads to diverging at varying rates, and this can likely not be avoided, though implementing the SVD might help.
-
 It also seems that the our $MSE$ increases as a function of the hyperparameter $\lambda$, and that $10^{-16}$ is our best choice since smaller values will lead to floating point errors.
 
-Given that the $R^2$-score in Figure \ref{fig_10} agrees as well, this could very well be the case.
-
 We can assume that the variation in Figure \ref{fig_11} is simply a product of random number generation.
-
-Perhaps if we had greater numerical precision, such as 128-bit precision, then we might be able to further decrease $\lambda$ and get even better results.
 
 It is very likely that allowing the \textsc{lasso} function to converge at a larger number of iterations would improve the $MSE$.
 
@@ -634,19 +628,19 @@ It appears that cross-validation is necessary when dealing with a real life data
 
 Once again, the fact that we are dealing with real life data leads to worse performance with regards to the $MSE$ and other validation metrics.
 
-With a minimum $MSE$ of 0.25, we have to accept a good deal of imprecision in our regression, but that is simply a consequence of dealing with real data.  However, we can be confident that our model performs reliably, as the $MSE$ curves for the training and testing sets in Figure \ref{fig_18} differ little.
+With a minimum $MSE$ of 0.25, we have to accept a good deal of imprecision in our regression, but that is simply a consequence of dealing with real data.  However, we can be confident that our model performs reliably, as the $MSE$ curves for the training and testing sets in Figure \ref{fig_18} differ little from each other.
 
 Since the geological features of our dataset do not match any polynomial particularly well, increasing the polynomial degree in Ridge regression will always lead to a larger variance.
 
-The fact that two vastly different datasets \footnote{One a mathematical function, the other a scan of a landscape.} both have optimal polynomial regression degrees of 9, is suspicious.  We suspect that implementing another method, such as the SVD, might lead to more stability in our model; if this is to be the case, perhaps a higher degree polynomial regression would be successful, and reduce the $MSE$ further.
+The fact that two vastly different datasets\footnote{One a mathematical function, the other a scan of a landscape.} both have optimal polynomial regression degrees of 9, is suspicious.  We suspect that implementing another method, such as the SVD, might lead to more stability in our model; if this is to be the case, perhaps a higher degree polynomial regression would be successful, and reduce the $MSE$ further.
 
-Perhaps the most important conclusion we can draw from our experience here is that when dealing with real life data, implementing Ridge regression over OLS is likely unnecessary, as we see that our results are all mostly independent of the hyperparameter $\lambda$.
+Perhaps the most important conclusion we can draw from our experience here is that when dealing with real life data, implementing Ridge regression over OLS is likely unnecessary, as we see that our results are all \textit{mostly} independent of the hyperparameter $\lambda$.
 
 It is also worth mentioning that \textsc{lasso} performs with far less stability than OLS or Ridge regression, and with a noticeably larger $MSE$ and variance, and smaller $R^2$-score.  It is likely that increasing the iteration limit for \textsc{lasso} would help improve this, but at an extreme performance penalty.
 
-We should also note that the $MSE$, variance, and $R^2$ are all likely independent of the chosen hyperparameter $\lambda$ for \textsc{lasso}, just as they were for Ridge regression.
+We should also note that the $MSE$, variance, and $R^2$ are all unlikely to depend on of the chosen hyperparameter $\lambda$ for \textsc{lasso}, just as they were for Ridge regression.
 
-If we can draw any conclusion, it is that OLS and Ridge regression are equals when it comes to their performance, and that \textsc{lasso} gives poorer results.  This may not be the case if we allow for the \textsc{lasso} algorithm to iterate a larger number of times, but this is simply not possible given the constraints of our equipment.
+If we can draw any conclusion, it is that OLS and Ridge regression are near equals when it comes to their performance, and that \textsc{lasso} gives poorer results overall.  This may not be the case if we allow for the \textsc{lasso} algorithm to iterate a larger number of times, but this is simply not possible given the constraints of our equipment.
 
 \bibliography{bib}{}
 \bibliographystyle{ieeetr}
