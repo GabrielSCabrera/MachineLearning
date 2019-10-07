@@ -312,7 +312,7 @@ R^2 = 1 - \frac{\sum_{i=1}^N (y_i - \hat{y}_i)^2 }{\sum_{i=1}^N (y_i - \bar{y}_i
 
 The closer $R^2$ is to one, the closer the polynomial approximation is to the input/output dataset, although a perfect score can once again arise due to overfitting just as in the case of the $MSE$.
 
-\subsection*{Bias-Variance Tradeoff}
+\subsection{Bias-Variance Tradeoff}
 
 Before we continue, we can decompose the range of outputs $\mathbf{y}$ as follows:
 
@@ -321,13 +321,13 @@ Before we continue, we can decompose the range of outputs $\mathbf{y}$ as follow
 \mathbf{y}(\mathbf{X}) = f(\mathbf{X}) + N(0, \sigma) 
 \end{equation}
 
-Where $f(\mathbf{X})$ represents the \textit{actual} function used to generate the dataset, and $N(0,\sigma)$ is a Gaussian noise with a standard deviation of $\sigma$.
+Where $f(\mathbf{X})$ represents the \textit{actual} function used to generate the dataset, and $N(0,\sigma)$ is a Gaussian noise with a standard deviation of $\sigma$ and mean 0.
 
 As a regression model increases in complexity\footnote{For a polynomial regression, this would refer to its \textit{degree}.}, it so happens that the \textit{variance} of a prediction increases.  Variance is defined as follows:
 
 \begin{equation}
 \label{eq_method_6}
-\text{Var}(\mathbf{y}) = \frac{1}{n} \sum_{i=1}^{n} (y_i - \mathbb{E}[\mathbf{y}] )
+\text{Var}(\mathbf{y}) = \frac{1}{n} \sum_{i=1}^{n} (y_i - \mathbb{E}[\mathbf{y}] )^2
 \end{equation}
 
 On the other hand, we have that the \textit{bias} of the prediction decreases as the complexity increases.  We define the bias as:
@@ -339,7 +339,7 @@ On the other hand, we have that the \textit{bias} of the prediction decreases as
 
 Note that in order to calculate the bias, we need to know the original function $f$ used to generate $\mathbf{y}$.
 
-Interestingly enough, taking the sum of (\ref{eq_method_6}) and (\ref{eq_method_7}) as well as $\sigma^2$ will yield the \textit{mean squared error}.  We will show this to be the case in the following subsection.
+Interestingly enough, taking the sum of (\ref{eq_method_6}) and the square of (\ref{eq_method_7}) as well as $\sigma^2$ will yield the \textit{mean squared error}.  We will show this to be the case in the following subsection.
 
 \subsubsection*{Derivation}
 
@@ -373,7 +373,7 @@ The next few steps are messy, and require lots of algebraic manipulation:
 \\&- \frac{2}{n} \sum_{i=1}^{n} \varepsilon ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )
 + \frac{2}{n} \sum_{i=1}^{n} \varepsilon ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )
 \\&- \frac{2}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] ) ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )
-= \frac{1}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
+\\&= \frac{1}{n} \sum_{i=1}^{n} ( f_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
 \\&+ \frac{1}{n} \sum_{i=1}^{n} ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )^2 
 + \sigma^2
 - \mathbb{E}[\varepsilon] \frac{2}{n} \sum_{i=1}^{n} ( \hat{y}_i - \mathbb{E}[\hat{\mathbf{y}}] )
