@@ -330,6 +330,7 @@ def part_D(R, f_xy = None, save = False, plots = False, name = ""):
 
         xlabel = "Polynomial Degree"
         ylabel = r"Hyperparameter $\lambda$"
+        
 
         for n,(i,j) in enumerate(zip(data, data_labels)):
             fig = plt.figure()
@@ -551,11 +552,11 @@ if __name__ == "__main__":
 
     print("\n\n\t\tFRANKE FUNCTION\n\n")
 
-    part_A(R = R_Franke, save = save_all, plots = plots)
-    part_B(R = R_Franke, save = save_all, plots = plots)
-    part_C(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
-    part_D(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
-    part_E(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
+#    part_A(R = R_Franke, save = save_all, plots = plots)
+#    part_B(R = R_Franke, save = save_all, plots = plots)
+#    part_C(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
+#    part_D(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
+#    part_E(R = R_Franke, f_xy = f_xy, save = save_all, plots = plots)
 
     """Parts f and g"""
 
@@ -569,11 +570,34 @@ if __name__ == "__main__":
     x, y = part_F(save = save_all, plots = plots)
     R_real = Regression(x, y, max_iter = max_iter)
 
-    part_A(R = R_real, save = save_all, plots = plots)
-    part_B(R = R_real, save = save_all, plots = plots)
-    part_C(R = R_real, save = save_all, plots = plots)
-    part_D(R = R_real, save = save_all, plots = plots)
-    part_E(R = R_real, save = save_all, plots = plots)
+#    part_A(R = R_real, save = save_all, plots = plots)
+#    part_B(R = R_real, save = save_all, plots = plots)
+#    part_C(R = R_real, save = save_all, plots = plots)
+#    part_D(R = R_real, save = save_all, plots = plots)
+#    part_E(R = R_real, save = save_all, plots = plots)
 
     dt = time() - t1
     print(f"\nElapsed time: {dt:.0f} s(~{dt/60:.0f} m,  ~{dt/3600:.0f} h)")
+    
+    x_min, x_max, N = 0, 1, 100
+    x = np.linspace(x_min, x_max, int(N))
+    X,Y = np.meshgrid(x, x)
+    
+    R_Franke.reset()
+    arg_idx = R_Franke.split(test_size = split_test)
+    R_Franke.poly(degree = 9, alpha = 1e-16)
+    
+    Y_hat = R_Franke.predict()
+    
+#    plt.plot(R_Franke._X, Y_hat)
+    
+#    fig = plt.figure()
+#    ax = fig.gca(projection="3d")
+#    ax.plot_surface(X, Y, Y_hat)
+#    plt.show()
+    
+    R_Franke.plot(plot_points = False, xlabel = "x", ylabel = "y", zlabel = "f(x,y)", detail = 0.9)
+    
+    
+    
+    

@@ -947,7 +947,7 @@ class Regression():
 
         """
         self._check_regr("plot")
-        plt.style.use("seaborn")
+        #plt.style.use("seaborn")
 
         if self._p not in [1,2]:
             error_msg = (f"\n\nAttempting to call method <Regression.plot()> "
