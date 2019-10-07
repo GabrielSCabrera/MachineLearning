@@ -9,6 +9,10 @@ from time import time
 import numpy as np
 import matplotlib
 
+font = {'size':15}
+
+matplotlib.rc('font', **font)
+
 sys.path.append("..")
 from utils.classes import Regression
 
@@ -24,8 +28,9 @@ alpha_min_R = 1E-16  # Minimum Lambda in Ridge
 alpha_max_R = 1E0    # Maximum lambda in Ridge
 alpha_min_L = 1E-16  # Minimum lambda in LASSO
 alpha_max_L = 1E-3   # Maximum lambda in LASSO
-N_alpha_R = 30       # Number of lambdas to check for with Ridge in Part d)
-N_alpha_L = 30       # Number of lambdas to check for with LASSO in Part e)
+N_alpha_R = 50       # Number of lambdas to check for with Ridge in Part d)
+N_alpha_L = 50       # Number of lambdas to check for with LASSO in Part e)
+skip_real = 15       # Number of indices to skip over in x and y directions
 
 save_dir = "output"  # Default directory in which to save output files
 plots = True         # Whether to generate plots
@@ -35,6 +40,7 @@ extension = "png"    # Extension (filetype) of saved plots (do not include ".")
 bv_plots = 4         # Number of bias-variance tradeoff plots in Part d)
 cmap = cm.magma      # Colormap to use in 3-D surface plots
 alpha_3D = 0.5       # Transparency of 3-D surface plots, range -> [0,1]
+max_iter = 1E4       # Maximum number of iterations for LASSO
 
 # Path of .tif file containing real terrain data
 terrain_data = "SRTM_data_Norway_2.tif"
@@ -50,7 +56,7 @@ np.random.seed(69420666)
 
 """Helper Functions"""
 
-def plot_Franke(x_min = 0, x_max = 1, N = 100):
+def plot_Franke(x_min = 0, x_max = 1, N = 150):
     # Generating NxN meshgrid of x,y values in range [0, 1]
     x_min, x_max, N = 0, 1, 100
     x = np.linspace(x_min, x_max, int(N))
@@ -346,9 +352,9 @@ def part_D(R, f_xy = None, save = False, plots = False, name = ""):
             plt.legend([legend])
 
             ax.plot_surface(D, L, i, cmap = cmap, alpha = alpha_3D)
-            ax.set_xlabel("\n\n\n" + xlabel, linespacing = 3)
-            ax.set_ylabel("\n\n\n" + ylabel, linespacing = 3)
-            ax.set_zlabel("\n\n\n" + j, linespacing = 3)
+            ax.set_xlabel("\n" + xlabel, linespacing = 3)
+            ax.set_ylabel("\n" + ylabel, linespacing = 3)
+            ax.set_zlabel("\n" + j, linespacing = 3)
 
             if save is False:
                 plt.show()
@@ -462,9 +468,9 @@ def part_E(R, f_xy = None, save = False, plots = False, name = ""):
             plt.legend([legend])
 
             ax.plot_surface(D, L, i, cmap = cmap, alpha = alpha_3D)
-            ax.set_xlabel("\n\n\n" + xlabel, linespacing = 3)
-            ax.set_ylabel("\n\n\n" + ylabel, linespacing = 3)
-            ax.set_zlabel("\n\n\n" + j, linespacing = 3)
+            ax.set_xlabel("\n" + xlabel, linespacing = 3)
+            ax.set_ylabel("\n" + ylabel, linespacing = 3)
+            ax.set_zlabel("\n" + j, linespacing = 3)
 
             if save is False:
                 plt.show()
@@ -502,7 +508,7 @@ def part_F(save = False, plots = False):
         # Importing the data
         terrain_data = imread(globals()["terrain_data"])
         # Resizing the data
-        terrain_data = terrain_data[::15,::15]
+        terrain_data = terrain_data[::skip_real,::skip_real]
         # Normalizing the data
         terrain_data = (terrain_data - np.mean(terrain_data))\
                        / np.std(terrain_data)
@@ -539,7 +545,7 @@ if __name__ == "__main__":
         plot_Franke(x_min = 0, x_max = 1, N = 100)
 
     x, y, f_xy = generate_Franke_data()
-    R_Franke = Regression(x, y)
+    R_Franke = Regression(x, y, max_iter = max_iter)
 
     """Parts a – e"""
 
@@ -561,7 +567,7 @@ if __name__ == "__main__":
         os.mkdir(save_dir)
 
     x, y = part_F(save = save_all, plots = plots)
-    R_real = Regression(x, y)
+    R_real = Regression(x, y, max_iter = max_iter)
 
     part_A(R = R_real, save = save_all, plots = plots)
     part_B(R = R_real, save = save_all, plots = plots)
@@ -570,4 +576,4 @@ if __name__ == "__main__":
     part_E(R = R_real, save = save_all, plots = plots)
 
     dt = time() - t1
-    print(f"Elapsed time: {dt:} seconds")
+    print(f"\nElapsed time: {dt:.0f} s(~{dt/60:.0f} m,  ~{dt/3600:.0f} h)")

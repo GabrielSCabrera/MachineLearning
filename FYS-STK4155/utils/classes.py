@@ -11,7 +11,7 @@ np.random.seed(69420666)
 
 class Regression():
 
-    def __init__(self, X, Y, dtype = np.float64):
+    def __init__(self, X, Y, dtype = np.float64, max_iter = 1E3):
         """
             ---PURPOSE------------------------------------
 
@@ -85,7 +85,7 @@ class Regression():
         self._split = False
         self._N = self._X.shape[0]
         self._p = self._X.shape[1]
-        self._max_iter = 1E3
+        self._max_iter = max_iter
 
         # Cleans out all attributes in case of reset
         if not hasattr(self, '_dir_backup'):
