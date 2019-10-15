@@ -2,9 +2,9 @@ from sklearn.preprocessing import PolynomialFeatures as Poly
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import Lasso, Ridge
 from sklearn.preprocessing import normalize
+from multiprocessing import Pool, cpu_count
 from sklearn.model_selection import KFold
 import rpy2.robjects as robjects
-from multiprocessing import Pool
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -17,12 +17,12 @@ def calculate(data):
     a = data[0]
     max_iter = data[1]
 
+    lasso = Lasso(alpha = a, max_iter = max_iter, precompute = True)
+    ridge = Ridge(alpha = a)
+
     for X_train, X_test, y_train, y_test in data[2]:
 
-        lasso = Lasso(alpha = a, max_iter = max_iter)
         lasso.fit(X_train, y_train)
-
-        ridge = Ridge(alpha = a)
         ridge.fit(X_train, y_train)
 
         y_lasso = lasso.predict(X_test)
@@ -42,10 +42,11 @@ y = (y - np.mean(y))/np.std(y)
 
 k = 10
 degree = 1
-N = 1E3
-alphas = np.logspace(-8, 3, N)
-max_iter_vals = [5, 1000]
-filenames = ["a_5_iter", "a"]
+N = 5E2
+alphas = np.logspace(-8, 4, N)
+max_iter_vals = [10, 100, 1000]
+outputfile = "outputdata.txt"
+filenames = ["a_10_iter", "a_100_iter", "a_1000_iter"]
 
 kf = KFold(n_splits = k)
 sets = []
@@ -54,12 +55,14 @@ for train_index, test_index in kf.split(X):
     sets.append((poly.fit_transform(X[train_index]),
     poly.fit_transform(X[test_index]), y[train_index], y[test_index]))
 
+outfile = open(outputfile, "w+")
+pool = Pool()
+
 for max_iter, filename in zip(max_iter_vals, filenames):
 
     MSE_lasso = np.zeros_like(alphas)
     MSE_ridge = np.zeros_like(alphas)
 
-    pool = Pool()
     n = 0
     for i in pool.imap(calculate, ([alphas[j], max_iter, sets] for j in range(int(N)))):
         MSE_lasso[n], MSE_ridge[n] = i
@@ -70,9 +73,12 @@ for max_iter, filename in zip(max_iter_vals, filenames):
     argmin_lasso = np.argmin(MSE_lasso)
     argmin_ridge = np.argmin(MSE_ridge)
 
-    print(f"LASSO lambda = {alphas[argmin_lasso]}, MSE = {MSE_lasso[argmin_lasso]}")
-    print(f"Ridge lambda = {alphas[argmin_ridge]}, MSE = {MSE_ridge[argmin_ridge]}")
+    msg = (f"For max_iter = {max_iter}, we have:\n"
+           f"LASSO lambda = {alphas[argmin_lasso]}, MSE = {MSE_lasso[argmin_lasso]}\n"
+           f"Ridge lambda = {alphas[argmin_ridge]}, MSE = {MSE_ridge[argmin_ridge]}\n")
 
+    outfile.write(msg)
+    print(msg)
     plotfunc = plt.semilogx
 
     plotfunc(alphas, MSE_lasso, "b-", label = "LASSO")
@@ -96,3 +102,5 @@ for max_iter, filename in zip(max_iter_vals, filenames):
     plt.xlim([np.min(alphas), np.max(alphas)])
     plt.savefig(f"{filename}.pdf", dpi = 250)
     plt.close()
+
+outfile.close()
