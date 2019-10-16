@@ -1,72 +1,89 @@
 from multiprocessing import Pool
+from numba import jit
 import numpy as np
 
 class NeuralNet:
 
     def __init__(self, X, Y):
+        """
+            IN
+            X:          NumPy Array (N, p) or (N,)
+            Y:          NumPy Array (M, q) or (M,)
+
+            OUT
+            self._X:    NumPy Array (N, p)
+            self._Y:    NumPy Array (M, q)
+        """
         if X.ndim == 1:
-            self._X = X[:,np.newaxis]
+            self._X = X[:,np.newaxis].astype(np.float64)
         else:
-            self._X = X
+            self._X = X.astype(np.float64)
         if Y.ndim == 1:
-            self._Y = Y[:,np.newaxis]
+            self._Y = Y[:,np.newaxis].astype(np.float64)
         else:
-            self._Y = Y
+            self._Y = Y.astype(np.float64)
         self._N = self._X.shape[0]
+        self._M = self._Y.shape[0]
         self._p = self._X.shape[1]
         self._q = self._Y.shape[1]
 
-    def run(self, cycles, layers, alpha = 1E-3):
-        w = 2*np.random.random((layers, self._N, self._N, 1)) - 1
-        b = 2*np.random.random((layers, self._N)) - 1
-        pool = Pool()
-        net = np.zeros((layers, self._N, self._p))
-        out = np.zeros((layers+1, self._N, self._p))
-        out[0] = self._X
-        for c in range(cycles):
-            for i in range(layers):
-                net[i], out[i+1] = self.layer(out[i], w[i], b[i], pool)
+        info = (f"X: (N= {self._N}, p= {self._p})"
+                f"\nY: (M= {self._M}, q= {self._q})")
+        print(info)
 
-            delta = self.delta_output(out[-1], self._Y)
-            print(out[-1].shape)
-            for i in range(layers):
-                idx = layers - i - 1
-                for j in range(self._N):
-                    delta = self.delta_inner(w[i], delta, out[i])
-                    dw = delta*out[i]
-                    print(w[i,j].shape, dw.shape)
-                    w[i,j] -= alpha*dw
+    def run(self, nodes, layers):
+        """
+        nodes: Number of nodes <int>, minimum of 1
+        layers: Number of hidden layers <int>, minimum of 1
 
-    def delta_output(self, out, target):
-        dL = 2*(out - target)       # MSE
-        dphi = out*(1-out)          # Sigmoid
-        return np.mean(dL*dphi, axis = 1)
+        Note: The bias term is added automatically.
+        """
+        mu, sigma = 0, 1
+        X, Y = self._X, self._Y
+        M, N = self._M, self._N
+        p, q = self._p, self._q
 
-    def delta_inner(self, w, delta_prev, out):
-        dL = np.sum(w*delta_prev)
-        dphi = out*(1-out)
-        return np.mean(dL*dphi, axis = 1)
+        W_in = np.random.normal(mu, sigma, (nodes, N))
+        W = np.random.normal(mu, sigma, (layers, nodes, nodes))
+        W_out = np.random.normal(mu, sigma, (M, nodes))
 
-    def MSE(self, out, target):
-        return (out - target)**2
+        B_in = np.random.normal(mu, sigma, (nodes, p))
+        B = np.random.normal(mu, sigma, (layers, nodes, p))
+        B_out = np.random.normal(mu, sigma, (M, q))
+        redim = np.random.normal(mu, sigma, (p, q))
 
-    def sigmoid(self, net):
-        return 1/(1 + np.exp(-net))
+        # Hidden Layers
+        H = np.zeros((layers, nodes, p), dtype = np.float64)
 
-    def layer(self, out_prev, w, b, pool):
-        net = pool.starmap(self.perceptron,
-        ([out_prev, w[i], b[i]] for i in range(out_prev.shape[0])))
-        out = np.array(pool.map(self.sigmoid, net))
-        return net, out
+        @jit(cache = True, nopython = True)
+        def fast_forward(X, H, W_in, W, W_out, B_in, B, B_out, redim, layers):
+            H[0] = W_in @ X + B_in
+            H[0] = 1/(1 + np.exp(H[0]))
+            for l in range(layers-1):
+                H[l+1] = W[l] @ H[l] + B[l]
+                H[l+1] = 1/(1 + np.exp(H[l+1]))
+            Z = W_out @ H[l+1] + B_out
+            Z = 1/(1 + np.exp(Z @ redim))
+            return Z, H
 
-    def perceptron(self, X, w, b):
-        return np.sum(w*X + b, axis = 0)
+        # @jit(cache = True, nopython = True)
+        def backprop(Y, Z, H, W_in, W, W_out, B_in, B, B_out, redim, layers):
+            Ey = Z - Y
+            print(Ey.shape)
+            MSE = np.mean(Ey**2)
+            dZ = (1-Z)**2
+            delta_Y = Ey*dZ     #ok
+            dW_out = -redim.T*H[-1]
+            print(dW_out.shape)
 
+
+        Z, H = fast_forward(X, H, W_in, W, W_out, B_in, B, B_out, redim, layers)
+        backprop(Y, Z, H, W_in, W, W_out, B_in, B, B_out, redim, layers)
 if __name__ == "__main__":
     N = 100
     x = np.array([[0,0,0,0,1,0,0,1,0,0,1,1,1,0,0,1,1,1,1,1,0,1,1,1],
                   [0,0,1,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1]])
     y = np.array( [0,0,1,0,1,0,0,1,0,0,0,0,1,1,0,0,1,0,0,0,1,1,0,0])
     NN = NeuralNet(x.T, y)
-    X = NN.run(2,10,50)
+    X = NN.run(5,10)
     # print(X)
