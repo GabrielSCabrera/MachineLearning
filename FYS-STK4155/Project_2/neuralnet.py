@@ -1,8 +1,10 @@
+from numba.typed import List as jitlist
 from multiprocessing import Pool
 import matplotlib.pyplot as plt
 from imageio import imread
 from numba import njit
-import numpу as np
+import numpy as np
+import sys
 
 class NeuralNet:
 
@@ -33,35 +35,45 @@ class NeuralNet:
                 f"\nY: (M= {self._M}, q= {self._q})")
         print(info)
 
-    def learn(self, cycles, nodes, layers, lr = 0.1, mu = 0, sigma = 1):
+    def learn(self, cycles, layers, batchsize, lr = 0.1):
         """
         cycles:     Number of fwdfeed-backprop cycles <int>, minimum of 1
-        nodes:      Number of nodes <int>, minimum of 1
         layers:     Number of hidden layers <int>, minimum of 1
 
         Note:       The bias term is added automatically.
+
+        batchsize must be divisible into both the X and Y datasets
         """
         X, Y = self._X.flatten()[:,np.newaxis], self._Y.flatten()[:,np.newaxis]
+        N, M = X.shape[0], Y.shape[0]
 
-        scale = 1
-        shift = 0
+        if N >= M:
+            A_split = M
+            B_split = N
+            txt_A = "Y"
+            txt_B = "X"
+        else:
+            A_split = N
+            B_split = M
+            txt_A = "X"
+            txt_B = "Y"
+        if A_split%batchsize != 0:
+            raise Exception(f"{txt_A} must be divisible into batchsize")
+        splits = A_split//batchsize
+        if B_split%splits != 0:
+            raise Exception(f"{txt_B} must be divisible into batchsize")
+        X_batches = np.array(np.split(X, splits))
+        Y_batches = np.array(np.split(Y, splits))
+
+        N_batch = N//splits
+        M_batch = M//splits
 
         cycles = int(cycles)
-        nodes = int(nodes)
-        layers = int(layers)
+        layers = np.array(layers, dtype = np.int64)
+        layers = np.concatenate([[N_batch], layers, [M_batch]])
 
-        X_shift = 0
         Y_shift = 0
-        X_scale = 1
         Y_scale = 1
-
-        if np.min(X) != 0:
-            X_shift = -np.min(X)
-
-        if np.max(X) - np.min(X) != 1:
-            X_scale = np.max(X)-np.min(X)
-
-        X = (X + X_shift)/X_scale
 
         if np.min(Y) != 0:
             Y_shift = -np.min(Y)
@@ -69,125 +81,89 @@ class NeuralNet:
         if np.max(Y) - np.min(Y) != 1:
             Y_scale = np.max(Y)-np.min(Y)
 
-        Y = (Y + Y_shift)/Y_scale
+        W = jitlist()
+        B = jitlist()
 
-        N, M = X.shape[0], Y.shape[0]
+        for i in range(len(layers)-1):
+            if i < len(layers) - 1:
+                W.append(np.random.random((layers[i+1], layers[i])))
+                B.append(np.random.random((layers[i+1], 1)))
 
-        W_in = np.random.normal(mu, sigma, (nodes, N))
-        W = np.random.normal(mu, sigma, (layers, nodes, nodes))
-        W_out = np.random.normal(mu, sigma, (M, nodes))
+        # @njit(cache = True)
+        def batch(X, Y, W, B, lr, cycles, layers):
+            # perc = 0
+            Z = jitlist()
+            Z.append(X)
+            for i in layers:
+                Z.append(np.zeros((i, 1)))
+            # print()
+            for c in range(cycles):
 
-        B_in = np.random.normal(mu, sigma, (nodes, 1))
-        B = np.random.normal(mu, sigma, (layers, nodes, 1))
-        B_out = np.random.normal(mu, sigma, (M, 1))
+                for n,(w,b) in enumerate(zip(W,B)):
+                    Z[n+1] = w @ Z[n] + b
+                    Z[n+1] = 1/(1 + np.exp(-Z[n+1]))
 
-        Z = np.zeros((layers, nodes, 1), dtype = np.float64)
+                dCdA = 2*(Y - Z[-1])
+                dAdZ = Z[-1]*(1 - Z[-1])
+                delta = dCdA*dAdZ
+                if c == cycles-1:
+                    break
 
-        @njit(cache = True)
-        def feedforward(X, Z, W_in, W, W_out, B_in, B, B_out, layers):
-            Z[0] = W_in @ X + B_in
-            Z[0] = np.log10(1 + np.exp(-Z[0]))          # Softmax
-            # Z[0] = 1/(1 + np.exp(-Z[0]))              # Sigmoid
-            for l in range(layers-1):
-                Z[l+1] = W[l] @ Z[l] + B[l]
-                Z[l+1] = np.log10(1 + np.exp(-Z[l+1]))  # Softmax
-                # Z[l+1] = 1/(1 + np.exp(-Z[l+1]))      # Sigmoid
-            A = W_out @ Z[-1] + B_out
-            A = np.log10(1 + np.exp(-A))                # Softmax
-            # A = 1/(1 + np.exp(-A))                    # Sigmoid
-            return A, Z
+                for n in range(len(W)-1):
+                    l = len(W)-n-1
+                    W[l] += lr*delta @ Z[l].T
+                    B[l] += lr*delta
+                    delta = W[l].T @ delta
+                    delta *= Z[l]*(1 - Z[l])
 
-        @njit(cache = True)
-        def backprop(X, Y, A, Z, W_in, W, W_out, B_in, B, B_out, layers, lr):
-            diff = A - Y
-            C = np.mean(diff**2)
+            #     new_perc = int(100*(c+1)/cycles)
+            #     if new_perc > perc:
+            #         perc = new_perc
+            #         print("\033[1A\r", perc, "\b%")
+            # print(f"\033[1A\r100%")
 
-            dCdA = 2*(A - Y)
-            dAdZ = 1/(1 + np.exp(-A))                   # Softmax deriv
-            # dAdZ = A*(A - 1)                          # Sigmoid deriv
-            dZdW = Z[-1]
-            delta = dCdA*dAdZ
-            W_out -= lr*delta @ dZdW.T
-            B_out -= lr*delta
-
-            delta = W_out.T @ delta
-            delta *= 1/(1 + np.exp(-Z[-1]))             # Softmax deriv
-            # delta *= Z[-1]*(1 - Z[-1])                # Sigmoid deriv
-            W[-1] -= lr*delta @ Z[-1].T
-            B[-1] -= lr*delta
-
-            for i in range(1, layers):
-                l = layers - i - 1
-                delta = (W[l+1].T @ delta)
-                delta *= 1/(1 + np.exp(-Z[l]))          # Softmax deriv
-                # delta *= Z[l]*(1 - Z[l])              # Sigmoid deriv
-                W[l] -= lr*delta @ Z[l].T
-                B[l] -= lr*delta
-
-            delta = W[0].T @ delta
-            W_in -= lr*delta @ X.T
-            B_in -= lr*delta
-
-            return W_in, W, W_out, B_in, B, B_out
+            return W,B
 
         perc = 0
-        print(f"\r{perc:>3d}%", end = "")
-        for c in range(cycles):
-            A, Z = feedforward(X, Z, W_in, W, W_out, B_in, B, B_out, layers)
-            if c == cycles-1:
-                break
-            W_in, W, W_out, B_in, B, B_out = \
-            backprop(X, Y, A, Z, W_in, W, W_out, B_in, B, B_out, layers, lr)
-            new_perc = int(100*(c+1)/cycles)
+        print(f"\r{perc:3d}%", end = "")
+        for n,(x,y) in enumerate(zip(X_batches, Y_batches)):
+            W, B = batch(x, y, W, B, lr, cycles, layers)
+
+            new_perc = int(100*(n+1)/splits)
             if new_perc > perc:
                 perc = new_perc
-                print(f"\r{perc:>3d}%", end = "")
-        print(f"\r{100:>3d}%")
+                print(f"\r{perc:3d}%", end = "")
+        print("\r100%")
 
-        self.W_in = W_in
+        for n,(w,b) in enumerate(zip(W,B)):
+            W[n] = w/splits
+            B[n] = b/splits
+
         self.W = W
-        self.W_out = W_out
-
-        self.B_in = B_in
         self.B = B
-        self.B_out = B_out
 
         self.layers = layers
-        self.nodes = nodes
 
-        self.X_scale = X_scale
-        self.X_shift = X_shift
         self.Y_scale = Y_scale
         self.Y_shift = Y_shift
 
-        return (np.reshape(A, self._Y.shape)*self.Y_scale)+self.Y_shift
+        # return (np.reshape(A, self._Y.shape)*self.Y_scale)+self.Y_shift
 
     def predict(self, X):
 
-        X = X.flatten()[:,np.newaxis].astype(np.float64)
+        X = X.flatten()[:,np.newaxis]
 
-        W_in, W, W_out, B_in, B, B_out =\
-        self.W_in, self.W, self.W_out, self.B_in, self.B, self.B_out
+        Y_shift = 0
+        Y_scale = 1
 
-        X = (X + self.X_shift)/self.X_scale
+        W = self.W
+        B = self.B
 
-        layers = self.layers
-        nodes = self.nodes
-        Z = np.zeros((layers, nodes, 1), dtype = np.float64)
+        for n,(w,b) in enumerate(zip(W,B)):
+            X = w @ X + b
+            X = 1/(1 + np.exp(-X))              # Sigmoid
 
-        @jit(cache = True, nopython = True)
-        def feedforward(X, Z, W_in, W, W_out, B_in, B, B_out, layers):
-            Z[0] = W_in @ X + B_in
-            Z[0] = 1/(1 + np.exp(Z[0]))
-            for l in range(layers-1):
-                Z[l+1] = W[l] @ Z[l] + B[l]
-                Z[l+1] = 1/(1 + np.exp(Z[l+1]))
-            A = W_out @ Z[-1] + B_out
-            A = 1/(1 + np.exp(A))
-            return A, Z
-
-        A, Z = feedforward(X, Z, W_in, W, W_out, B_in, B, B_out, layers)
-        return (A*self.Y_scale)+self.Y_shift
+        return X
 
 if __name__ == "__main__":
 

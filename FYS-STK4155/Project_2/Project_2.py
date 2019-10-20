@@ -14,11 +14,17 @@ X = np.array(df.iloc()[1:,1:-1], dtype = np.int64)
 Y = np.array(df.iloc()[1:,-1], dtype = np.int64)
 del df
 
-NN = NeuralNet(X, Y)
-out = NN.learn(cycles = 1E3, nodes = 5, layers = 30)
+test_size = 1000
+trainlen = len(X)-test_size
+trainlen = int(trainlen)
+testlen = len(X)-trainlen
+
+NN = NeuralNet(X[:trainlen], Y[:trainlen])
+out = NN.learn(cycles = 2000, layers = [16,14,12,8], batchsize = test_size)
+out = NN.predict(X[trainlen:])
 out[out >= 0.5] = 1
 out[out < 1] = 0
-diffs = out.flatten().astype(np.int64)-Y
+diffs = out.flatten().astype(np.int64)-Y[trainlen:]
 print(f"Number of wrong outputs: {np.sum(np.abs(diffs))}")
 print(f"Number of correct outputs: {diffs.shape[0] - np.sum(np.abs(diffs))}")
 
