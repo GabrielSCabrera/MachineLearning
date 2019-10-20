@@ -1,8 +1,8 @@
 from multiprocessing import Pool
 import matplotlib.pyplot as plt
 from imageio import imread
-from numba import jit
-import numpy as np
+from numba import njit
+import numpу as np
 
 class NeuralNet:
 
@@ -35,11 +35,11 @@ class NeuralNet:
 
     def learn(self, cycles, nodes, layers, lr = 0.1, mu = 0, sigma = 1):
         """
-        cycles: Number of for-back cycles <int>, minimum of 1
-        nodes: Number of nodes <int>, minimum of 1
-        layers: Number of hidden layers <int>, minimum of 1
+        cycles:     Number of fwdfeed-backprop cycles <int>, minimum of 1
+        nodes:      Number of nodes <int>, minimum of 1
+        layers:     Number of hidden layers <int>, minimum of 1
 
-        Note: The bias term is added automatically.
+        Note:       The bias term is added automatically.
         """
         X, Y = self._X.flatten()[:,np.newaxis], self._Y.flatten()[:,np.newaxis]
 
@@ -50,13 +50,26 @@ class NeuralNet:
         nodes = int(nodes)
         layers = int(layers)
 
+        X_shift = 0
+        Y_shift = 0
+        X_scale = 1
+        Y_scale = 1
+
+        if np.min(X) != 0:
+            X_shift = -np.min(X)
+
+        if np.max(X) - np.min(X) != 1:
+            X_scale = np.max(X)-np.min(X)
+
+        X = (X + X_shift)/X_scale
+
         if np.min(Y) != 0:
-            shift = -np.min(Y)
+            Y_shift = -np.min(Y)
 
         if np.max(Y) - np.min(Y) != 1:
-            scale = np.max(Y)-np.min(Y)
+            Y_scale = np.max(Y)-np.min(Y)
 
-        Y = (Y + shift)/scale
+        Y = (Y + Y_shift)/Y_scale
 
         N, M = X.shape[0], Y.shape[0]
 
@@ -70,36 +83,44 @@ class NeuralNet:
 
         Z = np.zeros((layers, nodes, 1), dtype = np.float64)
 
-        @jit(cache = True, nopython = True)
+        @njit(cache = True)
         def feedforward(X, Z, W_in, W, W_out, B_in, B, B_out, layers):
             Z[0] = W_in @ X + B_in
-            Z[0] = 1/(1 + np.exp(-Z[0]))
+            Z[0] = np.log10(1 + np.exp(-Z[0]))          # Softmax
+            # Z[0] = 1/(1 + np.exp(-Z[0]))              # Sigmoid
             for l in range(layers-1):
                 Z[l+1] = W[l] @ Z[l] + B[l]
-                Z[l+1] = 1/(1 + np.exp(-Z[l+1]))
+                Z[l+1] = np.log10(1 + np.exp(-Z[l+1]))  # Softmax
+                # Z[l+1] = 1/(1 + np.exp(-Z[l+1]))      # Sigmoid
             A = W_out @ Z[-1] + B_out
-            A = 1/(1 + np.exp(A))
+            A = np.log10(1 + np.exp(-A))                # Softmax
+            # A = 1/(1 + np.exp(-A))                    # Sigmoid
             return A, Z
 
-        @jit(cache = True, nopython = True)
+        @njit(cache = True)
         def backprop(X, Y, A, Z, W_in, W, W_out, B_in, B, B_out, layers, lr):
             diff = A - Y
             C = np.mean(diff**2)
 
             dCdA = 2*(A - Y)
-            dAdZ = A*(A - 1)
+            dAdZ = 1/(1 + np.exp(-A))                   # Softmax deriv
+            # dAdZ = A*(A - 1)                          # Sigmoid deriv
             dZdW = Z[-1]
             delta = dCdA*dAdZ
             W_out -= lr*delta @ dZdW.T
             B_out -= lr*delta
 
-            delta = (W_out.T @ delta)*(Z[-1]*(1 - Z[-1]))
+            delta = W_out.T @ delta
+            delta *= 1/(1 + np.exp(-Z[-1]))             # Softmax deriv
+            # delta *= Z[-1]*(1 - Z[-1])                # Sigmoid deriv
             W[-1] -= lr*delta @ Z[-1].T
             B[-1] -= lr*delta
 
             for i in range(1, layers):
                 l = layers - i - 1
-                delta = (W[l+1].T @ delta)*(Z[l]*(1 - Z[l]))
+                delta = (W[l+1].T @ delta)
+                delta *= 1/(1 + np.exp(-Z[l]))          # Softmax deriv
+                # delta *= Z[l]*(1 - Z[l])              # Sigmoid deriv
                 W[l] -= lr*delta @ Z[l].T
                 B[l] -= lr*delta
 
@@ -133,10 +154,13 @@ class NeuralNet:
 
         self.layers = layers
         self.nodes = nodes
-        self.scale = scale
-        self.shift = shift
 
-        return (np.reshape(A, self._X.shape)*self.scale)+self.shift
+        self.X_scale = X_scale
+        self.X_shift = X_shift
+        self.Y_scale = Y_scale
+        self.Y_shift = Y_shift
+
+        return (np.reshape(A, self._Y.shape)*self.Y_scale)+self.Y_shift
 
     def predict(self, X):
 
@@ -144,6 +168,8 @@ class NeuralNet:
 
         W_in, W, W_out, B_in, B, B_out =\
         self.W_in, self.W, self.W_out, self.B_in, self.B, self.B_out
+
+        X = (X + self.X_shift)/self.X_scale
 
         layers = self.layers
         nodes = self.nodes
@@ -161,7 +187,7 @@ class NeuralNet:
             return A, Z
 
         A, Z = feedforward(X, Z, W_in, W, W_out, B_in, B, B_out, layers)
-        return (A*self.scale)+self.shift
+        return (A*self.Y_scale)+self.Y_shift
 
 if __name__ == "__main__":
 
