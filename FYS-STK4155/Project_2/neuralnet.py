@@ -1,10 +1,28 @@
 from numba.typed import List as jitlist
-from multiprocessing import Pool
 import matplotlib.pyplot as plt
-from imageio import imread
 from numba import njit
 import numpy as np
 import sys
+
+def preprocess(X):
+    N,M = X.shape
+    X_new = []
+    for i in range(M):
+        col = X[:,i]
+        col_int = col.astype(int)
+        if np.all((col - col_int) == 0) and np.max(col) < 10:
+            categories = int(np.max(col) - np.min(col)) + 1
+            col = col - np.min(col)
+            new_cols = np.zeros((categories, N))
+            for n,c in enumerate(col):
+                new_cols[int(c),n] = 1
+            for c in new_cols:
+                X_new.append(c)
+        else:
+            shift = np.min(col)
+            scale = np.max(col) - shift
+            X_new.append((col - shift)/scale)
+    return np.array(X_new).T
 
 class NeuralNet:
 
@@ -38,7 +56,7 @@ class NeuralNet:
     def learn(self, cycles, layers, batchsize, lr = 0.1):
         """
         cycles:     Number of fwdfeed-backprop cycles <int>, minimum of 1
-        layers:     Number of hidden layers <int>, minimum of 1
+        layers:     List of layer sizes, each element (e >= 1) must be an <int>
 
         Note:       The bias term is added automatically.
 
@@ -89,55 +107,47 @@ class NeuralNet:
                 W.append(np.random.random((layers[i+1], layers[i])))
                 B.append(np.random.random((layers[i+1], 1)))
 
-        # @njit(cache = True)
-        def batch(X, Y, W, B, lr, cycles, layers):
-            # perc = 0
-            Z = jitlist()
-            Z.append(X)
-            for i in layers:
-                Z.append(np.zeros((i, 1)))
-            # print()
+        @njit(cache = True)
+        def wrapped(X_batches, Y_batches, W, B, lr, cycles, layers):
+            perc = 0
+            print("0%")
             for c in range(cycles):
+                for n in range(len(X_batches)):
+                    X = X_batches[n]
+                    Y = Y_batches[n]
+                    Z = jitlist()
+                    Z.append(X)
+                    for i in layers:
+                        Z.append(np.zeros((i, 1)))
 
-                for n,(w,b) in enumerate(zip(W,B)):
-                    Z[n+1] = w @ Z[n] + b
-                    Z[n+1] = 1/(1 + np.exp(-Z[n+1]))
+                    for m in range(len(W)):
+                        w = W[m]
+                        b = B[m]
+                        Z[m+1] = w @ Z[m] + b
+                        Z[m+1] = 1/(1 + np.exp(-Z[m+1]))
 
-                dCdA = 2*(Y - Z[-1])
-                dAdZ = Z[-1]*(1 - Z[-1])
-                delta = dCdA*dAdZ
-                if c == cycles-1:
-                    break
+                    dCdA = 2*(Y - Z[-1])
+                    dAdZ = Z[-1]*(1 - Z[-1])
+                    delta = dCdA*dAdZ
 
-                for n in range(len(W)-1):
-                    l = len(W)-n-1
-                    W[l] += lr*delta @ Z[l].T
-                    B[l] += lr*delta
-                    delta = W[l].T @ delta
-                    delta *= Z[l]*(1 - Z[l])
+                    if c == cycles-1:
+                        break
 
-            #     new_perc = int(100*(c+1)/cycles)
-            #     if new_perc > perc:
-            #         perc = new_perc
-            #         print("\033[1A\r", perc, "\b%")
-            # print(f"\033[1A\r100%")
+                    for m in range(len(W)-1):
+                        l = len(W)-m-1
+                        W[l] += lr*delta @ Z[l].T
+                        B[l] += lr*delta
+                        delta = W[l].T @ delta
+                        delta *= Z[l]*(1 - Z[l])
 
+                    new_perc = int(100*(n+1 + c*len(X_batches))/(cycles*len(X_batches)))
+                    if new_perc > perc:
+                        perc = new_perc
+                        print("\033[1A\r", perc, "\b%")
+            print("\033[1A\r100%")
             return W,B
 
-        perc = 0
-        print(f"\r{perc:3d}%", end = "")
-        for n,(x,y) in enumerate(zip(X_batches, Y_batches)):
-            W, B = batch(x, y, W, B, lr, cycles, layers)
-
-            new_perc = int(100*(n+1)/splits)
-            if new_perc > perc:
-                perc = new_perc
-                print(f"\r{perc:3d}%", end = "")
-        print("\r100%")
-
-        for n,(w,b) in enumerate(zip(W,B)):
-            W[n] = w/splits
-            B[n] = b/splits
+        W, B = wrapped(X_batches, Y_batches, W, B, lr, cycles, layers)
 
         self.W = W
         self.B = B
@@ -150,7 +160,6 @@ class NeuralNet:
         # return (np.reshape(A, self._Y.shape)*self.Y_scale)+self.Y_shift
 
     def predict(self, X):
-
         X = X.flatten()[:,np.newaxis]
 
         Y_shift = 0
@@ -164,22 +173,3 @@ class NeuralNet:
             X = 1/(1 + np.exp(-X))              # Sigmoid
 
         return X
-
-if __name__ == "__main__":
-
-    print("Importing")
-    X = np.array(imread("a.jpg"))
-    Y = np.array(imread("b.jpg"))
-
-    # X = np.mean(X, axis = 2)
-    # Y = np.mean(Y, axis = 2)
-
-    NN = NeuralNet(X, Y)
-
-    print("Learning")
-    Z = NN.learn(cycles = 1000, nodes = 5, layers = 2, lr = 1E-3, mu = 0, sigma = 0.001)
-
-    print("Plotting")
-    plt.imshow(Z.astype(np.int32))
-    plt.savefig("output.png")
-    plt.close()
