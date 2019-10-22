@@ -126,7 +126,7 @@ class NeuralNet:
                     # Z = jitlist()
                     Z.append(X)
                     for i in layers:
-                        Z.append(np.zeros((i, 1)))
+                        Z.append(np.zeros((P, i, 1)))
 
                     for m in range(len(W)):
                         w = W[m]
