@@ -6,11 +6,17 @@ Created on Tue Oct 22 18:20:13 2019
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import datasets
+from sklearn.model_selection import train_test_split
+
+
+np.random.seed(1337)
     
 
-def next_node(w_i, b_i, y_i1, func):
+def next_layer(w_i, b_i, y_i1, func):
     """
-    A function that finds the y-vector for the next node.
+    A function that finds the y-vector for the next layer.
     """
     y_i = func(np.dot(w_i,y_i1) + b_i)
     return y_i
@@ -24,12 +30,12 @@ def sigmoid(x):
 
 def find_output(inp, ws, bs, func):
     """
-    A function that goes through all the nodes, and finds the output.
+    A function that goes through all the layers and nodes, and finds the output.
     """
     ys = [inp] #a list to hold the y-values
     
     for i in range(len(bs)):
-        yi = next_node(ws[i], bs[i], ys[i], func)
+        yi = next_layer(ws[i], bs[i], ys[i], func)
         ys.append(yi)
         
     return ys[-1]
@@ -58,13 +64,66 @@ def set_up(n_input_nodes = 164, n_output_nodes = 10, n_hidden = 2, n_nodes_hidde
     
     return inp, ws, bs
 
-if __name__ == "__main__":
-    inp, ws, bs = set_up()
-    
-    outp = find_output(inp, ws, bs, sigmoid)
-    print(inp)
-    print(outp)
+def cost_func(desired_output, found_output):
+    cost = np.sum((found_output - desired_output)**2)/2
+    return cost
 
+def get_handwritten_data():
+    
+    # display images in notebook
+#    %matplotlib inline
+    plt.rcParams['figure.figsize'] = (12,12)
+
+
+    # download MNIST dataset
+    digits = datasets.load_digits()
+    
+    # define inputs and labels
+    inputs = digits.images
+    labels = digits.target
+    
+    print("inputs = (n_inputs, pixel_width, pixel_height) = " + str(inputs.shape))
+    print("labels = (n_inputs) = " + str(labels.shape))
+    
+    
+    # flatten the image
+    # the value -1 means dimension is inferred from the remaining dimensions: 8x8 = 64
+    n_inputs = len(inputs)
+    inputs = inputs.reshape(n_inputs, -1)
+    print("X = (n_inputs, n_features) = " + str(inputs.shape))
+    
+    
+    # choose some random images to display
+    indices = np.arange(n_inputs)
+    random_indices = np.random.choice(indices, size=5)
+    
+    for i, image in enumerate(digits.images[random_indices]):
+        plt.subplot(1, 5, i+1)
+        plt.axis('off')
+        plt.imshow(image, cmap=plt.cm.gray_r, interpolation='nearest')
+        plt.title("Label: %d" % digits.target[random_indices[i]])
+    plt.show()
+    
+    return inputs, labels
+
+if __name__ == "__main__":
+    
+    #inputs the handwritten data
+    inputs, labels = get_handwritten_data()
+    #generates arrays based upon the handwritten data
+    inp, ws, bs = set_up(n_input_nodes=len(inputs[0]), n_output_nodes=10)
+    
+    #splits into training and testing data
+    train_size = 0.8
+    test_size = 1 - train_size
+    inputs_train, inputs_test, labels_train, labels_test = train_test_split(inputs, labels, train_size=train_size, test_size=test_size)
+    
+    out = find_output(inputs_train[0], ws, bs, sigmoid)
+    print(out)
+    print(out/np.sum(out))
+    print(np.sum(out/np.sum(out)))
+    
+    
 
 
 
