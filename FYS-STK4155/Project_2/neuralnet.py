@@ -4,6 +4,11 @@ from numba import njit
 import numpy as np
 import sys
 
+def shapes(*args):
+    for i in args:
+        print(i.shape, end = " ")
+    print()
+
 def preprocess(X):
     N,M = X.shape
     X_new = []
@@ -62,8 +67,10 @@ class NeuralNet:
 
         batchsize must be divisible into both the X and Y datasets
         """
-        X, Y = self._X.flatten()[:,np.newaxis], self._Y.flatten()[:,np.newaxis]
+        # X, Y = self._X.flatten()[:,np.newaxis], self._Y.flatten()[:,np.newaxis]
+        X, Y = self._X, self._Y
         N, M = X.shape[0], Y.shape[0]
+        P, Q = X.shape[1], Y.shape[1]
 
         if N >= M:
             A_split = M
@@ -104,10 +111,10 @@ class NeuralNet:
 
         for i in range(len(layers)-1):
             if i < len(layers) - 1:
-                W.append(np.random.random((layers[i+1], layers[i])))
-                B.append(np.random.random((layers[i+1], 1)))
+                W.append(np.random.random((P, layers[i+1], layers[i])))
+                B.append(np.random.random((P, layers[i+1], 1)))
 
-        @njit(cache = True)
+        # @njit(cache = True)
         def wrapped(X_batches, Y_batches, W, B, lr, cycles, layers):
             perc = 0
             print("0%")
@@ -115,7 +122,8 @@ class NeuralNet:
                 for n in range(len(X_batches)):
                     X = X_batches[n]
                     Y = Y_batches[n]
-                    Z = jitlist()
+                    Z = []
+                    # Z = jitlist()
                     Z.append(X)
                     for i in layers:
                         Z.append(np.zeros((i, 1)))
@@ -135,6 +143,7 @@ class NeuralNet:
 
                     for m in range(len(W)-1):
                         l = len(W)-m-1
+                        shapes(W[l], delta, Z[l].T)
                         W[l] += lr*delta @ Z[l].T
                         B[l] += lr*delta
                         delta = W[l].T @ delta
