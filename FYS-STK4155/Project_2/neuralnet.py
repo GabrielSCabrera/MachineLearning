@@ -9,26 +9,6 @@ def shapes(*args):
         print(i.shape, end = " ")
     print()
 
-def preprocess(X):
-    N,M = X.shape
-    X_new = []
-    for i in range(M):
-        col = X[:,i]
-        col_int = col.astype(int)
-        if np.all((col - col_int) == 0) and np.max(col) < 10:
-            categories = int(np.max(col) - np.min(col)) + 1
-            col = col - np.min(col)
-            new_cols = np.zeros((categories, N))
-            for n,c in enumerate(col):
-                new_cols[int(c),n] = 1
-            for c in new_cols:
-                X_new.append(c)
-        else:
-            shift = np.min(col)
-            scale = np.max(col) - shift
-            X_new.append((col - shift)/scale)
-    return np.array(X_new).T
-
 class NeuralNet:
 
     def __init__(self, X, Y):
@@ -72,30 +52,15 @@ class NeuralNet:
         N, M = X.shape[0], Y.shape[0]
         P, Q = X.shape[1], Y.shape[1]
 
-        if N >= M:
-            A_split = M
-            B_split = N
-            txt_A = "Y"
-            txt_B = "X"
-        else:
-            A_split = N
-            B_split = M
-            txt_A = "X"
-            txt_B = "Y"
-        if A_split%batchsize != 0:
-            raise Exception(f"{txt_A} must be divisible into batchsize")
-        splits = A_split//batchsize
-        if B_split%splits != 0:
-            raise Exception(f"{txt_B} must be divisible into batchsize")
-        X_batches = np.array(np.split(X, splits))
-        Y_batches = np.array(np.split(Y, splits))
-
-        N_batch = N//splits
-        M_batch = M//splits
-
         cycles = int(cycles)
         layers = np.array(layers, dtype = np.int64)
-        layers = np.concatenate([[N_batch], layers, [M_batch]])
+        layers = np.concatenate([[P], layers, [Q]])
+
+        rounded_len = (N//batchsize)*N
+        batches = N//batchsize
+
+        X_batches = np.split(X[:rounded_len-1], batches)
+        Y_batches = np.split(Y[:rounded_len-1], batches)
 
         Y_shift = 0
         Y_scale = 1
@@ -111,22 +76,23 @@ class NeuralNet:
 
         for i in range(len(layers)-1):
             if i < len(layers) - 1:
-                W.append(np.random.random((P, layers[i+1], layers[i])))
-                B.append(np.random.random((P, layers[i+1], 1)))
+                W.append(np.random.random((layers[i+1], layers[i])))
+                B.append(np.random.random((layers[i+1], 1)))
 
         # @njit(cache = True)
         def wrapped(X_batches, Y_batches, W, B, lr, cycles, layers):
             perc = 0
+            N = X_batches[0].shape[0]
             print("0%")
             for c in range(cycles):
                 for n in range(len(X_batches)):
-                    X = X_batches[n]
-                    Y = Y_batches[n]
+                    X = X_batches[n].T
+                    Y = Y_batches[n].T
                     Z = []
                     # Z = jitlist()
                     Z.append(X)
                     for i in layers:
-                        Z.append(np.zeros((P, i, 1)))
+                        Z.append(np.zeros((N, i, 1)))
 
                     for m in range(len(W)):
                         w = W[m]
@@ -134,8 +100,10 @@ class NeuralNet:
                         Z[m+1] = w @ Z[m] + b
                         Z[m+1] = 1/(1 + np.exp(-Z[m+1]))
 
-                    dCdA = 2*(Y - Z[-1])
+                    dCdA = -2*(Y - Z[-1])
+                    shapes(dCdA, Y, Z[-1])
                     dAdZ = Z[-1]*(1 - Z[-1])
+                    shapes(dAdZ, Z[-1])
                     delta = dCdA*dAdZ
 
                     if c == cycles-1:
@@ -144,8 +112,11 @@ class NeuralNet:
                     for m in range(len(W)-1):
                         l = len(W)-m-1
                         shapes(W[l], delta, Z[l].T)
-                        W[l] += lr*delta @ Z[l].T
-                        B[l] += lr*delta
+                        shapes(B[l], delta)
+                        dW = lr*delta @ Z[l].T
+                        dB = lr*delta
+                        W[l] += np.mean(dW, axis = 0)
+                        B[l] += np.mean(dB, axis = 0)
                         delta = W[l].T @ delta
                         delta *= Z[l]*(1 - Z[l])
 

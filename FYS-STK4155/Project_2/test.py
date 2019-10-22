@@ -1,4 +1,8 @@
-print("\033[40;30m")
+def gen(low, high, step = 1):
+    low = low - step
+    while low < high-step:
+        low += step
+        yield low
 
-print("wergpouwpuaerguawegpph9gs")
-print("qwehu3q4huptu3pth3uoq5h = 5")
+for i in gen(0, 10, 2):
+    print(i)
