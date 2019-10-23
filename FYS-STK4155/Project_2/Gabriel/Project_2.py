@@ -7,13 +7,13 @@ import os
 """ PROGRAM PARAMETERS """
 
 # Size of each batch sent into the neural network
-batchsize = 50
+batchsize = 2
 # Percentage of data to set aside for testing
 test_percent = 25
 # Configuration of layers in the Neural Network
 NN_layers = [200,100,75,50,25,10]
 # Number of epochs, or total cycles over all batches
-NN_epochs = 1
+NN_epochs = 1000
 # File in which to save the terminal output
 terminal_output_file = "term_out.txt"
 
