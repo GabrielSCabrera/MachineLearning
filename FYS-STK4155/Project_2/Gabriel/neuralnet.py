@@ -1,9 +1,20 @@
 import matplotlib.pyplot as plt
 from time import time
 import numpy as np
-import sys
+import sys, os
 
 # np.einsum("ijk,ikj->ijk",a,b) # DO NOT LOSE THIS!
+
+def split(X, Y, test_percent = 0.25):
+    N = X.shape[0]
+    N_train = N - (N*test_percent)//100
+
+    test_idx = np.random.choice(X.shape[0], N_train)
+    train_idx = np.delete(np.arange(0, X.shape[0]), test_idx)
+
+    X_train, Y_train = X[train_idx], Y[train_idx]
+    X_test, Y_test = X[test_idx], Y[test_idx]
+    return X_train, Y_train, X_test, Y_test
 
 def preprocess(X, Y, categorical_cols, delete_outliers = True):
     """
@@ -46,15 +57,61 @@ def preprocess(X, Y, categorical_cols, delete_outliers = True):
             for j in new_cols:
                 X_new.append(j)
         else:
+            # Scaling from 0 to 1
+            # col = X[:,i]
+            # shift = np.min(col)
+            # scale = np.max(col) - shift
+            # X_new.append((col - shift)/scale)
+
+            # Scaling based on mean and std
             col = X[:,i]
-            shift = np.min(col)
-            scale = np.max(col) - shift
-            X_new.append((col - shift)/scale)
+            X_new.append((col - np.mean(col))/np.std(col))
     del_rows = np.sort(del_rows)
     for row in del_rows[::-1]:
         X_new = np.delete(X_new, row, axis = 1)
         Y = np.delete(Y, row, axis = 0)
     return np.array(X_new).T, Y
+
+def upsample_binary(X, Y):
+    """
+        Creates "new" datapoints from previously existing data, so as to
+        make the distribution of outputs Y half-zero and half-one.  Helps to
+        prevent the network from being biased one way or the other.
+
+        Warning: may drastically increase the array sizes
+    """
+    tol = 1E-15
+    idx_zeros = np.argwhere(np.abs(Y - 0) < tol)[:,0]
+    idx_ones = np.argwhere(np.abs(Y - 1) < tol)[:,0]
+    N_zeros = len(idx_zeros)
+    N_ones = len(idx_ones)
+    if N_zeros > N_ones:
+        ratio = int(N_zeros//N_ones)
+        new_len = ratio*N_ones + N_zeros
+        X_up = np.zeros((new_len, X.shape[1]))
+        Y_up = np.zeros((new_len, Y.shape[1]))
+        sample_idx = np.random.choice(idx_ones, (ratio - 1)*N_ones)
+        X_up[:X.shape[0]] = X
+        Y_up[:Y.shape[0]] = Y
+        X_up[X.shape[0]:] = X[sample_idx]
+        Y_up[Y.shape[0]:] = Y[sample_idx]
+    elif N_zeros < N_ones:
+        ratio = int(N_ones//N_zeros)
+        new_len = ratio*N_zeros + N_ones
+        X_up = np.zeros((new_len, X.shape[1]))
+        Y_up = np.zeros((new_len, Y.shape[1]))
+        sample_idx = np.random.choice(idx_zeros, (ratio - 1)*N_zeros)
+        X_up[:X.shape[0]] = X
+        Y_up[:Y.shape[0]] = Y
+        X_up[X.shape[0]:] = X[sample_idx]
+        Y_up[Y.shape[0]:] = Y[sample_idx]
+    else:
+        X_up, Y_up = X, Y
+
+    shuffle_idx = np.random.choice(X_up.shape[0], (X_up.shape[0]))
+    X_up = X_up[shuffle_idx]
+    Y_up = Y_up[shuffle_idx]
+    return X_up, Y_up
 
 def shapes(*args):
     """
@@ -66,7 +123,56 @@ def shapes(*args):
 
 class NeuralNet:
 
-    def __init__(self, X, Y):
+    def __init__(self):
+        pass
+
+    def load(self, path):
+
+        # Loading the training data
+        self._X = np.load(f"{path}/X_train.npy")
+        self._Y = np.load(f"{path}/Y_train.npy")
+
+        # Loading the layer configuration
+        layers = np.load(f"{path}/layers.npy")
+        layers = [self._X.shape[1]] + list(layers) + [self._Y.shape[1]]
+
+        # Loading the weights
+        W_filenames = np.sort(os.listdir(f"{path}/W/"))
+
+        msg = (f"Data corrupted – inconsistencies detected in saved data\n"
+        f"\tdir: {path}/W")
+        if len(W_filenames) != len(layers)-1:
+            raise ValueError(msg)
+
+        W = []
+        for f,l,l_prev in zip(W_filenames, layers[1:], layers[:-1]):
+            W.append(np.load(f"{path}/W/{f}"))
+            if W[-1].shape[0] != 1 or W[-1].shape[1] != l or W[-1].shape[2] != l_prev:
+                raise ValueError(msg)
+
+        # Loading the biases
+        B_filenames = np.sort(os.listdir(f"{path}/B/"))
+
+        msg = (f"Data corrupted – inconsistencies detected in saved data\n"
+        f"\tdir: {path}/B")
+        if len(B_filenames) != len(layers)-1:
+            raise ValueError(msg)
+
+        B = []
+        for f,l in zip(B_filenames, layers[1:]):
+            B.append(np.load(f"{path}/B/{f}"))
+            if B[-1].shape[0] != 1 or B[-1].shape[1] != l or B[-1].shape[2] != 1:
+                raise ValueError(msg)
+
+        self.W = W
+        self.B = B
+
+        self._N = self._X.shape[0]
+        self._M = self._Y.shape[0]
+        self._p = self._X.shape[1]
+        self._q = self._Y.shape[1]
+
+    def set(self, X, Y):
         """
             IN
             X:          NumPy Array (N, p) or (N,)
@@ -123,8 +229,8 @@ class NeuralNet:
         B = []
 
         for i in range(len(layers)-1):
-            W.append(np.random.normal(0,0.5,(1, layers[i+1], layers[i])))
-            B.append(np.random.normal(0,0.5,(1, layers[i+1], 1)))
+            W.append(np.random.normal(0,1,(1, layers[i+1], layers[i])))
+            B.append(np.random.normal(0,1,(1, layers[i+1], 1)))
 
         perc = 0
         N = X_batches[0].shape[0]
