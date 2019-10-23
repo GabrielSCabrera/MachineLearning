@@ -9,16 +9,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
 
 np.random.seed(1337)
     
 
+def shapes(*args):
+    for i in args:
+        print(i.shape, end = "")
+    print()
+
 def next_layer(w_i, b_i, y_i1, func):
     """
     A function that finds the y-vector for the next layer.
     """
-    y_i = func(np.dot(w_i,y_i1) + b_i)
+    z_i = (w_i @ y_i1.T).T + b_i
+    y_i = func(z_i)
     return y_i
 
 def sigmoid(x):
@@ -28,7 +35,7 @@ def sigmoid(x):
     f = 1/(1 + np.exp(-x))
     return f
 
-def find_output(inp, ws, bs, func):
+def feed_forward(inp, ws, bs, func):
     """
     A function that goes through all the layers and nodes, and finds the output.
     """
@@ -37,8 +44,10 @@ def find_output(inp, ws, bs, func):
     for i in range(len(bs)):
         yi = next_layer(ws[i], bs[i], ys[i], func)
         ys.append(yi)
+    
+    prob = ys[-1]/np.sum(ys[-1])
         
-    return ys[-1]
+    return ys, prob
 
 def set_up(n_input_nodes = 164, n_output_nodes = 10, n_hidden = 2, n_nodes_hidden = [12, 12]):
     """
@@ -64,11 +73,17 @@ def set_up(n_input_nodes = 164, n_output_nodes = 10, n_hidden = 2, n_nodes_hidde
     
     return inp, ws, bs
 
-def cost_func(desired_output, found_output):
-    cost = np.sum((found_output - desired_output)**2)/2
-    return cost
+def loss_func(desired_output, found_output):
+    """
+    The loss/cost function
+    """
+    loss = np.sum((found_output - desired_output)**2)/2
+    return loss
 
 def get_handwritten_data():
+    """
+    A function that collects and returns the handwritten data.
+    """
     
     # display images in notebook
 #    %matplotlib inline
@@ -82,15 +97,15 @@ def get_handwritten_data():
     inputs = digits.images
     labels = digits.target
     
-    print("inputs = (n_inputs, pixel_width, pixel_height) = " + str(inputs.shape))
-    print("labels = (n_inputs) = " + str(labels.shape))
+#    print("inputs = (n_inputs, pixel_width, pixel_height) = " + str(inputs.shape))
+#    print("labels = (n_inputs) = " + str(labels.shape))
     
     
     # flatten the image
     # the value -1 means dimension is inferred from the remaining dimensions: 8x8 = 64
     n_inputs = len(inputs)
     inputs = inputs.reshape(n_inputs, -1)
-    print("X = (n_inputs, n_features) = " + str(inputs.shape))
+#    print("X = (n_inputs, n_features) = " + str(inputs.shape))
     
     
     # choose some random images to display
@@ -106,6 +121,53 @@ def get_handwritten_data():
     
     return inputs, labels
 
+
+def to_categorical_numpy(integer_vector):
+    """
+    Outputs a given vector in the 1-hot form.
+    """
+    n_inputs = len(integer_vector)
+    n_categories = np.max(integer_vector) + 1
+    onehot_vector = np.zeros((n_inputs, n_categories))
+    onehot_vector[range(n_inputs), integer_vector] = 1
+    
+    return onehot_vector
+
+def backpropagation(inputs, labels, ws, bs, func):
+    """
+    A function htat does backpropagation.
+    """    
+    
+    #runs the feed forward thing
+    a_h, prob = feed_forward(inputs, ws, bs, func)
+    
+    errs = [] #the errors
+    #error in the final output layer
+    err_out = prob - labels
+    errs.append(err_out)
+    
+    #error in the rest of the layers
+    for i in range(len(ws)-1):
+        err_i = (errs[0] @ ws[-1-i]) * a_h[-2-i] * (1 - a_h[-2-i])
+        errs = [err_i] + errs
+    
+    w_grad = [] #the gradients for the weights
+    for i in range(len(ws)):
+        w_g_i = a_h[i].T @ errs[i]
+        w_grad.append(w_g_i)
+    
+    b_grad = [] #the gradient for the biases
+    for i in range(len(bs)):
+        b_g_i = np.sum(errs[i])
+        b_grad.append(b_g_i)
+    
+    return w_grad, b_grad
+
+def predict(X, ws, bs, func):
+    probabilities = feed_forward(X, ws, bs, func)[1]
+    return np.argmax(probabilities, axis=1)    
+
+
 if __name__ == "__main__":
     
     #inputs the handwritten data
@@ -118,17 +180,28 @@ if __name__ == "__main__":
     test_size = 1 - train_size
     inputs_train, inputs_test, labels_train, labels_test = train_test_split(inputs, labels, train_size=train_size, test_size=test_size)
     
-    out = find_output(inputs_train[0], ws, bs, sigmoid)
-    print(out)
-    print(out/np.sum(out))
-    print(np.sum(out/np.sum(out)))
-    
-    
+    labels_train_onehot, labels_test_onehot = to_categorical_numpy(labels_train), to_categorical_numpy(labels_test)
 
+    print("Old accuracy on training data: " + str(accuracy_score(labels_test, predict(inputs_test, ws, bs, sigmoid))))
 
+    eta = 0.01
+    lmbd = 0.01    
+    for i in range(100):
+        #runs the backpropagation
+        w_grad, b_grad = backpropagation(inputs_train, labels_train_onehot, ws, bs, sigmoid)
+        
+        #regularization term gradients
+        for i in range(len(w_grad)):
+            w_grad_i = lmbd * ws[i].T
+            w_grad[i] += w_grad_i
+        
+        #update weight and biases
+        for i in range(len(w_grad)):
+            ws[i] -= eta * w_grad[i].T
+            bs[i] -= eta * b_grad[i]
+        
 
-
-
+    print("New accuracy on training data: " + str(accuracy_score(labels_test, predict(inputs_test, ws, bs, sigmoid))))
 
 
 
