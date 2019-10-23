@@ -1,83 +1,89 @@
-from neuralnet import NeuralNet
+from neuralnet import NeuralNet, preprocess
 import pandas as pd
 import numpy as np
 from time import time
 
-def preprocess(X, categorical_cols, delete_outliers = True):
-    """
-        categorical_cols should be a dict with:
-        {"index_1"              :       [cat_11, cat_12, cat_13, ...],
-         "index_2 index_3"      :       [cat_21, cat_22, cat_23, ...]}
+""" PROGRAM PARAMETERS """
 
-        Where index_1, index_2, ... must always be of type <int>,
-        Each index_i must be unique!
+# Size of each batch sent into the neural network
+batchsize = 10
+# Percentage of data to set aside for testing
+test_percent = 25
+# Configuration of layers in the Neural Network
+NN_layers = [100,75,50,25,10]
+# Number of epochs, or total cycles over all batches
+NN_epochs = 1
+# File in which to save the terminal output
+terminal_output_file = "term_out.txt"
 
-        One-hot encoding sorts the input cat_ij from least to greatest, and
-        assigns new column indices 0,1,... to each cat_ij based on this order.
-    """
-    N,M = X.shape
-    X_new = []
-    categories = {}
-    del_rows = []
-    for i,j in categorical_cols.items():
-        cat_keys = i.split(" ")
-        cat_vals = np.sort(j)
-        for k in cat_keys:
-            categories[k] = cat_vals
-    for i in range(M):
-        if str(i) in categories.keys():
-            key = str(i)
-            val = categories[key]
-            valmap = {v:n for n,v in enumerate(val)}
-            new_cols = np.zeros((len(val), N))
-            col = X[:,i]
-            for n,c in enumerate(col):
-                if int(c) not in val:
-                    if delete_outliers is True:
-                        del_rows.append(n)
-                    else:
-                        msg = (f"Found outlier {int(c)} at index ({n}, {k})\n"
-                               f"Expected values: {val}")
-                        raise Exception(msg)
-                else:
-                    new_cols[valmap[c],n] = 1
-            for j in new_cols:
-                X_new.append(j)
-        else:
-            col = X[:,i]
-            shift = np.min(col)
-            scale = np.max(col) - shift
-            X_new.append((col - shift)/scale)
-    del_rows = np.sort(del_rows)
-    for row in del_rows[::-1]:
-        X_new = np.delete(X_new, row, axis = 1)
-    return np.array(X_new).T
+""" DATASET PARAMETERS """
+
+# Determines which columns in the dataset are categorical, and which values
+# the categories take
+categorical_cols = {"1":[1,2], "2":[1,2,3,4], "3":[1,2,3]}
+
+""" READING THE DATA (READING FROM .xls FILE) """
 
 t0 = time()
 
-# Reading the Excel Data
 filename = "ccdata.xls"
 df = pd.read_excel(filename)
 X_labels = list(df.iloc()[0,:-1])
 Y_label = list(df.iloc()[0,-1])
-categorical_cols = {"1":[1,2], "2":[1,2,3,4], "3":[1,2,3]}
 X = np.array(df.iloc()[1:,1:-1], dtype = np.int64)
-Y = np.array(df.iloc()[1:,-1], dtype = np.int64)
-X = preprocess(X, categorical_cols)
+Y = np.array(df.iloc()[1:,-1], dtype = np.int64)[:,np.newaxis]
 del df
 
-test_size = 3
-trainlen = len(X)-test_size
-trainlen = int(trainlen)
-testlen = len(X)-trainlen
+""" PREPROCESSING, SPLITTING, AND RESHAPING THE DATA """
 
-NN = NeuralNet(X[:trainlen], Y[:trainlen])
-out = NN.learn(cycles = 1000, layers = [16,14,12,8], batchsize = test_size)
-out = NN.predict(X[trainlen:])
-out[out >= 0.5] = 1
-out[out < 1] = 0
-diffs = out.flatten().astype(np.int64)-Y[trainlen:]
-print(f"Number of wrong outputs: {np.sum(np.abs(diffs))}")
-print(f"Number of correct outputs: {diffs.shape[0] - np.sum(np.abs(diffs))}")
+# Implements normalization and one-hot encoding
+X,Y = preprocess(X,Y, categorical_cols)
 
-print(f"Time Elapsed: {time() - t0:.0f}s")
+# Splitting the data into training and testing sets
+N = X.shape[0]
+N_train = N - (N*test_percent)//100
+X_train, Y_train = X[:N_train], Y[:N_train]
+X_test, Y_test = X[N_train:], Y[N_train:]
+
+""" INFORMATION FOR THE USER """
+
+msg1 = (f"\nProcessed Dataset Dimensions:\n"
+        f"\n\tX_train: (N= {X_train.shape[0]}, p= {X_train.shape[1]})"
+        f"\n\tY_train: (M= {Y_train.shape[0]}, q= {Y_train.shape[1]})\n"
+        f"\n\tX_test:  (N= {X_test.shape[0]}, p= {X_test.shape[1]})"
+        f"\n\tY_test:  (M= {Y_test.shape[0]}, q= {Y_test.shape[1]})\n"
+        f"\nNeural Network Parameters\n"
+        f"\n\tBatch Size: {batchsize}\n\tLayer Configuration: {NN_layers}"
+        f"\n\tEpochs: {NN_epochs}\n\nTraining the Network:\n")
+print(msg1)
+
+""" IMPLEMENTING THE NEURAL NETWORK """
+
+# Initializing the neural network with the training data
+NN = NeuralNet(X_train, Y_train)
+
+# Training the neural network with the parameters given earlier
+NN.train(epochs = NN_epochs, layers = NN_layers, batchsize = batchsize)
+
+# Predicting outputs for the testing data
+Y_predict = NN.predict(X_test)
+
+# Rounding the predicted values to zero and one
+Y_predict[Y_predict >= 0.5] = 1
+Y_predict[Y_predict < 1] = 0
+
+# Calculating the elementwise difference in the predicted and expected outputs
+diffs = Y_predict-Y_test
+
+# Displaying the total correct and incorrect outputs
+incorrect = np.sum(np.abs(diffs))
+correct = diffs.shape[0] - incorrect
+total = diffs.shape[0]
+msg2 = (f"\nTest Results\n\n\tNumber of incorrect outputs: {incorrect:.0f}/"
+       f"{total:d}\n\tNumber of correct outputs: {correct:.0f}/{total:d}\n\t"
+       f"Percent correct: {100*correct/total:.0f}%")
+print(msg2)
+
+with open(terminal_output_file, "a+") as outfile:
+    outfile.write("\n" + "-"*80)
+    outfile.write(msg1 + "\n" + msg2 + "\n")

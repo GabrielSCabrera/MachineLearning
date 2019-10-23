@@ -1,10 +1,65 @@
-from numba.typed import List as jitlist
 import matplotlib.pyplot as plt
-from numba import njit
+from time import time
 import numpy as np
 import sys
 
+# np.einsum("ijk,ikj->ijk",a,b) # DO NOT LOSE THIS!
+
+def preprocess(X, Y, categorical_cols, delete_outliers = True):
+    """
+        categorical_cols should be a dict with:
+        {"index_1"              :       [cat_11, cat_12, cat_13, ...],
+         "index_2 index_3"      :       [cat_21, cat_22, cat_23, ...]}
+
+        Where index_1, index_2, ... must always be of type <int>,
+        Each index_i must be unique!
+
+        One-hot encoding sorts the input cat_ij from least to greatest, and
+        assigns new column indices 0,1,... to each cat_ij based on this order.
+    """
+    N,M = X.shape
+    X_new = []
+    categories = {}
+    del_rows = []
+    for i,j in categorical_cols.items():
+        cat_keys = i.split(" ")
+        cat_vals = np.sort(j)
+        for k in cat_keys:
+            categories[k] = cat_vals
+    for i in range(M):
+        if str(i) in categories.keys():
+            key = str(i)
+            val = categories[key]
+            valmap = {v:n for n,v in enumerate(val)}
+            new_cols = np.zeros((len(val), N))
+            col = X[:,i]
+            for n,c in enumerate(col):
+                if int(c) not in val:
+                    if delete_outliers is True:
+                        del_rows.append(n)
+                    else:
+                        msg = (f"Found outlier {int(c)} at index ({n}, {k})\n"
+                               f"Expected values: {val}")
+                        raise Exception(msg)
+                else:
+                    new_cols[valmap[c],n] = 1
+            for j in new_cols:
+                X_new.append(j)
+        else:
+            col = X[:,i]
+            shift = np.min(col)
+            scale = np.max(col) - shift
+            X_new.append((col - shift)/scale)
+    del_rows = np.sort(del_rows)
+    for row in del_rows[::-1]:
+        X_new = np.delete(X_new, row, axis = 1)
+        Y = np.delete(Y, row, axis = 0)
+    return np.array(X_new).T, Y
+
 def shapes(*args):
+    """
+        For quick bugfixing
+    """
     for i in args:
         print(i.shape, end = " ")
     print()
@@ -34,33 +89,26 @@ class NeuralNet:
         self._p = self._X.shape[1]
         self._q = self._Y.shape[1]
 
-        info = (f"X: (N= {self._N}, p= {self._p})"
-                f"\nY: (M= {self._M}, q= {self._q})")
-        print(info)
-
-    def learn(self, cycles, layers, batchsize, lr = 0.1):
+    def train(self, epochs, layers, batchsize, lr = 0.1):
         """
-        cycles:     Number of fwdfeed-backprop cycles <int>, minimum of 1
+        epochs:     Number of fwdfeed-backprop epochs <int>, minimum of 1
         layers:     List of layer sizes, each element (e >= 1) must be an <int>
 
         Note:       The bias term is added automatically.
-
-        batchsize must be divisible into both the X and Y datasets
         """
-        # X, Y = self._X.flatten()[:,np.newaxis], self._Y.flatten()[:,np.newaxis]
         X, Y = self._X, self._Y
         N, M = X.shape[0], Y.shape[0]
         P, Q = X.shape[1], Y.shape[1]
 
-        cycles = int(cycles)
+        epochs = int(epochs)
         layers = np.array(layers, dtype = np.int64)
         layers = np.concatenate([[P], layers, [Q]])
 
-        rounded_len = (N//batchsize)*N
+        rounded_len = (N//batchsize)*batchsize
         batches = N//batchsize
 
-        X_batches = np.split(X[:rounded_len-1], batches)
-        Y_batches = np.split(Y[:rounded_len-1], batches)
+        X_batches = np.split(X[:rounded_len,:,np.newaxis], batches)
+        Y_batches = np.split(Y[:rounded_len,:,np.newaxis], batches)
 
         Y_shift = 0
         Y_scale = 1
@@ -71,85 +119,84 @@ class NeuralNet:
         if np.max(Y) - np.min(Y) != 1:
             Y_scale = np.max(Y)-np.min(Y)
 
-        W = jitlist()
-        B = jitlist()
+        W = []
+        B = []
 
         for i in range(len(layers)-1):
-            if i < len(layers) - 1:
-                W.append(np.random.random((layers[i+1], layers[i])))
-                B.append(np.random.random((layers[i+1], 1)))
+            W.append(np.random.normal(0,0.5,(1, layers[i+1], layers[i])))
+            B.append(np.random.normal(0,0.5,(1, layers[i+1], 1)))
 
-        # @njit(cache = True)
-        def wrapped(X_batches, Y_batches, W, B, lr, cycles, layers):
-            perc = 0
-            N = X_batches[0].shape[0]
-            print("0%")
-            for c in range(cycles):
-                for n in range(len(X_batches)):
-                    X = X_batches[n].T
-                    Y = Y_batches[n].T
-                    Z = []
-                    # Z = jitlist()
-                    Z.append(X)
-                    for i in layers:
-                        Z.append(np.zeros((N, i, 1)))
+        perc = 0
+        N = X_batches[0].shape[0]
+        tot_iter = (epochs*len(X_batches))
+        times = np.zeros(tot_iter)
+        counter = 0
+        t0 = time()
+        print(f"\t{0:>3d}%", end = "")
+        for e in range(epochs):
+            for n in range(len(X_batches)):
+                X = X_batches[n]
+                Y = Y_batches[n]
+                Z = []
+                Z.append(X)
+                for i in layers[1:]:
+                    Z.append(np.zeros((N, i, 1)))
 
-                    for m in range(len(W)):
-                        w = W[m]
-                        b = B[m]
-                        Z[m+1] = w @ Z[m] + b
-                        Z[m+1] = 1/(1 + np.exp(-Z[m+1]))
+                for m in range(len(W)):
+                    w = W[m]
+                    b = B[m]
+                    Z[m+1] = w @ Z[m] + b
+                    Z[m+1] = 1/(1 + np.exp(-Z[m+1]))
 
-                    dCdA = -2*(Y - Z[-1])
-                    shapes(dCdA, Y, Z[-1])
-                    dAdZ = Z[-1]*(1 - Z[-1])
-                    shapes(dAdZ, Z[-1])
-                    delta = dCdA*dAdZ
+                dCdA = -2*(Y - Z[-1])
+                dAdZ = Z[-1]*(1 - Z[-1])
+                delta = dCdA*dAdZ
 
-                    if c == cycles-1:
-                        break
+                for i in range(1, len(Z)):
+                    dW = np.einsum("ijk,ikj->ijk", delta, Z[-i-1])
+                    W[-i] -= lr*np.mean(dW, axis = 0)
+                    B[-i] -= lr*np.mean(delta, axis = 0)
+                    W_T = W[-i].reshape(1, W[-i].shape[2], W[-i].shape[1])
+                    delta = (W_T @ delta)*Z[-i-1]*(1 - Z[-i-1])
 
-                    for m in range(len(W)-1):
-                        l = len(W)-m-1
-                        shapes(W[l], delta, Z[l].T)
-                        shapes(B[l], delta)
-                        dW = lr*delta @ Z[l].T
-                        dB = lr*delta
-                        W[l] += np.mean(dW, axis = 0)
-                        B[l] += np.mean(dB, axis = 0)
-                        delta = W[l].T @ delta
-                        delta *= Z[l]*(1 - Z[l])
-
-                    new_perc = int(100*(n+1 + c*len(X_batches))/(cycles*len(X_batches)))
-                    if new_perc > perc:
-                        perc = new_perc
-                        print("\033[1A\r", perc, "\b%")
-            print("\033[1A\r100%")
-            return W,B
-
-        W, B = wrapped(X_batches, Y_batches, W, B, lr, cycles, layers)
+                counter += 1
+                new_perc = int(100*counter/tot_iter)
+                times[counter-1] = time()
+                if new_perc > perc and counter > 1:
+                    perc = new_perc
+                    t_avg = np.mean(np.diff(times[:counter]))
+                    eta = t_avg*(tot_iter - counter)
+                    hh = eta//3600
+                    mm = (eta - hh*60)//60
+                    ss = eta - mm*60 - hh*3600
+                    msg = f"\r\t{perc:>3d}% – ETA {hh:02.0f}:{mm:02.0f}:{ss:02.0f}"
+                    print(msg, end = "")
+        dt = time() - t0
+        hh = dt//3600
+        mm = (dt - hh*60)//60
+        ss = dt - mm*60 - hh*3600
+        print(f"\r\t100% – Total Time Elapsed {hh:02.0f}:{mm:02.0f}:{ss:02.0f}")
 
         self.W = W
         self.B = B
 
+        self.batchsize = batchsize
         self.layers = layers
 
         self.Y_scale = Y_scale
         self.Y_shift = Y_shift
 
-        # return (np.reshape(A, self._Y.shape)*self.Y_scale)+self.Y_shift
-
     def predict(self, X):
-        X = X.flatten()[:,np.newaxis]
-
-        Y_shift = 0
-        Y_scale = 1
-
         W = self.W
         B = self.B
 
-        for n,(w,b) in enumerate(zip(W,B)):
-            X = w @ X + b
-            X = 1/(1 + np.exp(-X))              # Sigmoid
-
-        return X
+        Z = X[:,:,np.newaxis]
+        for m in range(len(W)):
+            w = W[m]
+            b = B[m]
+            Z = w @ Z + b
+            Z = 1/(1 + np.exp(-Z))
+        Z = np.squeeze(Z)
+        if Z.ndim == 1:
+            Z = Z[:,np.newaxis]
+        return Z

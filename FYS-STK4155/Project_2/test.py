@@ -1,8 +1,10 @@
-def gen(low, high, step = 1):
-    low = low - step
-    while low < high-step:
-        low += step
-        yield low
+import numpy as np
 
-for i in gen(0, 10, 2):
-    print(i)
+a1 = np.array([[1],[2]])
+b1 = np.array([[1],[2],[3]])
+
+a = np.array([[[1],[2]], [[1],[2]], [[1],[2]]])
+b = np.array([[[1],[2],[3]], [[1],[2],[3]], [[1],[2],[3]]])
+c = np.einsum("ijk,ikj->ijk",a,b)
+print(c)
+print(np.outer(a1, b1))
