@@ -132,6 +132,7 @@ class NeuralNet:
         times = np.zeros(tot_iter)
         counter = 0
         t0 = time()
+        dt = 0
         print(f"\t{0:>3d}%", end = "")
         for e in range(epochs):
             for n in range(len(X_batches)):
@@ -162,19 +163,20 @@ class NeuralNet:
                 counter += 1
                 new_perc = int(100*counter/tot_iter)
                 times[counter-1] = time()
-                if new_perc > perc and counter > 1:
+                if int(time() - t0) > dt:
                     perc = new_perc
                     t_avg = np.mean(np.diff(times[:counter]))
                     eta = t_avg*(tot_iter - counter)
                     hh = eta//3600
-                    mm = (eta - hh*60)//60
-                    ss = eta - mm*60 - hh*3600
+                    mm = (eta//60)%60
+                    ss = eta%60
                     msg = f"\r\t{perc:>3d}% – ETA {hh:02.0f}:{mm:02.0f}:{ss:02.0f}"
                     print(msg, end = "")
+                dt = time() - t0
         dt = time() - t0
         hh = dt//3600
-        mm = (dt - hh*60)//60
-        ss = dt - mm*60 - hh*3600
+        mm = (dt//60)%60
+        ss = dt%60
         print(f"\r\t100% – Total Time Elapsed {hh:02.0f}:{mm:02.0f}:{ss:02.0f}")
 
         self.W = W
@@ -185,6 +187,8 @@ class NeuralNet:
 
         self.Y_scale = Y_scale
         self.Y_shift = Y_shift
+
+        return W,B
 
     def predict(self, X):
         W = self.W
