@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from time import time
 
 
 np.random.seed(1337)
@@ -49,7 +50,7 @@ def feed_forward(inp, ws, bs, func):
         
     return ys, prob
 
-def set_up(n_input_nodes = 164, n_output_nodes = 10, n_hidden = 2, n_nodes_hidden = [12, 12]):
+def set_up(n_input_nodes = 164, n_output_nodes = 10, n_hidden = 2, n_nodes_hidden = 12):
     """
     A function that sets up all the vector and matrices we will need with random values between -1 and 1.
     n_hidden is the number of hidden layers
@@ -58,10 +59,15 @@ def set_up(n_input_nodes = 164, n_output_nodes = 10, n_hidden = 2, n_nodes_hidde
     n_nodes_hidden is the number of nodes for each of the hidden layers
     """
     
-    inp = (np.random.rand(n_input_nodes) - 0.5)*2 #the input
+    inp = (np.zeros(n_input_nodes) + 0.1) #the input
     
     ws = [] #a list to hold the w-matrices
-    n_nodes = [n_input_nodes] + n_nodes_hidden + [n_output_nodes]
+    n_nodes = [n_input_nodes]
+    for i in range(n_hidden):
+        n_nodes.append(n_nodes_hidden)
+    n_nodes.append(n_output_nodes)
+
+    
     for i in range(n_hidden+1):
         wi = (np.random.rand(n_nodes[i+1],n_nodes[i]) - 0.5)*2
         ws.append(wi)
@@ -173,7 +179,7 @@ if __name__ == "__main__":
     #inputs the handwritten data
     inputs, labels = get_handwritten_data()
     #generates arrays based upon the handwritten data
-    inp, ws, bs = set_up(n_input_nodes=len(inputs[0]), n_output_nodes=10)
+    inp, ws, bs = set_up(n_input_nodes=len(inputs[0]), n_output_nodes=10, n_hidden=10, n_nodes_hidden=50)
     
     #splits into training and testing data
     train_size = 0.8
@@ -184,31 +190,60 @@ if __name__ == "__main__":
 
     print("Old accuracy on training data: " + str(accuracy_score(labels_test, predict(inputs_test, ws, bs, sigmoid))))
 
-    eta = 0.01
-    lmbd = 0.01    
-    for i in range(100):
-        #runs the backpropagation
-        w_grad, b_grad = backpropagation(inputs_train, labels_train_onehot, ws, bs, sigmoid)
-        
-        #regularization term gradients
-        for i in range(len(w_grad)):
-            w_grad_i = lmbd * ws[i].T
-            w_grad[i] += w_grad_i
-        
-        #update weight and biases
-        for i in range(len(w_grad)):
-            ws[i] -= eta * w_grad[i].T
-            bs[i] -= eta * b_grad[i]
-        
+    eta = 0.1
+    lambd = 0
+    batch_size = 100
+    epochs = 100
+    iterations = len(inputs_train) // batch_size
+    
+    perc = 0
+    tot_iter = iterations*epochs
+    times = np.zeros(tot_iter)
+    counter = 0
+    t0 = time()
+    dt = 0
+    print(f"\t{0:>3d}%", end = "")
+    
+    data_indices = np.arange(len(inputs_train))    
+    for j in range(epochs):
+        for i in range(iterations):
+            
+            chosen_datapoints = np.random.choice(data_indices, size=batch_size, replace=False)
+            
+            counter += 1
+            new_perc = int(100*counter/tot_iter)
+            times[counter-1] = time()
+            if int(time() - t0) > dt:
+                perc = new_perc
+                t_avg = np.mean(np.diff(times[:counter]))
+                ETA = t_avg*(tot_iter - counter)
+                hh = ETA//3600
+                mm = (ETA//60)%60
+                ss = ETA%60
+                msg = f"\r\t{perc:>3d}% – ETA {hh:02.0f}:{mm:02.0f}:{ss:02.0f}"
+                print(msg, end = "")
+            dt = time() - t0
+            
+            #runs the backpropagation
+            w_grad, b_grad = backpropagation(inputs_train[data_indices], labels_train_onehot[data_indices], ws, bs, sigmoid)
+            
+            #regularization term gradients
+            for i in range(len(w_grad)):
+                w_grad_i = lambd * ws[i].T
+                w_grad[i] += w_grad_i
+            
+            #update weight and biases
+            for i in range(len(w_grad)):
+                ws[i] -= eta * w_grad[i].T
+                bs[i] -= eta * b_grad[i]
+            
+    dt = time() - t0
+    hh = dt//3600
+    mm = (dt//60)%60
+    ss = dt%60
+    print(f"\r\t100% – Total Time Elapsed {hh:02.0f}:{mm:02.0f}:{ss:02.0f}")
 
     print("New accuracy on training data: " + str(accuracy_score(labels_test, predict(inputs_test, ws, bs, sigmoid))))
-
-
-
-
-
-
-
 
 
 
