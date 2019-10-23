@@ -1,0 +1,12 @@
+
+Processed Dataset Dimensions:
+
+	X: (N= 202500, p= 3)
+	Y: (M= 202500, q= 3)
+
+Neural Network Parameters
+
+	Batch Size: 1000
+	Layer Configuration: [100, 75, 50, 25, 10]
+	Epochs: 1
+
