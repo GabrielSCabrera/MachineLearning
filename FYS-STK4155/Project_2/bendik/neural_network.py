@@ -46,9 +46,9 @@ def feed_forward(inp, ws, bs, func):
         yi = next_layer(ws[i], bs[i], ys[i], func)
         ys.append(yi)
     
-    prob = ys[-1]/np.sum(ys[-1])
+    prob = ys[-1].T/np.sum(ys[-1], axis=1)
         
-    return ys, prob
+    return ys, prob.T
 
 def set_up(n_input_nodes = 164, n_output_nodes = 10, n_hidden = 2, n_nodes_hidden = 12):
     """
@@ -171,7 +171,15 @@ def backpropagation(inputs, labels, ws, bs, func):
 
 def predict(X, ws, bs, func):
     probabilities = feed_forward(X, ws, bs, func)[1]
-    return np.argmax(probabilities, axis=1)    
+#    print("np.sum(probabilities[:,0])", np.sum(probabilities[:,0]))
+#    print("probabilities[:,0]", probabilities[:,0])
+#    print("np.sum(probabilities[:,1])", np.sum(probabilities[:,1]))
+#    shapes(probabilities)
+    pro = np.argmax(probabilities, axis=1)
+#    print("pro", pro)
+#    print("np.shape(pro)", np.shape(pro))
+#    print("")
+    return pro
 
 
 if __name__ == "__main__":
@@ -188,10 +196,16 @@ if __name__ == "__main__":
     
     labels_train_onehot, labels_test_onehot = to_categorical_numpy(labels_train), to_categorical_numpy(labels_test)
 
-    print("Old accuracy on training data: " + str(accuracy_score(labels_test, predict(inputs_test, ws, bs, sigmoid))))
+    print("Old accuracy on training data: " + str(accuracy_score(labels_train, predict(inputs_train, ws, bs, sigmoid))))
+    print("Old accuracy on testing data: " + str(accuracy_score(labels_test, predict(inputs_test, ws, bs, sigmoid))))
+    print(predict(inputs_test, ws, bs, sigmoid))
+    print(min(predict(inputs_test, ws, bs, sigmoid)))
+    print(max(predict(inputs_test, ws, bs, sigmoid)))
+    print("")
+    
 
-    eta = 0.1
-    lambd = 0
+    eta = 0.001
+    lambd = 0.01
     batch_size = 100
     epochs = 100
     iterations = len(inputs_train) // batch_size
@@ -229,8 +243,7 @@ if __name__ == "__main__":
             
             #regularization term gradients
             for i in range(len(w_grad)):
-                w_grad_i = lambd * ws[i].T
-                w_grad[i] += w_grad_i
+                w_grad[i] += lambd * ws[i].T
             
             #update weight and biases
             for i in range(len(w_grad)):
@@ -243,9 +256,12 @@ if __name__ == "__main__":
     ss = dt%60
     print(f"\r\t100% – Total Time Elapsed {hh:02.0f}:{mm:02.0f}:{ss:02.0f}")
 
-    print("New accuracy on training data: " + str(accuracy_score(labels_test, predict(inputs_test, ws, bs, sigmoid))))
-
-
+    print("New accuracy on training data: " + str(accuracy_score(labels_train, predict(inputs_train, ws, bs, sigmoid))))
+    print("New accuracy on testing data: " + str(accuracy_score(labels_test, predict(inputs_test, ws, bs, sigmoid))))
+    print(predict(inputs_test, ws, bs, sigmoid))
+    print(min(predict(inputs_test, ws, bs, sigmoid)))
+    print(max(predict(inputs_test, ws, bs, sigmoid)))
+    
 
 
 
