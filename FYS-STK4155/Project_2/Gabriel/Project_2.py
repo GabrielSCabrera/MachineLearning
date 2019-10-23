@@ -60,13 +60,13 @@ def parse_args(all_args):
 """ PROGRAM PARAMETERS """
 
 # Size of each batch sent into the neural network
-batchsize = 50
+batchsize = 2
 # Percentage of data to set aside for testing
 test_percent = 25
 # Configuration of layers in the Neural Network
 NN_layers = [100,75,50,25,10]
 # Number of epochs, or total cycles over all batches
-NN_epochs = 10
+NN_epochs = 100
 # File in which to save the terminal output
 terminal_output_file = "term_out.txt"
 # Directory in which to save the terminal output; underscore allows for
@@ -118,7 +118,7 @@ msg1 = (f"\nProcessed Dataset Dimensions:\n"
         f"\n\tY_test:  (M= {Y_test.shape[0]}, q= {Y_test.shape[1]})\n"
         f"\nNeural Network Parameters\n"
         f"\n\tBatch Size: {batchsize}\n\tLayer Configuration: {NN_layers}"
-        f"\n\tEpochs: {NN_epochs}\n\n")
+        f"\n\tEpochs: {NN_epochs}\n")
 print(msg1)
 
 """ IMPLEMENTING THE NEURAL NETWORK """
