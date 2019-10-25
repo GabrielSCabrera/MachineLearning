@@ -64,11 +64,11 @@ batchsize = 2
 # Percentage of data to set aside for testing
 test_percent = 25
 # Configuration of layers in the Neural Network
-NN_layers = [100,75,50,25,10]
+NN_layers = [200,200,100,100,50,50]
 # Number of epochs, or total cycles over all batches
-NN_epochs = 100
+NN_epochs = 750
 # File in which to save the terminal output
-terminal_output_file = "term_out.txt"
+terminal_output_file = "log.txt"
 # Directory in which to save the terminal output; underscore allows for
 # automatic numbering
 dirname = "results_"

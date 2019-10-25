@@ -9,8 +9,8 @@ def split(X, Y, test_percent = 0.25):
     N = X.shape[0]
     N_train = N - (N*test_percent)//100
 
-    test_idx = np.random.choice(X.shape[0], N_train)
-    train_idx = np.delete(np.arange(0, X.shape[0]), test_idx)
+    train_idx = np.random.choice(X.shape[0], N_train)
+    test_idx = np.delete(np.arange(0, X.shape[0]), train_idx)
 
     X_train, Y_train = X[train_idx], Y[train_idx]
     X_test, Y_test = X[test_idx], Y[test_idx]
@@ -195,7 +195,7 @@ class NeuralNet:
         self._p = self._X.shape[1]
         self._q = self._Y.shape[1]
 
-    def train(self, epochs, layers, batchsize, lr = 0.1):
+    def train(self, epochs, layers, batchsize, lr = 0.01):
         """
         epochs:     Number of fwdfeed-backprop epochs <int>, minimum of 1
         layers:     List of layer sizes, each element (e >= 1) must be an <int>
@@ -229,8 +229,8 @@ class NeuralNet:
         B = []
 
         for i in range(len(layers)-1):
-            W.append(np.random.normal(0,1,(1, layers[i+1], layers[i])))
-            B.append(np.random.normal(0,1,(1, layers[i+1], 1)))
+            W.append(np.random.normal(0,0.5,(1, layers[i+1], layers[i])))
+            B.append(np.random.normal(0,0.5,(1, layers[i+1], 1)))
 
         perc = 0
         N = X_batches[0].shape[0]
