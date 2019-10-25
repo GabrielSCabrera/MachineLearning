@@ -175,7 +175,7 @@ def predict(X, ws, bs, func):
     return pro
 
 
-def neural_network(inputs_train, labels_train_onehot, ws, bs, eta = 0.001, lambd = 0.01, batch_size = 100, epochs = 100, timer=True):
+def neural_network(eta = 0.001, lambd = 0.01, batch_size = 100, epochs = 100, timer=True):
     
     iterations = len(inputs_train) // batch_size
     
@@ -211,7 +211,7 @@ def neural_network(inputs_train, labels_train_onehot, ws, bs, eta = 0.001, lambd
             chosen_datapoints = np.random.choice(data_indices, size=batch_size, replace=False)
 
             #runs the backpropagation
-            w_grad, b_grad = backpropagation(inputs_train[chosen_datapoints], labels_train_onehot[chosen_datapoints], ws, bs, sigmoid)
+            w_grad, b_grad = backpropagation(inputs_train[data_indices], labels_train_onehot[data_indices], ws, bs, sigmoid)
             
             #regularization term gradients
             for i in range(len(w_grad)):
@@ -221,15 +221,14 @@ def neural_network(inputs_train, labels_train_onehot, ws, bs, eta = 0.001, lambd
             for i in range(len(w_grad)):
                 ws[i] -= eta * w_grad[i].T
                 bs[i] -= eta * b_grad[i]
-        
-    if timer == True:
-        dt = time() - t0
-        hh = dt//3600
-        mm = (dt//60)%60
-        ss = dt%60
-        print(f"\r\t100% – Total Time Elapsed {hh:02.0f}:{mm:02.0f}:{ss:02.0f}")
+            
+    dt = time() - t0
+    hh = dt//3600
+    mm = (dt//60)%60
+    ss = dt%60
+    print(f"\r\t100% – Total Time Elapsed {hh:02.0f}:{mm:02.0f}:{ss:02.0f}")
 
-    return ws,bs
+    
 
 
 if __name__ == "__main__":
@@ -249,19 +248,20 @@ if __name__ == "__main__":
     print("Old accuracy on training data: " + str(accuracy_score(labels_train, predict(inputs_train, ws, bs, sigmoid))))
     print("Old accuracy on testing data: " + str(accuracy_score(labels_test, predict(inputs_test, ws, bs, sigmoid))))
     print(predict(inputs_test, ws, bs, sigmoid))
-#    print(min(predict(inputs_test, ws, bs, sigmoid)))
-#    print(max(predict(inputs_test, ws, bs, sigmoid)))
-#    print("")
+    print(min(predict(inputs_test, ws, bs, sigmoid)))
+    print(max(predict(inputs_test, ws, bs, sigmoid)))
+    print("")
     
-    ws, bs = neural_network(inputs_train, labels_train_onehot, ws, bs, eta = 0.001, lambd = 0.01, batch_size = 100, epochs = 100)
+
+    
 
     print("New accuracy on training data: " + str(accuracy_score(labels_train, predict(inputs_train, ws, bs, sigmoid))))
     print("New accuracy on testing data: " + str(accuracy_score(labels_test, predict(inputs_test, ws, bs, sigmoid))))
-#    print(labels_test)
-#    print(predict(inputs_test, ws, bs, sigmoid))
-#    print(min(predict(inputs_test, ws, bs, sigmoid)))
-#    print(max(predict(inputs_test, ws, bs, sigmoid)))
-#    
+    print(labels_test)
+    print(predict(inputs_test, ws, bs, sigmoid))
+    print(min(predict(inputs_test, ws, bs, sigmoid)))
+    print(max(predict(inputs_test, ws, bs, sigmoid)))
+    
 
 
 
