@@ -1,0 +1,27 @@
+
+Processed Dataset Dimensions:
+
+	X_train: (N= 60000, p= 784)
+	Y_train: (M= 60000, q= 10)
+
+	X_test:  (N= 10000, p= 784)
+	Y_test:  (M= 10000, q= 10)
+
+Neural Network Parameters
+
+	Batch Size: 5
+	Layer Configuration: [200, 200, 200, 200, 200]
+	Epochs: 200
+
+
+Test Results
+
+	Number of incorrect outputs: 972/10000
+	Number of correct outputs: 9028/10000
+	Percent correct: 90%
+
+Prediction information:
+
+	No. of ones:	9886
+	No. of zeros:	114
+
