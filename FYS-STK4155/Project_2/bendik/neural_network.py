@@ -170,16 +170,23 @@ def backpropagation(inputs, labels, ws, bs, func):
     return w_grad, b_grad
 
 def predict(X, ws, bs, func):
+    """
+    A function that takes in the w-matrices and the b-vectors and uses those to predict what the inputs are.
+    """    
     probabilities = feed_forward(X, ws, bs, func)[1]
     pro = np.argmax(probabilities, axis=1)
     return pro
 
 
 def neural_network(inputs_train, labels_train_onehot, ws, bs, eta = 0.001, lambd = 0.01, batch_size = 100, epochs = 100, timer=True):
+    """
+    A function that runs the neural network for all the desired epochs, with a certian batch_size for each.
+    """
+    
     
     iterations = len(inputs_train) // batch_size
     
-    if timer == True:
+    if timer:
         perc = 0
         tot_iter = iterations*epochs
         times = np.zeros(tot_iter)
@@ -192,7 +199,7 @@ def neural_network(inputs_train, labels_train_onehot, ws, bs, eta = 0.001, lambd
     for j in range(epochs):
         for i in range(iterations):
             
-            if timer == True:
+            if timer:
                 counter += 1
                 new_perc = int(100*counter/tot_iter)
                 times[counter-1] = time()
@@ -222,7 +229,7 @@ def neural_network(inputs_train, labels_train_onehot, ws, bs, eta = 0.001, lambd
                 ws[i] -= eta * w_grad[i].T
                 bs[i] -= eta * b_grad[i]
         
-    if timer == True:
+    if timer:
         dt = time() - t0
         hh = dt//3600
         mm = (dt//60)%60
@@ -231,8 +238,10 @@ def neural_network(inputs_train, labels_train_onehot, ws, bs, eta = 0.001, lambd
 
     return ws,bs
 
-
-if __name__ == "__main__":
+def run_nn(train_size = 0.8, do_print=True, n_hidden=10, n_nodes_hidden=50, eta = 0.001, lambd = 0.01, batch_size = 100, epochs = 1000):
+    """
+    A function that sets up all the required arrays, then runs the neural network.
+    """
     
     #inputs the handwritten data
     inputs, labels = get_handwritten_data()
@@ -240,28 +249,39 @@ if __name__ == "__main__":
     inp, ws, bs = set_up(n_input_nodes=len(inputs[0]), n_output_nodes=10, n_hidden=10, n_nodes_hidden=50)
     
     #splits into training and testing data
-    train_size = 0.8
+    
     test_size = 1 - train_size
     inputs_train, inputs_test, labels_train, labels_test = train_test_split(inputs, labels, train_size=train_size, test_size=test_size)
     
-    labels_train_onehot, labels_test_onehot = to_categorical_numpy(labels_train), to_categorical_numpy(labels_test)
-
-    print("Old accuracy on training data: " + str(accuracy_score(labels_train, predict(inputs_train, ws, bs, sigmoid))))
-    print("Old accuracy on testing data: " + str(accuracy_score(labels_test, predict(inputs_test, ws, bs, sigmoid))))
-    print(predict(inputs_test, ws, bs, sigmoid))
-#    print(min(predict(inputs_test, ws, bs, sigmoid)))
-#    print(max(predict(inputs_test, ws, bs, sigmoid)))
-#    print("")
+    labels_train_onehot = to_categorical_numpy(labels_train)
     
-    ws, bs = neural_network(inputs_train, labels_train_onehot, ws, bs, eta = 0.001, lambd = 0.01, batch_size = 100, epochs = 100)
+    old_train = accuracy_score(labels_train, predict(inputs_train, ws, bs, sigmoid))
+    old_test = accuracy_score(labels_test, predict(inputs_test, ws, bs, sigmoid))
+    
+    if do_print:        
+        print("Old accuracy on training data: " + str(old_train))
+        print("Old accuracy on testing data: " + str(old_test))
+    
+    ws, bs = neural_network(inputs_train, labels_train_onehot, ws, bs, eta = 0.001, lambd = 0.001, batch_size = 100, epochs = 100)
+    
+    new_train = accuracy_score(labels_train, predict(inputs_train, ws, bs, sigmoid))
+    new_test = accuracy_score(labels_test, predict(inputs_test, ws, bs, sigmoid))
+    
+    if do_print:        
+        print("New accuracy on training data: " + str(new_train))
+        print("New accuracy on testing data: " + str(new_test))
 
-    print("New accuracy on training data: " + str(accuracy_score(labels_train, predict(inputs_train, ws, bs, sigmoid))))
-    print("New accuracy on testing data: " + str(accuracy_score(labels_test, predict(inputs_test, ws, bs, sigmoid))))
-#    print(labels_test)
-#    print(predict(inputs_test, ws, bs, sigmoid))
-#    print(min(predict(inputs_test, ws, bs, sigmoid)))
-#    print(max(predict(inputs_test, ws, bs, sigmoid)))
-#    
+    return ws, bs, new_test, new_train, old_test, old_train
+
+if __name__ == "__main__":
+    
+    ws, bs, new_test, new_train, old_test, old_train = run_nn()
+    
+
+
+
+
+
 
 
 
