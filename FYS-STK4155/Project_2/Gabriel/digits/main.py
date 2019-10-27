@@ -204,9 +204,7 @@ if loadname is None:
         np.save(f"{dirname}/W/layer_{layer:03.0f}", W[layer])
         np.save(f"{dirname}/B/layer_{layer:03.0f}", B[layer])
 
-    NN_layer = np.concatenate([[X_train.shape[1]], NN_layer, [Y_train.shape[1]]])
-    np.save(f"{dirname}/X_train", X_train)
-    np.save(f"{dirname}/Y_train", Y_train)
+    NN_layers = np.concatenate([[X_train.shape[1]], NN_layers, [Y_train.shape[1]]])
     np.save(f"{dirname}/layers", NN_layers)
 
     with open(f"{dirname}/{terminal_output_file}", "w+") as outfile:
