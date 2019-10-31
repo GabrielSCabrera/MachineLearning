@@ -86,7 +86,7 @@ def loss_func(desired_output, found_output):
     loss = np.sum((found_output - desired_output)**2)/2
     return loss
 
-def get_handwritten_data():
+def get_handwritten_data(do_display=False):
     """
     A function that collects and returns the handwritten data.
     """
@@ -115,15 +115,16 @@ def get_handwritten_data():
     
     
     # choose some random images to display
-    indices = np.arange(n_inputs)
-    random_indices = np.random.choice(indices, size=5)
-    
-    for i, image in enumerate(digits.images[random_indices]):
-        plt.subplot(1, 5, i+1)
-        plt.axis('off')
-        plt.imshow(image, cmap=plt.cm.gray_r, interpolation='nearest')
-        plt.title("Label: %d" % digits.target[random_indices[i]])
-    plt.show()
+    if do_display:
+        indices = np.arange(n_inputs)
+        random_indices = np.random.choice(indices, size=5)
+        
+        for i, image in enumerate(digits.images[random_indices]):
+            plt.subplot(1, 5, i+1)
+            plt.axis('off')
+            plt.imshow(image, cmap=plt.cm.gray_r, interpolation='nearest')
+            plt.title("Label: %d" % digits.target[random_indices[i]])
+        plt.show()
     
     return inputs, labels
 
@@ -238,7 +239,7 @@ def neural_network(inputs_train, labels_train_onehot, ws, bs, eta = 0.001, lambd
 
     return ws,bs
 
-def run_nn(train_size = 0.8, do_print=True, n_hidden=10, n_nodes_hidden=50, eta = 0.001, lambd = 0.01, batch_size = 100, epochs = 1000):
+def run_nn(train_size = 0.8, do_print=True, timer=True, n_hidden=10, n_nodes_hidden=50, eta = 0.001, lambd = 0.01, batch_size = 100, epochs = 1000):
     """
     A function that sets up all the required arrays, then runs the neural network.
     """
@@ -262,7 +263,7 @@ def run_nn(train_size = 0.8, do_print=True, n_hidden=10, n_nodes_hidden=50, eta 
         print("Old accuracy on training data: " + str(old_train))
         print("Old accuracy on testing data: " + str(old_test))
     
-    ws, bs = neural_network(inputs_train, labels_train_onehot, ws, bs, eta = 0.001, lambd = 0.001, batch_size = 100, epochs = 100)
+    ws, bs = neural_network(inputs_train, labels_train_onehot, ws, bs, eta = 0.001, lambd = 0.001, batch_size = 100, epochs = 100, timer=timer)
     
     new_train = accuracy_score(labels_train, predict(inputs_train, ws, bs, sigmoid))
     new_test = accuracy_score(labels_test, predict(inputs_test, ws, bs, sigmoid))
@@ -273,10 +274,82 @@ def run_nn(train_size = 0.8, do_print=True, n_hidden=10, n_nodes_hidden=50, eta 
 
     return ws, bs, new_test, new_train, old_test, old_train
 
+def find_best_learn_vals(etas, lambds, n_test=1, train_size = 0.8, Do_print=True, n_hidden=10, n_nodes_hidden=50, batch_size = 100,\
+                         epochs = 1000, Timer=True):
+    """
+    A function that tests different values for eta and lambda to find which gives the best accuracy.
+    """
+    
+    #a matrix to hold the found accuracy values
+    accs = np.zeros((len(etas), len(lambds)))
+    
+    if Timer:
+        perc = 0
+        tot_iter = len(etas)*len(lambds)*n_test
+        times = np.zeros(tot_iter)
+        counter = 0
+        t0 = time()
+        dt = 0
+        print(f"\t{0:>3d}%", end = "")
+    
+    
+    #goes through all the desired values for eta and lamda
+    for i in range(len(etas)):
+        for j in range(len(lambds)):
+            new_test = 0 #we go through each of the eta-lamda combinations a certian number of times, and take the average
+            for k in range(n_test):
+                
+                if Timer:
+                    counter += 1
+                    new_perc = int(100*counter/tot_iter)
+                    times[counter-1] = time()
+                    if int(time() - t0) > dt:
+                        perc = new_perc
+                        t_avg = np.mean(np.diff(times[:counter]))
+                        ETA = t_avg*(tot_iter - counter)
+                        hh = ETA//3600
+                        mm = (ETA//60)%60
+                        ss = ETA%60
+                        msg = f"\r\t{perc:>3d}% – ETA {hh:02.0f}:{mm:02.0f}:{ss:02.0f}"
+                        print(msg, end = "")
+                    dt = time() - t0
+                
+                new_test += run_nn(eta=etas[i], lambd=lambds[i], do_print=False, train_size=train_size,\
+                                  n_hidden=n_hidden,n_nodes_hidden=n_nodes_hidden,batch_size=batch_size,\
+                                  epochs=epochs, timer=False)[2]
+            new_test /= n_test
+            accs[i][j] = new_test
+            if Do_print:
+                print("Learning rate  = ", etas[i])
+                print("Lambda = ", lambds[j])
+                print("Accuracy score on test set: ", new_test)
+                print()
+        
+    if Timer:
+        dt = time() - t0
+        hh = dt//3600
+        mm = (dt//60)%60
+        ss = dt%60
+        print(f"\r\t100% – Total Time Elapsed {hh:02.0f}:{mm:02.0f}:{ss:02.0f}")
+            
+    return accs
+
 if __name__ == "__main__":
     
-    ws, bs, new_test, new_train, old_test, old_train = run_nn()
+#    ws, bs, new_test, new_train, old_test, old_train = run_nn()
     
+    etas = np.logspace(-5, 1, 7)
+    lambds = np.logspace(-5, 1, 7)
+    
+    accs = find_best_learn_vals(etas, lambds, n_test=10)
+    
+    loc = np.where(accs == np.max(accs))
+    print("\nBest values: ")
+    print("Learning rate  = ", etas[loc[0]][0])
+    print("Lambda = ", lambds[loc[1]][0])
+    print("Average accuracy score on test set: ", accs[loc])
+    print()
+
 
 
 
