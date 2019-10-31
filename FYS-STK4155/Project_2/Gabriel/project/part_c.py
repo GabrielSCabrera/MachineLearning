@@ -62,7 +62,7 @@ def parse_args(all_args):
 """ PROGRAM PARAMETERS """
 
 # Size of each batch sent into the neural network
-batchsize = 2
+batchsize = 5
 # Percentage of data to set aside for testing
 test_percent = 25
 # Configuration of layers in the Neural Network
@@ -79,7 +79,7 @@ loadname = None
 
 """ IMPORTING COMMAND-LINE ARGUMENT SETTINGS """
 
-# Initializing command-line arguments; NB all keys must be lowercase!
+# Initializing command-line arguments; NOTE all keys must be lowercase!
 all_args = {"save":[str, "dirname"], "load":[str, "loadname"],
             "display":[int, "N_display"], "epochs":[int, "NN_epochs"],
             "batchsize":[int, "batchsize"]}
@@ -150,7 +150,7 @@ Y_predict = NN.predict(X_test)
 
 """ ERROR ANALYSIS """
 
-# Rounding the predicted values to zero and one
+# Rounding the predicted values to zero and one for sigmoid
 Y_predict[Y_predict >= 0.5] = 1
 Y_predict[Y_predict < 1] = 0
 

@@ -218,8 +218,8 @@ class NeuralNet:
         B = []
 
         for i in range(len(layers)-1):
-            W.append(np.random.normal(0,0.5,(1, layers[i+1], layers[i])))
-            B.append(np.random.normal(0,0.5,(1, layers[i+1], 1)))
+            W.append(np.random.normal(0, 0.5, (1, layers[i+1], layers[i])))
+            B.append(np.random.normal(0, 0.5, (1, layers[i+1], 1)))
 
         perc = 0
         N = X_batches[0].shape[0]
@@ -242,10 +242,12 @@ class NeuralNet:
                     w = W[m]
                     b = B[m]
                     Z[m+1] = w @ Z[m] + b
-                    Z[m+1] = 1/(1 + np.exp(-Z[m+1]))
+                    Z[m+1] = 1/(1 + np.exp(-Z[m+1]))        # sigmoid
+                    # Z[m+1] = np.tanh(-Z[m+1])               # tanh
 
                 dCdA = -2*(Y - Z[-1])
-                dAdZ = Z[-1]*(1 - Z[-1])
+                dAdZ = Z[-1]*(1 - Z[-1])                    # sigmoid
+                # dAdZ = 1 - np.tanh(Z[-1])**2                # tanh
                 delta = dCdA*dAdZ
 
                 for i in range(1, len(Z)):
@@ -253,7 +255,9 @@ class NeuralNet:
                     W[-i] -= lr*np.mean(dW, axis = 0)
                     B[-i] -= lr*np.mean(delta, axis = 0)
                     W_T = W[-i].reshape(1, W[-i].shape[2], W[-i].shape[1])
-                    delta = (W_T @ delta)*Z[-i-1]*(1 - Z[-i-1])
+                    delta = W_T @ delta
+                    delta *= Z[-i-1]*(1 - Z[-i-1])          # sigmoid
+                    # delta *= 1 - np.tanh(Z[-i-1])**2        # tanh
 
                 counter += 1
                 new_perc = int(100*counter/tot_iter)
@@ -288,7 +292,8 @@ class NeuralNet:
             w = W[m]
             b = B[m]
             Z = w @ Z + b
-            Z = 1/(1 + np.exp(-Z))
+            Z = 1/(1 + np.exp(-Z))                    # sigmoid
+            # Z = np.tanh(Z)                              # tanh
         Z = np.squeeze(Z)
         if Z.ndim == 1:
             Z = Z[:,np.newaxis]
