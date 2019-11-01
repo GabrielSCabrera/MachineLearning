@@ -266,17 +266,17 @@ class NeuralNet:
                     perc = new_perc
                     t_avg = np.mean(np.diff(times[:counter]))
                     eta = t_avg*(tot_iter - counter)
-                    hh = eta//3600
-                    mm = (eta//60)%60
-                    ss = eta%60
-                    msg = f"\r\t{perc:>3d}% – ETA {hh:02.0f}:{mm:02.0f}:{ss:02.0f}"
+                    hh = int(eta//3600)
+                    mm = int((eta//60)%60)
+                    ss = int(eta%60)
+                    msg = f"\r\t{perc:>3d}% – ETA {hh:02d}:{mm:02d}:{ss:02d}"
                     print(msg, end = "")
                 dt = time() - t0
         dt = time() - t0
-        hh = dt//3600
-        mm = (dt//60)%60
-        ss = dt%60
-        print(f"\r\t100% – Total Time Elapsed {hh:02.0f}:{mm:02.0f}:{ss:02.0f}")
+        hh = int(dt//3600)
+        mm = int((dt//60)%60)
+        ss = int(dt%60)
+        print(f"\r\t100% – Total Time Elapsed {hh:02d}:{mm:02d}:{ss:02d}")
 
         self.W = W
         self.B = B

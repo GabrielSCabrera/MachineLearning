@@ -1,7 +1,11 @@
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+from matplotlib import cm
 from time import time
 import pandas as pd
 import numpy as np
-import os, sys
+import sys
+import os
 
 sys.path.append("..")
 from backend.neuralnet import NeuralNet, preprocess, upsample_binary, split
@@ -15,7 +19,7 @@ def FrankeFunction(x,y):
     term4 = -0.2*np.exp(-(9*x-4)**2 - (9*y-7)**2)
     return term1 + term2 + term3 + term4
 
-def generate_Franke_data(x_min = 0, x_max = 1, N = 150):
+def generate_Franke_data(x_min = 0, x_max = 1, N = 250):
 
     # Generating NxN meshgrid of x,y values in range [x_min, x_max]
     X = np.random.random((N,N))*(x_max-x_min) + x_min
@@ -91,18 +95,18 @@ def parse_args(all_args):
 """ PROGRAM PARAMETERS """
 
 # Size of each batch sent into the neural network
-batchsize = 25
+batchsize = 5
 # Percentage of data to set aside for testing
 test_percent = 25
 # Configuration of layers in the Neural Network
-NN_layers = [200,100,50]
+NN_layers = [575,383,255,170,113,75,50]
 # Number of epochs, or total cycles over all batches
-NN_epochs = 200
+NN_epochs = 600
 # File in which to save the terminal output
 terminal_output_file = "log.txt"
 # Directory in which to save the terminal output; underscore allows for
 # automatic numbering
-dirname = "results_"
+dirname = "results_franke_"
 # If we want to load an older model, we can pass a string to the following
 loadname = None
 # Gaussian noise in Franke function
@@ -153,7 +157,8 @@ if loadname is None:
     NN.set(X_train, Y_train)
 
     # Training the neural network with the parameters given earlier
-    W,B = NN.train(epochs = NN_epochs, layers = NN_layers, batchsize = batchsize)
+    W,B = NN.train(epochs = NN_epochs, layers = NN_layers, lr = 0.01,
+    batchsize = batchsize)
 else:
     print(f"Loading from directory <{loadname}>\n")
     # Loading a previous neural network
@@ -173,6 +178,16 @@ R2 = 1 - SS_res/SS_tot
 # Displaying the total correct and incorrect outputs
 msg2 = (f"\nTest Results\n\n\tMSE: {MSE:.2g}\n\tR²: {R2:.2g}")
 print(msg2)
+
+""" Plotting the test output """
+
+fig = plt.figure()
+ax = fig.gca(projection="3d")
+fig.set_size_inches(8, 6)
+fig.tight_layout()
+ax.plot(X_test[:,0], X_test[:,1], Y_test[:,0], "b.")
+ax.plot(X_test[:,0], X_test[:,1], Y_predict[:,0], "r.")
+plt.show()
 
 """ SAVING DATA IF A NEW NETWORK IS CREATED"""
 

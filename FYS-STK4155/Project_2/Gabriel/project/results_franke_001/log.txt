@@ -1,0 +1,20 @@
+
+Processed Dataset Dimensions:
+
+	X_train: (N= 16875, p= 2)
+	Y_train: (M= 16875, q= 1)
+
+	X_test:  (N= 10635, p= 2)
+	Y_test:  (M= 10635, q= 1)
+
+Neural Network Parameters
+
+	Batch Size: 5
+	Layer Configuration: [500, 400, 300, 200, 100, 50]
+	Epochs: 200
+
+
+Test Results
+
+	MSE: 0.0035
+	R²: 0.96
