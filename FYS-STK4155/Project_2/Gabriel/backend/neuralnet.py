@@ -179,7 +179,7 @@ class NeuralNet:
         self._p = self._X.shape[1]
         self._q = self._Y.shape[1]
 
-    def train(self, epochs, layers, batchsize, lr = 0.01):
+    def train(self, epochs, layers, batchsize, lr = 0.01, reg = 0.02):
         """
         epochs:     Number of fwdfeed-backprop epochs <int>, minimum of 1
         layers:     List of layer sizes, each element (e >= 1) must be an <int>
@@ -252,7 +252,7 @@ class NeuralNet:
 
                 for i in range(1, len(Z)):
                     dW = np.einsum("ijk,ikj->ijk", delta, Z[-i-1])
-                    W[-i] -= lr*np.mean(dW, axis = 0)
+                    W[-i] -= lr*(np.mean(dW, axis = 0) - reg*W[-i])
                     B[-i] -= lr*np.mean(delta, axis = 0)
                     W_T = W[-i].reshape(1, W[-i].shape[2], W[-i].shape[1])
                     delta = W_T @ delta

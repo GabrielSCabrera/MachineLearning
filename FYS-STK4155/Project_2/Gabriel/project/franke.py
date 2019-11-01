@@ -2,7 +2,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from time import time
-import pandas as pd
 import numpy as np
 import sys
 import os
@@ -95,13 +94,17 @@ def parse_args(all_args):
 """ PROGRAM PARAMETERS """
 
 # Size of each batch sent into the neural network
-batchsize = 5
+batchsize = 50
 # Percentage of data to set aside for testing
 test_percent = 25
 # Configuration of layers in the Neural Network
-NN_layers = [575,383,255,170,113,75,50]
+NN_layers = [100]*4#[575,383,255,170,113,75,50]
 # Number of epochs, or total cycles over all batches
-NN_epochs = 600
+NN_epochs = 100#600
+# Learning Rate
+learning_rate = 0.01
+# Ridge Regularization Parameter
+regularization_param = 0
 # File in which to save the terminal output
 terminal_output_file = "log.txt"
 # Directory in which to save the terminal output; underscore allows for
@@ -111,14 +114,19 @@ dirname = "results_franke_"
 loadname = None
 # Gaussian noise in Franke function
 sigma = 0.01
+# Random Seed
+rand_seed = 112358
 
 """ IMPORTING COMMAND-LINE ARGUMENT SETTINGS """
 
 # Initializing command-line arguments; NOTE all keys must be lowercase!
 all_args = {"save":[str, "dirname"], "load":[str, "loadname"],
             "display":[int, "N_display"], "epochs":[int, "NN_epochs"],
-            "batchsize":[int, "batchsize"], "sigma":[float, "sigma"]}
+            "batchsize":[int, "batchsize"], "lr":[float,"learning_rate"],
+            "reg":[float,"regularization_param"], "seed":[int, "rand_seed"]}
 parse_args(all_args)
+
+np.random.seed(rand_seed)
 
 """ GENERATING, PREPROCESSING, SPLITTING, AND RESHAPING THE DATA """
 X, Y, f_xy = generate_Franke_data(N = 150)
@@ -140,7 +148,9 @@ msg1 = (f"\nProcessed Dataset Dimensions:\n"
         f"\n\tY_test:  (M= {Y_test.shape[0]}, q= {Y_test.shape[1]})\n"
         f"\nNeural Network Parameters\n"
         f"\n\tBatch Size: {batchsize}\n\tLayer Configuration: {NN_layers}"
-        f"\n\tEpochs: {NN_epochs}\n")
+        f"\n\tEpochs: {NN_epochs}\n\tLearning Rate: {learning_rate:g}\n\t"
+        f"Regularization Parameter: {regularization_param:g}\n\t"
+        f"Random Seed: {rand_seed:d}\n")
 print(msg1)
 
 """ IMPLEMENTING THE NEURAL NETWORK """
@@ -157,8 +167,8 @@ if loadname is None:
     NN.set(X_train, Y_train)
 
     # Training the neural network with the parameters given earlier
-    W,B = NN.train(epochs = NN_epochs, layers = NN_layers, lr = 0.01,
-    batchsize = batchsize)
+    W,B = NN.train(epochs = NN_epochs, layers = NN_layers, lr = learning_rate,
+    reg = regularization_param, batchsize = batchsize)
 else:
     print(f"Loading from directory <{loadname}>\n")
     # Loading a previous neural network
@@ -176,7 +186,7 @@ SS_res = np.sum((Y_predict-Y_test)**2)
 R2 = 1 - SS_res/SS_tot
 
 # Displaying the total correct and incorrect outputs
-msg2 = (f"\nTest Results\n\n\tMSE: {MSE:.2g}\n\tR²: {R2:.2g}")
+msg2 = (f"\nTest Results\n\n\tMSE: {MSE:.4g}\n\tR²: {R2:.4g}")
 print(msg2)
 
 """ Plotting the test output """

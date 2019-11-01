@@ -75,7 +75,7 @@ batchsize = 5
 # Configuration of layers in the Neural Network
 NN_layers = [200]*5
 # Number of epochs, or total cycles over all batches
-NN_epochs = 200
+NN_epochs = 50
 # File in which to save the terminal output
 terminal_output_file = "log.txt"
 # Directory in which to save the terminal output; underscore allows for

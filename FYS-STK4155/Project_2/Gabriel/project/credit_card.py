@@ -1,7 +1,8 @@
 from time import time
 import pandas as pd
 import numpy as np
-import os, sys
+import sys
+import os
 
 sys.path.append("..")
 from backend.neuralnet import NeuralNet, preprocess, upsample_binary, split
@@ -69,21 +70,30 @@ test_percent = 25
 NN_layers = [200,200,100,100,50,50]
 # Number of epochs, or total cycles over all batches
 NN_epochs = 750
+# Learning Rate
+learning_rate = 0.01
+# Ridge Regularization Parameter
+regularization_param = 0
 # File in which to save the terminal output
 terminal_output_file = "log.txt"
 # Directory in which to save the terminal output; underscore allows for
 # automatic numbering
-dirname = "results_"
+dirname = "results_cc_"
 # If we want to load an older model, we can pass a string to the following
 loadname = None
+# Random Seed
+rand_seed = 112358
 
 """ IMPORTING COMMAND-LINE ARGUMENT SETTINGS """
 
 # Initializing command-line arguments; NOTE all keys must be lowercase!
 all_args = {"save":[str, "dirname"], "load":[str, "loadname"],
             "display":[int, "N_display"], "epochs":[int, "NN_epochs"],
-            "batchsize":[int, "batchsize"]}
+            "batchsize":[int, "batchsize"], "lr":[float,"learning_rate"],
+            "reg":[float,"regularization_param"], "seed":[int, "rand_seed"]}
 parse_args(all_args)
+
+np.random.seed(rand_seed)
 
 """ DATASET PARAMETERS """
 
@@ -122,7 +132,9 @@ msg1 = (f"\nProcessed Dataset Dimensions:\n"
         f"\n\tY_test:  (M= {Y_test.shape[0]}, q= {Y_test.shape[1]})\n"
         f"\nNeural Network Parameters\n"
         f"\n\tBatch Size: {batchsize}\n\tLayer Configuration: {NN_layers}"
-        f"\n\tEpochs: {NN_epochs}\n")
+        f"\n\tEpochs: {NN_epochs}\n\tLearning Rate: {learning_rate:g}\n\t"
+        f"Regularization Parameter: {regularization_param:g}\n\t"
+        f"Random Seed: {rand_seed:d}\n")
 print(msg1)
 
 """ IMPLEMENTING THE NEURAL NETWORK """
@@ -139,7 +151,8 @@ if loadname is None:
     NN.set(X_train, Y_train)
 
     # Training the neural network with the parameters given earlier
-    W,B = NN.train(epochs = NN_epochs, layers = NN_layers, batchsize = batchsize)
+    W,B = NN.train(epochs = NN_epochs, layers = NN_layers, lr = learning_rate,
+    reg = regularization_param, batchsize = batchsize)
 else:
     print(f"Loading from directory <{loadname}>\n")
     # Loading a previous neural network
@@ -163,7 +176,7 @@ correct = diffs.shape[0] - incorrect
 total = diffs.shape[0]
 msg2 = (f"\nTest Results\n\n\tNumber of incorrect outputs: {incorrect:.0f}/"
        f"{total:d}\n\tNumber of correct outputs: {correct:.0f}/{total:d}\n\t"
-       f"Percent correct: {100*correct/total:.0f}%\n\n"
+       f"Accuracy Score: {correct/total:.2g}\n\n"
        f"Prediction information:\n\n\tNo. of ones:\t{np.sum(Y_predict):.0f}"
        f"\n\tNo. of zeros:\t{Y_predict.shape[0] - np.sum(Y_predict):.0f}\n")
 print(msg2)
