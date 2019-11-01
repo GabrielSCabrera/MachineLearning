@@ -179,7 +179,7 @@ class NeuralNet:
         self._p = self._X.shape[1]
         self._q = self._Y.shape[1]
 
-    def train(self, epochs, layers, batchsize, lr = 0.01, reg = 0.02):
+    def train(self, epochs, layers, batchsize, lr = 0.01, reg = 0):
         """
         epochs:     Number of fwdfeed-backprop epochs <int>, minimum of 1
         layers:     List of layer sizes, each element (e >= 1) must be an <int>
@@ -242,12 +242,12 @@ class NeuralNet:
                     w = W[m]
                     b = B[m]
                     Z[m+1] = w @ Z[m] + b
-                    Z[m+1] = 1/(1 + np.exp(-Z[m+1]))        # sigmoid
-                    # Z[m+1] = np.tanh(-Z[m+1])               # tanh
+                    Z[m+1] = 1/(1 + np.exp(-Z[m+1]))            # sigmoid
+                    # Z[m+1] = np.tanh(-Z[m+1])                 # tanh
 
                 dCdA = -2*(Y - Z[-1])
-                dAdZ = Z[-1]*(1 - Z[-1])                    # sigmoid
-                # dAdZ = 1 - np.tanh(Z[-1])**2                # tanh
+                dAdZ = Z[-1]*(1 - Z[-1])                        # sigmoid
+                # dAdZ = 1 - Z[-1]**2                           # tanh
                 delta = dCdA*dAdZ
 
                 for i in range(1, len(Z)):
@@ -256,8 +256,8 @@ class NeuralNet:
                     B[-i] -= lr*np.mean(delta, axis = 0)
                     W_T = W[-i].reshape(1, W[-i].shape[2], W[-i].shape[1])
                     delta = W_T @ delta
-                    delta *= Z[-i-1]*(1 - Z[-i-1])          # sigmoid
-                    # delta *= 1 - np.tanh(Z[-i-1])**2        # tanh
+                    delta *= Z[-i-1]*(1 - Z[-i-1])              # sigmoid
+                    # delta *= 1 - Z[-i-1]**2                   # tanh
 
                 counter += 1
                 new_perc = int(100*counter/tot_iter)

@@ -81,9 +81,24 @@
 
 Our first dataset contains real credit card metadata for 30,000 people, in the form of a \texttt{.xls} file; each given datapoint (or person) has 23 features and one \textit{binary output} denoting whether or not they've defaulted on their credit card debt.  These features can be summarized as follows:
 
-\begin{enumerate}
-\item 
-\end{enumerate}
+\begin{table}[H]
+\center
+\small
+\begin{tabular}{c l l}
+Feature No. & Description & Data Type\\
+\hline
+1 & Total Credit Given & Continuous\\
+2 & Gender & Categorical\\
+3 & Education & Categorical\\
+4 & Marital Status & Categorical\\
+5 & Age & Continuous\\
+6-11 & Month-Wise Repayment Status & Categorical\\
+12-17 & Month-Wise Bill Statement & Continuous\\
+18-23 & Month-Wise Amount Paid & Continuous
+\end{tabular}
+\end{table}
+
+For more detailed information regarding this dataset, and the file itself, visit \url{https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients}
 
 \subsection*{The Franke Function}
 

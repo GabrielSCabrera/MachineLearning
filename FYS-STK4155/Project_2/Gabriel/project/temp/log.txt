@@ -11,13 +11,12 @@ Neural Network Parameters
 
 	Batch Size: 50
 	Layer Configuration: [100, 100, 100, 100]
-	Epochs: 100
+	Epochs: 10
 	Learning Rate: 0.01
 	Regularization Parameter: 0
 	Random Seed: 112358
 
-
 Test Results
 
-	MSE: 0.01607
-	R²: 0.8059
+	MSE: 0.02525
+	R²: 0.695

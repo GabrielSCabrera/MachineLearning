@@ -211,4 +211,4 @@ if loadname is None:
     np.save(f"{dirname}/layers", NN_layers)
 
     with open(f"{dirname}/{terminal_output_file}", "w+") as outfile:
-        outfile.write(msg1 + "\n" + msg2 + "\n")
+        outfile.write(msg1 + msg2)

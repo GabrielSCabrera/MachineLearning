@@ -16,7 +16,6 @@ Neural Network Parameters
 	Regularization Parameter: 1e-06
 	Random Seed: 112358
 
-
 Test Results
 
 	MSE: 0.01606

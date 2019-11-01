@@ -100,7 +100,7 @@ test_percent = 25
 # Configuration of layers in the Neural Network
 NN_layers = [100]*4#[575,383,255,170,113,75,50]
 # Number of epochs, or total cycles over all batches
-NN_epochs = 100#600
+NN_epochs = 10#600
 # Learning Rate
 learning_rate = 0.01
 # Ridge Regularization Parameter
@@ -229,4 +229,4 @@ if loadname is None:
     np.save(f"{dirname}/layers", NN_layers)
 
     with open(f"{dirname}/{terminal_output_file}", "w+") as outfile:
-        outfile.write(msg1 + "\n" + msg2 + "\n")
+        outfile.write(msg1 + msg2)
