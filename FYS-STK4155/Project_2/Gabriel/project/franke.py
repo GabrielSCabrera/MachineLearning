@@ -31,10 +31,11 @@ def generate_Franke_data(x_min = 0, x_max = 1, N = 250):
     Z = Z + init_error
 
     # Making compatible input arrays for Regression object
-    x = np.zeros((X.shape[0]*X.shape[1], 2))
+    x = np.zeros((X.size, 2))
     x[:,0] = X.flatten()
     x[:,1] = Y.flatten()
-    y = Z.flatten()[:,np.newaxis]
+    y = Z.reshape((Z.size, 1))
+    # y = Z.flatten()[:,np.newaxis]
 
     return x, y, f_xy
 
@@ -94,17 +95,21 @@ def parse_args(all_args):
 """ PROGRAM PARAMETERS """
 
 # Size of each batch sent into the neural network
-batchsize = 50
+batchsize = 25
 # Percentage of data to set aside for testing
 test_percent = 25
 # Configuration of layers in the Neural Network
 NN_layers = [100]*4#[575,383,255,170,113,75,50]
 # Number of epochs, or total cycles over all batches
-NN_epochs = 10#600
-# Learning Rate
+NN_epochs = 10
+# Learning rate
 learning_rate = 0.01
-# Ridge Regularization Parameter
+# Ridge regularization parameter
 regularization_param = 0
+# Activation function
+activation_fxn = "sigmoid"
+# Activation function for output layer (None defaults to "activation_fxn")
+output_activation_fxn = None
 # File in which to save the terminal output
 terminal_output_file = "log.txt"
 # Directory in which to save the terminal output; underscore allows for
@@ -123,19 +128,24 @@ rand_seed = 112358
 all_args = {"save":[str, "dirname"], "load":[str, "loadname"],
             "display":[int, "N_display"], "epochs":[int, "NN_epochs"],
             "batchsize":[int, "batchsize"], "lr":[float,"learning_rate"],
-            "reg":[float,"regularization_param"], "seed":[int, "rand_seed"]}
+            "reg":[float,"regularization_param"], "seed":[int, "rand_seed"],
+            "activation":[str, "activation_fxn"],
+            "activation_out":[str, "output_activation_fxn"]}
 parse_args(all_args)
 
 np.random.seed(rand_seed)
 
 """ GENERATING, PREPROCESSING, SPLITTING, AND RESHAPING THE DATA """
-X, Y, f_xy = generate_Franke_data(N = 150)
 
+if output_activation_fxn is None:
+    output_activation_fxn = activation_fxn
+
+X, Y, f_xy = generate_Franke_data(N = 150)
 # Splitting the data into training and testing sets
 X_train, Y_train, X_test, Y_test = split(X, Y, test_percent)
 # Implements normalization and one-hot encoding
-X_train, Y_train = preprocess(X_train, Y_train, {})
-X_test, Y_test = preprocess(X_test, Y_test, {})
+X_train, Y_train = preprocess(X_train, Y_train, {}, output_activation_fxn)
+X_test, Y_test = preprocess(X_test, Y_test, {}, output_activation_fxn)
 # Upsamples the training data
 X_train, Y_train = upsample_binary(X_train, Y_train)
 
@@ -150,7 +160,9 @@ msg1 = (f"\nProcessed Dataset Dimensions:\n"
         f"\n\tBatch Size: {batchsize}\n\tLayer Configuration: {NN_layers}"
         f"\n\tEpochs: {NN_epochs}\n\tLearning Rate: {learning_rate:g}\n\t"
         f"Regularization Parameter: {regularization_param:g}\n\t"
-        f"Random Seed: {rand_seed:d}\n")
+        f"Random Seed: {rand_seed:d}\n\nActivation Functions\n\n\t"
+        f"Hidden Layers: {activation_fxn}\n\tOutput Layer "
+        f"{output_activation_fxn}\n")
 print(msg1)
 
 """ IMPLEMENTING THE NEURAL NETWORK """
@@ -168,7 +180,9 @@ if loadname is None:
 
     # Training the neural network with the parameters given earlier
     W,B = NN.train(epochs = NN_epochs, layers = NN_layers, lr = learning_rate,
-    reg = regularization_param, batchsize = batchsize)
+    reg = regularization_param, batchsize = batchsize,
+    activation_fxn = activation_fxn,
+    output_activation_fxn = output_activation_fxn)
 else:
     print(f"Loading from directory <{loadname}>\n")
     # Loading a previous neural network

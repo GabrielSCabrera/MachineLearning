@@ -9,14 +9,19 @@ Processed Dataset Dimensions:
 
 Neural Network Parameters
 
-	Batch Size: 50
+	Batch Size: 25
 	Layer Configuration: [100, 100, 100, 100]
 	Epochs: 10
 	Learning Rate: 0.01
 	Regularization Parameter: 0
 	Random Seed: 112358
 
+Activation Functions
+
+	Hidden Layers: sigmoid
+	Output Layer sigmoid
+
 Test Results
 
-	MSE: 0.02525
-	R²: 0.695
+	MSE: 0.0213
+	R²: 0.7428

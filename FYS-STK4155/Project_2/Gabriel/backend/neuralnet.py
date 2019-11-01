@@ -16,7 +16,8 @@ def split(X, Y, test_percent = 0.25):
     X_test, Y_test = X[test_idx], Y[test_idx]
     return X_train, Y_train, X_test, Y_test
 
-def preprocess(X, Y, categorical_cols, delete_outliers = True):
+def preprocess(X, Y, categorical_cols, delete_outliers = True,
+               output_activation_fxn = "sigmoid"):
     """
         categorical_cols should be a dict with:
         {"index_1"              :       [cat_11, cat_12, cat_13, ...],
@@ -28,6 +29,12 @@ def preprocess(X, Y, categorical_cols, delete_outliers = True):
         One-hot encoding sorts the input cat_ij from least to greatest, and
         assigns new column indices 0,1,... to each cat_ij based on this order.
     """
+    if output_activation_fxn == "sigmoid":
+        false_val = 0
+        true_val = 1
+    elif output_activation_fxn == "tanh":
+        false_val = -1
+        true_val = 1
     N,M = X.shape
     X_new = []
     categories = {}
@@ -42,7 +49,7 @@ def preprocess(X, Y, categorical_cols, delete_outliers = True):
             key = str(i)
             val = categories[key]
             valmap = {v:n for n,v in enumerate(val)}
-            new_cols = np.zeros((len(val), N))
+            new_cols = np.ones((len(val), N))*false_val
             col = X[:,i]
             for n,c in enumerate(col):
                 if int(c) not in val:
@@ -53,7 +60,7 @@ def preprocess(X, Y, categorical_cols, delete_outliers = True):
                                f"Expected values: {val}")
                         raise Exception(msg)
                 else:
-                    new_cols[valmap[c],n] = 1
+                    new_cols[valmap[c],n] = true_val
             for j in new_cols:
                 X_new.append(j)
         else:
@@ -106,14 +113,6 @@ def upsample_binary(X, Y):
     X_up = X_up[shuffle_idx]
     Y_up = Y_up[shuffle_idx]
     return X_up, Y_up
-
-def shapes(*args):
-    """
-        For quick bugfixing
-    """
-    for i in args:
-        print(i.shape, end = " ")
-    print()
 
 class NeuralNet:
 
@@ -179,13 +178,48 @@ class NeuralNet:
         self._p = self._X.shape[1]
         self._q = self._Y.shape[1]
 
-    def train(self, epochs, layers, batchsize, lr = 0.01, reg = 0):
+    def activation(self, function, x):
+        """
+            Parameter "function" can take values:
+                function = "sigmoid"
+                function = "tanh"
+                function = "x"
+        """
+        if function == "sigmoid":
+            return 1/(1 + np.exp(-x))
+        elif function == "tanh":
+            return np.tanh(x)
+        elif function == "x":
+            return x
+
+    def diff_activation(self, function, x):
+        """
+            Parameter "function" can take values:
+                function = "sigmoid"
+                function = "tanh"
+                function = "x"
+            Assumes that the activation function outputs are passed in as "x",
+            not the hidden layers pre-activation.
+        """
+        if function == "sigmoid":
+            return x*(1 - x)
+        elif function == "tanh":
+            return 1 - x**2
+        elif function == "x":
+            return np.ones_like(x)
+
+    def train(self, epochs, layers, batchsize, lr = 0.01, reg = 0,
+              activation_fxn = "sigmoid", output_activation_fxn = None):
         """
         epochs:     Number of fwdfeed-backprop epochs <int>, minimum of 1
         layers:     List of layer sizes, each element (e >= 1) must be an <int>
 
         Note:       The bias term is added automatically.
         """
+
+        if output_activation_fxn is None:
+            output_activation_fxn = activation_fxn
+
         try:
             X, Y = self._X, self._Y
         except AttributeError:
@@ -204,15 +238,6 @@ class NeuralNet:
 
         X_batches = np.split(X[:rounded_len,:,np.newaxis], batches)
         Y_batches = np.split(Y[:rounded_len,:,np.newaxis], batches)
-
-        Y_shift = 0
-        Y_scale = 1
-
-        if np.min(Y) != 0:
-            Y_shift = -np.min(Y)
-
-        if np.max(Y) - np.min(Y) != 1:
-            Y_scale = np.max(Y)-np.min(Y)
 
         W = []
         B = []
@@ -242,13 +267,13 @@ class NeuralNet:
                     w = W[m]
                     b = B[m]
                     Z[m+1] = w @ Z[m] + b
-                    Z[m+1] = 1/(1 + np.exp(-Z[m+1]))            # sigmoid
-                    # Z[m+1] = np.tanh(-Z[m+1])                 # tanh
+                    if m < len(W) - 1:
+                        Z[m+1] = self.activation(activation_fxn, Z[m+1])
+                    elif m == len(W) - 1:
+                        Z[m+1] = self.activation(output_activation_fxn, Z[m+1])
 
-                dCdA = -2*(Y - Z[-1])
-                dAdZ = Z[-1]*(1 - Z[-1])                        # sigmoid
-                # dAdZ = 1 - Z[-1]**2                           # tanh
-                delta = dCdA*dAdZ
+                delta = 2*(Z[-1] - Y)
+                delta *= self.diff_activation(output_activation_fxn, Z[-1])
 
                 for i in range(1, len(Z)):
                     dW = np.einsum("ijk,ikj->ijk", delta, Z[-i-1])
@@ -256,8 +281,7 @@ class NeuralNet:
                     B[-i] -= lr*np.mean(delta, axis = 0)
                     W_T = W[-i].reshape(1, W[-i].shape[2], W[-i].shape[1])
                     delta = W_T @ delta
-                    delta *= Z[-i-1]*(1 - Z[-i-1])              # sigmoid
-                    # delta *= 1 - Z[-i-1]**2                   # tanh
+                    delta *= self.diff_activation(activation_fxn, Z[-i-1])
 
                 counter += 1
                 new_perc = int(100*counter/tot_iter)
