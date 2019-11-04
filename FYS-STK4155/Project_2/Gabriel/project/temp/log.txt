@@ -11,7 +11,7 @@ Neural Network Parameters
 
 	Batch Size: 25
 	Layer Configuration: [100, 100, 100, 100]
-	Epochs: 10
+	Epochs: 400
 	Learning Rate: 0.01
 	Regularization Parameter: 0
 	Random Seed: 112358
@@ -19,9 +19,9 @@ Neural Network Parameters
 Activation Functions
 
 	Hidden Layers: sigmoid
-	Output Layer sigmoid
+	Output Layer tanh
 
 Test Results
 
-	MSE: 0.0213
-	R²: 0.7428
+	MSE: 0.08287
+	R²: -0.0009627
