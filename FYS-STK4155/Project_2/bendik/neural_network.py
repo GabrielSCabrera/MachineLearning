@@ -103,9 +103,6 @@ def get_handwritten_data(do_display=False):
     inputs = digits.images
     labels = digits.target
     
-#    print("inputs = (n_inputs, pixel_width, pixel_height) = " + str(inputs.shape))
-#    print("labels = (n_inputs) = " + str(labels.shape))
-    
     
     # flatten the image
     # the value -1 means dimension is inferred from the remaining dimensions: 8x8 = 64
@@ -239,7 +236,8 @@ def neural_network(inputs_train, labels_train_onehot, ws, bs, eta = 0.001, lambd
 
     return ws,bs
 
-def run_nn(train_size = 0.8, do_print=True, timer=True, n_hidden=10, n_nodes_hidden=50, eta = 0.001, lambd = 0.01, batch_size = 100, epochs = 1000):
+def run_nn(train_size = 0.8, do_print=True, timer=True, n_hidden=10, n_nodes_hidden=50, eta = 0.001, lambd = 0.01, batch_size = 100,\
+           epochs = 1000):
     """
     A function that sets up all the required arrays, then runs the neural network.
     """
@@ -247,7 +245,7 @@ def run_nn(train_size = 0.8, do_print=True, timer=True, n_hidden=10, n_nodes_hid
     #inputs the handwritten data
     inputs, labels = get_handwritten_data()
     #generates arrays based upon the handwritten data
-    inp, ws, bs = set_up(n_input_nodes=len(inputs[0]), n_output_nodes=10, n_hidden=10, n_nodes_hidden=50)
+    inp, ws, bs = set_up(n_input_nodes=len(inputs[0]), n_output_nodes=10, n_hidden=n_hidden, n_nodes_hidden=n_nodes_hidden)
     
     #splits into training and testing data
     
@@ -263,7 +261,8 @@ def run_nn(train_size = 0.8, do_print=True, timer=True, n_hidden=10, n_nodes_hid
         print("Old accuracy on training data: " + str(old_train))
         print("Old accuracy on testing data: " + str(old_test))
     
-    ws, bs = neural_network(inputs_train, labels_train_onehot, ws, bs, eta = 0.001, lambd = 0.001, batch_size = 100, epochs = 100, timer=timer)
+    ws, bs = neural_network(inputs_train, labels_train_onehot, ws, bs, eta = eta, lambd = lambd, batch_size = batch_size, epochs = epochs,\
+                            timer=timer)
     
     new_train = accuracy_score(labels_train, predict(inputs_train, ws, bs, sigmoid))
     new_test = accuracy_score(labels_test, predict(inputs_test, ws, bs, sigmoid))
@@ -274,8 +273,8 @@ def run_nn(train_size = 0.8, do_print=True, timer=True, n_hidden=10, n_nodes_hid
 
     return ws, bs, new_test, new_train, old_test, old_train
 
-def find_best_learn_vals(etas, lambds, n_test=1, train_size = 0.8, Do_print=True, n_hidden=10, n_nodes_hidden=50, batch_size = 100,\
-                         epochs = 1000, Timer=True):
+def find_best_learn_vals(etas, lambds, n_test=10, train_size = 0.8, Do_print=True, n_hidden=2, n_nodes_hidden=50, batch_size = 100,\
+                         epochs = 100, Timer=True):
     """
     A function that tests different values for eta and lambda to find which gives the best accuracy.
     """
@@ -320,7 +319,7 @@ def find_best_learn_vals(etas, lambds, n_test=1, train_size = 0.8, Do_print=True
             new_test /= n_test
             accs[i][j] = new_test
             if Do_print:
-                print("Learning rate  = ", etas[i])
+                print("\nLearning rate  = ", etas[i])
                 print("Lambda = ", lambds[j])
                 print("Accuracy score on test set: ", new_test)
                 print()
@@ -341,18 +340,31 @@ if __name__ == "__main__":
     etas = np.logspace(-5, 1, 7)
     lambds = np.logspace(-5, 1, 7)
     
-    accs = find_best_learn_vals(etas, lambds, n_test=10)
+    accs = find_best_learn_vals(etas, lambds, n_test=1)
     
     loc = np.where(accs == np.max(accs))
     print("\nBest values: ")
     print("Learning rate  = ", etas[loc[0]][0])
     print("Lambda = ", lambds[loc[1]][0])
-    print("Average accuracy score on test set: ", accs[loc])
+    print("Average accuracy score on test set: ", accs[loc][0])
     print()
 
 
 
 
+"""
+
+Best values: 
+Learning rate  =  0.001
+Lambda =  0.1
+Average accuracy score on test set:  [0.53361111]
+
+Best values: 
+Learning rate  =  0.0001
+Lambda =  0.0001
+Average accuracy score on test set:  0.5619444444444445
+
+"""
 
 
 

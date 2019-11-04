@@ -64,8 +64,8 @@ def preprocess(X, Y, categorical_cols, delete_outliers = True,
             for j in new_cols:
                 X_new.append(j)
         else:
-            # Scaling based on mean and std
             col = X[:,i]
+            # Scaling based on mean and std
             X_new.append((col - np.mean(col))/np.std(col))
     del_rows = np.sort(del_rows)
     for row in del_rows[::-1]:
