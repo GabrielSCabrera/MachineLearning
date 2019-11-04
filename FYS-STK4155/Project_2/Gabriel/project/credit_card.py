@@ -67,9 +67,9 @@ batchsize = 5
 # Percentage of data to set aside for testing
 test_percent = 25
 # Configuration of layers in the Neural Network
-NN_layers = [200,200,100,100,50,50]
+NN_layers = []#[200,200,100,100,50,50]
 # Number of epochs, or total cycles over all batches
-NN_epochs = 750
+NN_epochs = 10
 # Learning Rate
 learning_rate = 0.01
 # Ridge Regularization Parameter
@@ -180,6 +180,8 @@ msg2 = (f"\nTest Results\n\n\tNumber of incorrect outputs: {incorrect:.0f}/"
        f"Prediction information:\n\n\tNo. of ones:\t{np.sum(Y_predict):.0f}"
        f"\n\tNo. of zeros:\t{Y_predict.shape[0] - np.sum(Y_predict):.0f}\n")
 print(msg2)
+
+NN.ROC(X_test, Y_test)
 
 """ SAVING DATA IF A NEW NETWORK IS CREATED"""
 

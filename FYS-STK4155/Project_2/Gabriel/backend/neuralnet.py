@@ -322,3 +322,64 @@ class NeuralNet:
         if Z.ndim == 1:
             Z = Z[:,np.newaxis]
         return Z
+
+    def ROC(self, X_test, Y_test):
+        Y_test = Y_test.flatten()
+        Y_predict = self.predict(X_test).flatten()
+        Y_sort = Y_predict.copy()
+        Y_sort[Y_sort < 0.5] = Y_sort[Y_sort < 0.5] + 0.5
+        idx = np.argsort(Y_sort)[::-1]
+
+        Y_predict[Y_predict > 0.5] = 1
+        Y_predict[Y_predict <= 0.5] = 0
+
+        Y_test = Y_test[idx]
+        Y_predict = Y_predict[idx]
+
+        TP_arr = np.logical_and(np.equal(Y_predict, Y_test),
+                                np.equal(Y_test, 1))
+        TN_arr = np.logical_and(np.equal(Y_predict, Y_test),
+                                np.equal(Y_test, 0))
+        FP_arr = np.logical_and(np.equal(Y_predict, np.logical_not(Y_test)),
+                                np.equal(Y_test, 0))
+        FN_arr = np.logical_and(np.equal(Y_predict, np.logical_not(Y_test)),
+                                np.equal(Y_test, 1))
+
+        N = np.arange(1, len(Y_test)+1, dtype = np.uint32)
+        tpr = np.zeros_like(Y_test, dtype = np.float64)
+        fpr = np.zeros_like(Y_test, dtype = np.float64)
+
+        for i,(TP, TN, FP, FN) in enumerate(zip(TP_arr, TN_arr, FP_arr, FN_arr)):
+            if TP + FN != 0:
+                tpr[i:] = tpr[i] + TP/(TP + FN)
+            if FP + TN != 0:
+                fpr[i:] = fpr[i] + FP/(FP + TN)
+
+        # Integral of Best Curve
+        xBC = [0, np.sum(Y_test), len(Y_test)]
+        yBC = [0, np.max(tpr), np.max(tpr)]
+        A1 = np.trapz(yBC, xBC)
+        # Integral of Model
+        A2 = np.trapz(tpr, N)
+        # Integral of Baseline
+        xBl = [np.min(N), np.max(N)]
+        yBl = [np.min(tpr), np.max(tpr)]
+        A3 = np.trapz(yBl, xBl)
+
+        A_top = A1 - A3
+        A_btm = A2 - A3
+
+        ratio = A_btm/A_top
+
+        print(ratio)
+
+        # Model
+        plt.plot(N, tpr)
+        # Best Curve
+        plt.plot(xBC, yBC)
+        # Baseline
+        plt.plot(xBl, yBl)
+
+        plt.xlabel("FPR")
+        plt.ylabel("TPR")
+        plt.show()

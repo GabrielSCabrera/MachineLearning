@@ -1,0 +1,28 @@
+
+Processed Dataset Dimensions:
+
+	X_train: (N= 32111, p= 29)
+	Y_train: (M= 32111, q= 1)
+
+	X_test:  (N= 14058, p= 29)
+	Y_test:  (M= 14058, q= 1)
+
+Neural Network Parameters
+
+	Batch Size: 5
+	Layer Configuration: []
+	Epochs: 10
+	Learning Rate: 0.01
+	Regularization Parameter: 0
+	Random Seed: 112358
+
+Test Results
+
+	Number of incorrect outputs: 3566/14058
+	Number of correct outputs: 10492/14058
+	Accuracy Score: 0.75
+
+Prediction information:
+
+	No. of ones:	4039
+	No. of zeros:	10019
