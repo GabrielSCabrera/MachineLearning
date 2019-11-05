@@ -113,7 +113,6 @@ parse_args(all_args)
 
 np.random.seed(rand_seed)
 
-
 """ READING THE DATA (using mnist) """
 
 mndata = MNIST('.')
