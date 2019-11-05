@@ -247,6 +247,14 @@ Or is that basically the ROC?
 
 Do we use \textit{k-fold} cross validation? If not, we probally should.
 
+%I coiped over the text from project 1, we can probally reuse most of it:
+
+%So far, all our methods involving validation\footnote{This refers to calculating the $MSE$, variance, bias, and so on.} may have involved the separation of our data into a training and testing set, whereby the vector of coefficients is calculated using the \textit{training} set, and the validation is performed on the \textit{testing} set that remains.	There is however one more way to obtain a clearer picture of how well a model works: \textit{k-fold} cross validation.	
+%
+%In short, once the training and testing set have been separated, we can choose a value for $k$.  Next, we divide the training set into $k$ equally sized parts\footnote{We can have slightly unequal-sized parts without it being an issue, if the size of the dataset doesn't divide perfectly into $k$.}.  The next step is to be performed $k$ times; here we take $k-1$ of the parts and combine them into a temporary training set, and leave the last part as our testing set, and we perform validation on the testing set, and save the values.  During each iteration, we must shuffle our parts such that each step has a unique training-testing split.
+%
+%Finally, we can take all the calculated $MSE$ values, among others, and take their average.  This leaves us with a well-rounded result \textit{without} the need for more input data!
+
 
 \subsection*{Bootstrap?}
 
@@ -255,17 +263,19 @@ The introduction mentions the bootstrap method as a thing we could use (I think 
 
 \subsection*{Other cost funnctions}
 
-This is basically part d, I guess. The project text says we should change the cost function for our neural network code in order to perform a regression analysis. I'm guessing we already do that, but we should probally say something about that. We could also test different cost functions to find which gives the best results, and say a bit about each of them. 
+This is basically part d, I guess. The project text says we should change the cost function for our neural network code in order to perform a regression analysis. I'm guessing we already do that, but we should probally say something about that. 
+
+We could also test different cost functions to find which gives the best results, and say a bit about each of them. 
 
 
-\subparagraph*{learning rates and regularization parameters}
+\subsection*{learning rates and regularization parameters}
 
 The text also mentions that we should discuss learning rates and regularization parameters. We should probally talk about which values we test. 
 
 
 \subsection*{Scikit-Learn/tensorflow/keras?}
 
-The text also says we could compare or nn with Scikit-Learn or tensorflow/keras, but I'm not sure how necessary that is, or if we need to write about that.
+The text also says we could compare our nn with Scikit-Learn or tensorflow/keras, but I'm not sure how necessary that is, or if we need to write about that.
 
 
 
