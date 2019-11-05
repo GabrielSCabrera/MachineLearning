@@ -116,7 +116,7 @@ We will be solving the Franke function for 100 $x$-values and 100 $y$-values in 
 	\caption{The \textit{Franke function} for $x$ and $y$ values ranging from zero to one. \label{fig_Franke}}
 \end{figure}
 
-In addition, we will also be adding \textit{Gaussian noise} to each value $f(x,y)$, such that we are left with values as seen in Figure \ref{fig_Franke_noise}.
+In addition, we will also be adding \textit{Gaussian noise} to each value $f(x,y)$, such that we are left with values as seen in Figure \ref{fig_Franke_noise}. %maybye say how much noise?
 
 \begin{figure}[H]
 	\centering
@@ -231,13 +231,78 @@ The \textit{AUC} (or \textit{area under ROC}) is a measure of model performance;
 	\caption{An example $ROC$ curve with its $AUC$.\label{fig_roc_sample}}
 \end{figure}
 
+
+The project text also mentions theese things that we may or may not need to wtire about in this section:
+
+\subsection*{Accuracy score?}
+
+Or is that basically the ROC?
+
+\begin{align*}
+\text { Accuracy }=\frac{\sum_{i=1}^{n} I\left(t_{i}=y_{i}\right)}{n}
+\end{align*}
+
+
+\subsection*{Cross validation}
+
+Do we use \textit{k-fold} cross validation? If not, we probally should.
+
+
+\subsection*{Bootstrap?}
+
+The introduction mentions the bootstrap method as a thing we could use (I think it was as a alternative to \textit{k-fold}). We didn't use it for project 1, so I don't think we need to use it here either.
+
+
+\subsection*{Other cost funnctions}
+
+This is basically part d, I guess. The project text says we should change the cost function for our neural network code in order to perform a regression analysis. I'm guessing we already do that, but we should probally say something about that. We could also test different cost functions to find which gives the best results, and say a bit about each of them. 
+
+
+\subparagraph*{learning rates and regularization parameters}
+
+The text also mentions that we should discuss learning rates and regularization parameters. We should probally talk about which values we test. 
+
+
+\subsection*{Scikit-Learn/tensorflow/keras?}
+
+The text also says we could compare or nn with Scikit-Learn or tensorflow/keras, but I'm not sure how necessary that is, or if we need to write about that.
+
+
+
+
 \section*{Results}
+
+
+
+
 
 \section*{Discussion}
 
+
+
+
+
+
+
 \section*{Conclusion}
+
+Part e would basically be the conclusion rigth?
+
+
+
+\section*{Appendix?}
+
+\subsection*{Code explenation?}
+
+We could have an explenation of the structure of the code, like which files does what, and stuff like that. Would set this as low priority though, only do it if we have time.
+
+
 
 \bibliography{bib}{}
 \bibliographystyle{ieeetr}
 \end{multicols*}{2}
 \end{document}
+
+
+
+
