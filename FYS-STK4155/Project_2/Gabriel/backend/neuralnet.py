@@ -249,8 +249,6 @@ class NeuralNet:
         Note:       The bias term is added automatically.
         """
 
-        dtype = cp.float32
-
         if output_activation_fxn is None:
             output_activation_fxn = activation_fxn
 
@@ -270,7 +268,6 @@ class NeuralNet:
         rounded_len = (N//batchsize)*batchsize
         batches = N//batchsize
 
-
         X = X[:rounded_len,:,np.newaxis]
         Y = Y[:rounded_len,:,np.newaxis]
 
@@ -280,6 +277,11 @@ class NeuralNet:
         if GPU is True:
             X_batches = cp.array(X_batches, dtype = dtype)
             Y_batches = cp.array(Y_batches, dtype = dtype)
+        else:
+            X_batches = np.array(X_batches)
+            Y_batches = np.array(Y_batches)
+
+        N = X_batches.shape[1]
 
         W = []
         B = []
@@ -300,7 +302,7 @@ class NeuralNet:
                 b_sizes.append(b.size)
                 b_shapes.append(b.shape)
 
-            w_sizes = cp.array(w_sizes, dtype = cp.int32)
+            w_sizes = cp.array(w_sizes, dtype = np.int32)
             w_shift = w_sizes.copy()
             w_shift[1:] = w_sizes[:-1]
             w_shift[0] = 0
@@ -308,7 +310,7 @@ class NeuralNet:
             w_size = int(np.sum(w_sizes))
             W = cp.array(np.random.normal(0, 0.5, w_size), dtype = dtype)
 
-            b_sizes = cp.array(b_sizes, dtype = cp.int32)
+            b_sizes = cp.array(b_sizes, dtype = np.int32)
             b_shift = b_sizes.copy()
             b_shift[1:] = b_sizes[:-1]
             b_shift[0] = 0
@@ -319,9 +321,9 @@ class NeuralNet:
             Z_sizes = []
             Z_shapes = []
             for i in layers:
-                Z_sizes.append(batchsize*i)
-                Z_shapes.append((batchsize, i, 1))
-            Z_sizes = cp.array(Z_sizes, dtype = cp.int32)
+                Z_sizes.append(N*i)
+                Z_shapes.append((N, i, 1))
+            Z_sizes = cp.array(Z_sizes, dtype = np.int32)
             Z_shift = Z_sizes.copy()
             Z_shift[1:] = Z_sizes[:-1]
             Z_shift[0] = 0
@@ -330,7 +332,6 @@ class NeuralNet:
             Z = cp.zeros(Z_size, dtype = dtype)
 
         perc = 0
-        N = X_batches[0].shape[0]
         tot_iter = (epochs*len(X_batches))
         times = np.zeros(tot_iter)
         counter = 0
@@ -343,6 +344,8 @@ class NeuralNet:
                 for n in range(len(X_batches)):
                     X = X_batches[n]
                     Y = Y_batches[n]
+                    Z_idx = Z_idxs[0]
+                    Z[Z_idx[0]:Z_idx[1]] = X.flatten()
 
                     for m in range(len(layers)-1):
                         w_idx = w_idxs[m]
@@ -359,9 +362,9 @@ class NeuralNet:
                         Z_step = cp.reshape(Z[Z_idx[0]:Z_idx[1]], Z_shape)
                         Z_step = w @ Z_step + b
 
-                        if m < len(W) - 1:
+                        if m < len(layers) - 1:
                             Z_step = self.activation(activation_fxn, Z_step, GPU = GPU)
-                        elif m == len(W) - 1:
+                        elif m == len(layers) - 1:
                             Z_step = self.activation(output_activation_fxn, Z_step, GPU = GPU)
 
                         Z_idx_next = Z_idxs[m+1]
@@ -373,7 +376,7 @@ class NeuralNet:
                     delta = 2*(Z_last - Y)
                     delta = delta * self.diff_activation(output_activation_fxn, Z_last, GPU = GPU)
 
-                    for i in range(1, len(layers)-1):
+                    for i in range(1, len(layers)):
 
                         Z_idx = Z_idxs[-i-1]
                         Z_idx_prev = Z_idxs[-i]
@@ -397,7 +400,7 @@ class NeuralNet:
                         b_prev = b_prev - dB
                         W[w_idx_prev[0]:w_idx_prev[1]] = w_prev.flatten()
                         B[b_idx_prev[0]:b_idx_prev[1]] = b_prev.flatten()
-                        W_T = cp.reshape(w_prev, (1, w_prev.shape[2], w_prev.shape[1]))
+                        W_T = cp.reshape(w_prev, (w_prev.shape[0], w_prev.shape[2], w_prev.shape[1]))
                         delta = W_T @ delta
                         delta = delta*self.diff_activation(activation_fxn, Z_step, GPU = GPU)
 
@@ -414,6 +417,13 @@ class NeuralNet:
                         msg = f"\r\t{perc:>3d}% – ETA {hh:02d}:{mm:02d}:{ss:02d}"
                         print(msg, end = "")
                     dt = time() - t0
+            W_new = []
+            B_new = []
+            for ws, bs, wi, bi in zip(w_shapes, b_shapes, w_idxs, b_idxs):
+                W_new.append(np.reshape(cp.asnumpy(W[wi[0]:wi[1]]), ws))
+                B_new.append(np.reshape(cp.asnumpy(B[bi[0]:bi[1]]), bs))
+            W = W_new
+            B = B_new
         else:
             for e in range(epochs):
                 for n in range(len(X_batches)):
@@ -422,7 +432,7 @@ class NeuralNet:
                     Z = []
                     Z.append(X)
                     for i in layers[1:]:
-                        Z.append(np.zeros((batchsize, i, 1)))
+                        Z.append(np.zeros((N, i, 1)))
 
                     for m in range(len(W)):
                         w = W[m]
@@ -462,18 +472,8 @@ class NeuralNet:
         ss = int(dt%60)
         print(f"\r\t100% – Total Time Elapsed {hh:02d}:{mm:02d}:{ss:02d}")
 
-        W_new = []
-        B_new = []
-        for w,b in zip(W,B):
-            if GPU is True:
-                W_new.append(cp.asnumpy(w))
-                B_new.append(cp.asnumpy(b))
-            else:
-                W_new.append(w)
-                B_new.append(b)
-
-        self.W = W_new
-        self.B = B_new
+        self.W = W
+        self.B = B
 
         return self.W, self.B
 
@@ -493,7 +493,7 @@ class NeuralNet:
             Z = Z[:,np.newaxis]
         return Z
 
-    def ROC(self, X_test, Y_test):
+    def ROC(self, X_test, Y_test, savepath = None):
 
         if X_test.ndim == 1:
             X_test = X_test[:,np.newaxis].astype(np.float64)
@@ -557,7 +557,6 @@ class NeuralNet:
             xBl = [np.min(fpr), np.max(fpr)]
             yBl = [np.min(tpr), np.max(tpr)]
 
-
             # Model
             if q == 1:
                 model_label = "Model"
@@ -576,4 +575,8 @@ class NeuralNet:
         plt.xlabel("False Positive Rate (FPR)")
         plt.ylabel("True Positive Rate (TPR)")
         plt.grid()
-        plt.show()
+        if savepath is None:
+            plt.show()
+        else:
+            plt.savefig(savepath, dpi = 250)
+            plt.close()

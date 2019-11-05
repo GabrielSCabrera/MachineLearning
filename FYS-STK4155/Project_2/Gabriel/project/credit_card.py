@@ -68,11 +68,11 @@ batchsize = 100
 # Percentage of data to set aside for testing
 test_percent = 25
 # Configuration of layers in the Neural Network
-NN_layers = [int(29*(2/3)**x) for x in range(5)]
+NN_layers = [200,100,50,25]
 # Number of epochs, or total cycles over all batches
-NN_epochs = 1000
+NN_epochs = 10
 # Learning Rate
-learning_rate = 0.001
+learning_rate = 0.01
 # Ridge Regularization Parameter
 regularization_param = 1E-7
 # Activation function
@@ -90,6 +90,8 @@ dirname = "results_cc_"
 loadname = None
 # Random Seed
 rand_seed = 112358
+# ROC curve filename
+roc_img = None
 
 """ IMPORTING COMMAND-LINE ARGUMENT SETTINGS """
 
@@ -100,7 +102,7 @@ all_args = {"save":[str, "dirname"], "load":[str, "loadname"],
             "reg":[float, "regularization_param"], "seed":[int, "rand_seed"],
             "activation":[str, "activation_fxn"],
             "activation_out":[str, "output_activation_fxn"],
-            "GPU":[bool, "GPU"]}
+            "GPU":[bool, "GPU"], "saveimg":[str, "roc_img"]}
 parse_args(all_args)
 
 np.random.seed(rand_seed)
@@ -200,7 +202,7 @@ msg2 = (f"\nTest Results\n\n\tNumber of incorrect outputs: {incorrect:.0f}/"
        f"\n\tNo. of zeros:\t{Y_predict.shape[0] - np.sum(Y_predict):.0f}\n")
 print(msg2)
 
-NN.ROC(X_test, Y_test)
+NN.ROC(X_test, Y_test, savepath = roc_img)
 
 """ SAVING DATA IF A NEW NETWORK IS CREATED"""
 
