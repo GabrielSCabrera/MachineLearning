@@ -23,7 +23,8 @@ def parse_args(all_args):
         prev_vals = []
         prev_locs = []
         for arg in args:
-            arg = arg.lower().strip().split("=")
+            arg = arg.strip().split("=")
+            # arg = arg.lower().strip().split("=")
             if len(arg) != 2:
                 msg = (f"\n\nInvalid command-line argument format.  Keyword "
                        f"arguments are expected.  Attempted to pass {len(arg)}"
@@ -73,19 +74,19 @@ def one_hot_Y(Y):
 # Size of each batch sent into the neural network
 batchsize = 100
 # Configuration of layers in the Neural Network
-NN_layers = [200]*5
+NN_layers = [int(784*(2/3)**x) for x in range(10)]
 # Number of epochs, or total cycles over all batches
-NN_epochs = 50
+NN_epochs = 1000
 # Learning Rate
-learning_rate = 0.01
+learning_rate = 0.001
 # Ridge Regularization Parameter
-regularization_param = 0
+regularization_param = 1E-7
 # Activation function
 activation_fxn = "sigmoid"
 # Activation function for output layer (None defaults to "activation_fxn")
 output_activation_fxn = None
 # Optimize for CUDA
-GPU = False
+GPU = True
 # File in which to save the terminal output
 terminal_output_file = "log.txt"
 # Directory in which to save the terminal output; underscore allows for

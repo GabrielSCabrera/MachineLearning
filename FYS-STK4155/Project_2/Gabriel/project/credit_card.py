@@ -70,7 +70,7 @@ test_percent = 25
 # Configuration of layers in the Neural Network
 NN_layers = [int(29*(2/3)**x) for x in range(5)]
 # Number of epochs, or total cycles over all batches
-NN_epochs = 10
+NN_epochs = 1000
 # Learning Rate
 learning_rate = 0.001
 # Ridge Regularization Parameter
