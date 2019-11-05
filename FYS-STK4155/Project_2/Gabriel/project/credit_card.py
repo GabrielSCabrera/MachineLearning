@@ -22,7 +22,8 @@ def parse_args(all_args):
         prev_vals = []
         prev_locs = []
         for arg in args:
-            arg = arg.lower().strip().split("=")
+            arg = arg.strip().split("=")
+            # arg = arg.lower().strip().split("=")
             if len(arg) != 2:
                 msg = (f"\n\nInvalid command-line argument format.  Keyword "
                        f"arguments are expected.  Attempted to pass {len(arg)}"
@@ -63,17 +64,23 @@ def parse_args(all_args):
 """ PROGRAM PARAMETERS """
 
 # Size of each batch sent into the neural network
-batchsize = 5
+batchsize = 100
 # Percentage of data to set aside for testing
 test_percent = 25
 # Configuration of layers in the Neural Network
-NN_layers = []#[200,200,100,100,50,50]
+NN_layers = [int(29*(2/3)**x) for x in range(5)]
 # Number of epochs, or total cycles over all batches
 NN_epochs = 10
 # Learning Rate
-learning_rate = 0.01
+learning_rate = 0.001
 # Ridge Regularization Parameter
-regularization_param = 0
+regularization_param = 1E-7
+# Activation function
+activation_fxn = "sigmoid"
+# Activation function for output layer (None defaults to "activation_fxn")
+output_activation_fxn = None
+# Optimize for CUDA
+GPU = False
 # File in which to save the terminal output
 terminal_output_file = "log.txt"
 # Directory in which to save the terminal output; underscore allows for
@@ -90,10 +97,16 @@ rand_seed = 112358
 all_args = {"save":[str, "dirname"], "load":[str, "loadname"],
             "display":[int, "N_display"], "epochs":[int, "NN_epochs"],
             "batchsize":[int, "batchsize"], "lr":[float,"learning_rate"],
-            "reg":[float,"regularization_param"], "seed":[int, "rand_seed"]}
+            "reg":[float, "regularization_param"], "seed":[int, "rand_seed"],
+            "activation":[str, "activation_fxn"],
+            "activation_out":[str, "output_activation_fxn"],
+            "GPU":[bool, "GPU"]}
 parse_args(all_args)
 
 np.random.seed(rand_seed)
+
+if output_activation_fxn is None:
+    output_activation_fxn = activation_fxn
 
 """ DATASET PARAMETERS """
 
@@ -118,8 +131,10 @@ del df
 # Splitting the data into training and testing sets
 X_train, Y_train, X_test, Y_test = split(X, Y, test_percent)
 # Implements normalization and one-hot encoding
-X_train, Y_train = preprocess(X_train, Y_train, categorical_cols)
-X_test, Y_test = preprocess(X_test, Y_test, categorical_cols)
+X_train, Y_train = preprocess(X_train, Y_train, categorical_cols, True,
+                              output_activation_fxn)
+X_test, Y_test = preprocess(X_test, Y_test, categorical_cols, True,
+                              output_activation_fxn)
 # Upsamples the training data
 X_train, Y_train = upsample_binary(X_train, Y_train)
 
@@ -134,7 +149,9 @@ msg1 = (f"\nProcessed Dataset Dimensions:\n"
         f"\n\tBatch Size: {batchsize}\n\tLayer Configuration: {NN_layers}"
         f"\n\tEpochs: {NN_epochs}\n\tLearning Rate: {learning_rate:g}\n\t"
         f"Regularization Parameter: {regularization_param:g}\n\t"
-        f"Random Seed: {rand_seed:d}\n")
+        f"Random Seed: {rand_seed:d}\n\nActivation Functions\n\n\t"
+        f"Hidden Layers: {activation_fxn}\n\tOutput Layer "
+        f"{output_activation_fxn}\n\tCUDA: {str(GPU)}\n")
 print(msg1)
 
 """ IMPLEMENTING THE NEURAL NETWORK """
@@ -152,7 +169,9 @@ if loadname is None:
 
     # Training the neural network with the parameters given earlier
     W,B = NN.train(epochs = NN_epochs, layers = NN_layers, lr = learning_rate,
-    reg = regularization_param, batchsize = batchsize)
+    reg = regularization_param, batchsize = batchsize, GPU = GPU,
+    activation_fxn = activation_fxn,
+    output_activation_fxn = output_activation_fxn)
 else:
     print(f"Loading from directory <{loadname}>\n")
     # Loading a previous neural network

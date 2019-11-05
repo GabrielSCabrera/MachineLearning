@@ -126,6 +126,67 @@ In addition, we will also be adding \textit{Gaussian noise} to each value $f(x,y
 
 \section*{Method}
 
+\subsection*{Logistic Regression}
+
+The first technique we will be using is called \textit{logistic regression} – we will be using the \textit{sigmoid function} as our \textit{activation function}\footnote{A function that restricts the \textit{range} of predicted outputs.}:
+
+\begin{equation}
+\label{eq_sigmoid}
+\sigma(x) = \frac{1}{1 + e^{-x}}
+\end{equation}
+
+We will also need its derivative:
+
+\begin{equation}
+\label{eq_diff_sigmoid}
+\sigma^\prime(x) = \sigma(x) (1 - \sigma(x))
+\end{equation}
+
+Logistic regression is an iterative two-part process consisting of repeated \textit{feed-forward} and \textit{backpropagation} loops between an \textit{input layer} and \textit{output layer}.  Assume that we have an input matrix $\mathbf{X} \in \mathbb{R}^{p \times n}$ and output matrix $\mathbf{y} \in \mathbb{R}^{q \times n}$, where $n$ is the number of \textit{datapoints}, $p$ is the number of \textit{features}, and $q$ is the number of \textit{labels}.  Knowing this, we can generate a matrix of weights $\mathbf{W} \in \mathbb{R}^{q \times p}$ and vector of biases $\mathbf{b} \in \mathbb{R}^q$ such that:
+
+\begin{equation*}
+w_{ij} = N(0, 0.5); \qquad b_i = N(0, 0.5)
+\end{equation*}
+
+Where $N(\text{mean}, \text{std})$ is the \textit{normal distribution}.  To implement the feed-forward portion of the algorithm, we use matrix multiplication to predict an output $\hat{\mathbf{y}}$ with the given weights:
+
+\begin{equation*}
+\hat{\mathbf{y}} = \sigma( \mathbf{w} \mathbf{X} + \mathbf{b} )
+\end{equation*}
+
+For simplicity, we will define $\mathbf{z} \equiv \mathbf{w} \mathbf{X} + \mathbf{b}$.
+
+Next, we want to optimize our weights via backpropagation, which requires the use of gradient descent.  Specifically, we want to find $dw_{ij} = \frac{\partial C}{\partial w_{ij}}$, where $C$ is a \textit{cost function}, and $w_{ij} - dw_{ij}$ reduces $C$; to find such a value, we use the multivariable \textit{chain rule} to rewrite $dw_{ij}$:
+
+\begin{equation*}
+dw_{ij} = \frac{\partial C}{\partial w_{ij}} = \frac{\partial C}{\partial \hat{y}_i} \frac{\partial \hat{y}_i}{\partial z_i} \frac{\partial z_i}{\partial w_{ij}} = \delta_i \frac{\partial z_i}{\partial w_{ij}}
+\end{equation*}
+
+The intent of repeating this process is to reduce our cost function until a local or global minimum is reached and an optimal set of $\mathbf{W}$ and $\mathbf{b}$ are computed.  If we use the \textit{mean squared error} as our cost function, this can be rewritten in matrix form as follows:
+
+\begin{equation}
+\label{eq_backprop_output}
+d\mathbf{w} = [2(\hat{\mathbf{y}} - \mathbf{y}) \odot \sigma^\prime(\hat{\mathbf{y}})] \otimes \mathbf{X}
+\end{equation}
+
+One full feedforward–backpropagation iteration is known as a \textit{batch}; if $N$ datapoints are calculated in a single batch, we say that the \textit{batch size} is $N$, and $d\mathbf{w}$ is averaged over each input.
+
+Once a batch is complete, the updated weights and biases are used in the next batch, and so on for each subsequent batch. When all the batches have been evaluated, we say that an \textit{epoch} has been completed; many epochs are often required to properly optimize a set of weights and biases.
+
+\subsection*{Neural Networks}
+
+The second technique we will explore is the usage of \textit{multi-layer neural networks}; as with logistic regression, there exists an input layer and output layer and a set of weights and biases.  Now, however, we also have a variable number of \textit{hidden layers} $L-1$, each consisting of a variable number of \textit{nodes}.
+
+As with logistic regression, we must randomly initialize a set of weights – this time, however, we will need several weight matrices and bias vectors; specifically, we need an amount equal to the number of hidden layers, plus one.  Each weight matrix $w^\ell$ must have as many rows as there are nodes in the subsequent layer, and as many columns as there are in the preceeding layer; each bias vector must be as large as the subsequent layer.
+
+The feed-forward portion of the algorithm is unchanged, with the exception that the process must be repeated layer-by-layer, for each set of weights accompanying the product in question; the backpropagation, however, is more complex.
+
+To update all of our weights, we begin by using (\ref{eq_backprop_output}) on the \textit{last} set of weights\footnote{Those between the final hidden layer and output layer.} $\mathbf{w}^\textsc{l}$.  Once this has been accomplished, we can update these weights and use the following equation to find the remaining $d\mathbf{w}^\ell$:
+
+\begin{equation*}
+d\mathbf{w}^\ell = (\mathbf{W}^{\ell+1})^\textsc{t} \delta^{\ell+1}_i \odot \sigma^\prime(\mathbf{z}^\ell)
+\end{equation*}
+
 \subsection*{Mean Squared Error}
 
 To get a measure of success with respect to the implemented method and parameters, we can calculate the mean difference in the squares of each measured output $y_i$ and their respective predicted outputs $\hat{y}_i$:
@@ -145,6 +206,30 @@ R^2 = 1 - \frac{\sum_{i=1}^N (y_i - \hat{y}_i)^2 }{\sum_{i=1}^N (y_i - \bar{y}_i
 \end{equation*}
 
 The closer $R^2$ is to one, the closer the polynomial approximation is to the input/output dataset, although a perfect score can once again arise due to overfitting just as in the case of the $MSE$.
+
+\subsection*{ROC}
+
+The \textit{ROC} (short for \textit{receiver operating characteristic}) of a binary classifier is a measure of how well a model performs, by accumulating and comparing the rate of true positives\footnote{How often \texttt{1} is predicted when \texttt{1} is expected.} (\textit{TPR})
+ and rate of false positives\footnote{How often \texttt{1} is predicted when \texttt{0} is expected.} (\textit{FPR}). These can be calculated as follows:
+
+\begin{equation}
+\label{eq_ROC}
+TPR = \frac{TP}{TP + FN}; \qquad FPR = \frac{FP}{FP + TN}
+\end{equation}
+
+Where $TP$, $FN$, $FP$, and $TN$ are the total number of \textit{true positives}, \textit{false negatives}, \textit{false positives}, and \textit{true negatives}, respectively.
+
+Note that the equations in (\ref{eq_ROC}) are \textit{scalar values} – to construct our curve, we must therefore calculate $TPR$ and $FPR$ for \textit{every datapoint}. Once this is accomplished, the values are ordered such that predicted outputs furthest from $0.5$ are prioritized.  Next, the values are cumulatively summed up and the resulting series are normalized to $1$: normalization is important, since we are interested in \textit{rates} of prediction.
+
+\subsection*{AUC}
+
+The \textit{AUC} (or \textit{area under ROC}) is a measure of model performance; an AUC closer to $1$ suggests that a model is good at correctly making predictions, while an AUC closer to $0$ implies that a model is bad at binary classification.  The AUC of a model is calculated by finding the \textit{area} under the ROC curve of the given model; since the ROC is assumed to be normalized in the range $0$ to $1$, so will the AUC.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width = 0.5\textwidth, center]{roc_sample.pdf}
+	\caption{An example $ROC$ curve with its $AUC$.\label{fig_roc_sample}}
+\end{figure}
 
 \section*{Results}
 

@@ -54,7 +54,8 @@ def parse_args(all_args):
         prev_vals = []
         prev_locs = []
         for arg in args:
-            arg = arg.lower().strip().split("=")
+            arg = arg.strip().split("=")
+            # arg = arg.lower().strip().split("=")
             if len(arg) != 2:
                 msg = (f"\n\nInvalid command-line argument format.  Keyword "
                        f"arguments are expected.  Attempted to pass {len(arg)}"
@@ -112,6 +113,8 @@ activation_fxn = "sigmoid"
 output_activation_fxn = None
 # File in which to save the terminal output
 terminal_output_file = "log.txt"
+# Optimize for CUDA
+GPU = False
 # Directory in which to save the terminal output; underscore allows for
 # automatic numbering
 dirname = "results_franke_"
@@ -130,7 +133,8 @@ all_args = {"save":[str, "dirname"], "load":[str, "loadname"],
             "batchsize":[int, "batchsize"], "lr":[float,"learning_rate"],
             "reg":[float,"regularization_param"], "seed":[int, "rand_seed"],
             "activation":[str, "activation_fxn"],
-            "activation_out":[str, "output_activation_fxn"]}
+            "activation_out":[str, "output_activation_fxn"],
+            "GPU":[bool, "GPU"]}
 parse_args(all_args)
 
 np.random.seed(rand_seed)
@@ -144,8 +148,8 @@ X, Y, f_xy = generate_Franke_data(N = 150)
 # Splitting the data into training and testing sets
 X_train, Y_train, X_test, Y_test = split(X, Y, test_percent)
 # Implements normalization and one-hot encoding
-X_train, Y_train = preprocess(X_train, Y_train, {}, output_activation_fxn)
-X_test, Y_test = preprocess(X_test, Y_test, {}, output_activation_fxn)
+X_train, Y_train = preprocess(X_train, Y_train, {}, True, output_activation_fxn)
+X_test, Y_test = preprocess(X_test, Y_test, {}, True, output_activation_fxn)
 # Upsamples the training data
 X_train, Y_train = upsample_binary(X_train, Y_train)
 
@@ -162,7 +166,7 @@ msg1 = (f"\nProcessed Dataset Dimensions:\n"
         f"Regularization Parameter: {regularization_param:g}\n\t"
         f"Random Seed: {rand_seed:d}\n\nActivation Functions\n\n\t"
         f"Hidden Layers: {activation_fxn}\n\tOutput Layer "
-        f"{output_activation_fxn}\n")
+        f"{output_activation_fxn}\n\tCUDA: {str(GPU)}\n")
 print(msg1)
 
 """ IMPLEMENTING THE NEURAL NETWORK """
@@ -180,7 +184,7 @@ if loadname is None:
 
     # Training the neural network with the parameters given earlier
     W,B = NN.train(epochs = NN_epochs, layers = NN_layers, lr = learning_rate,
-    reg = regularization_param, batchsize = batchsize,
+    reg = regularization_param, batchsize = batchsize, GPU = GPU,
     activation_fxn = activation_fxn,
     output_activation_fxn = output_activation_fxn)
 else:

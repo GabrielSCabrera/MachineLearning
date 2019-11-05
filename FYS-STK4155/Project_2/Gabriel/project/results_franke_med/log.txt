@@ -13,7 +13,6 @@ Neural Network Parameters
 	Layer Configuration: [500, 400, 300, 200, 100, 50]
 	Epochs: 200
 
-
 Test Results
 
 	MSE: 0.0035

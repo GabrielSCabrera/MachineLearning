@@ -1,6 +1,10 @@
 import matplotlib.pyplot as plt
 from time import time
 import numpy as np
+try:
+    import cupy as cp
+except ImportError:
+    print("Warning: CUDA not supported on this device")
 import sys, os
 
 # np.einsum("ijk,ikj->ijk",a,b) # DO NOT LOSE THIS!
@@ -16,8 +20,7 @@ def split(X, Y, test_percent = 0.25):
     X_test, Y_test = X[test_idx], Y[test_idx]
     return X_train, Y_train, X_test, Y_test
 
-def preprocess(X, Y, categorical_cols, delete_outliers = True,
-               output_activation_fxn = "sigmoid"):
+def preprocess(X, Y, categorical_cols, delete_outliers = True, output_activation_fxn = "sigmoid"):
     """
         categorical_cols should be a dict with:
         {"index_1"              :       [cat_11, cat_12, cat_13, ...],
@@ -117,7 +120,16 @@ def upsample_binary(X, Y):
 class NeuralNet:
 
     def __init__(self):
-        pass
+        self.attribute_reset()
+
+    def attribute_reset(self):
+        # Cleans out all attributes in case of reset
+        if not hasattr(self, '_dir_backup'):
+            self._dir_backup = self.__dir__().copy
+        else:
+            for var in self.__dir__():
+                if var not in self._dir_backup() and var != "_dir_backup":
+                    delattr(self, var)
 
     def load(self, path):
 
@@ -165,6 +177,8 @@ class NeuralNet:
             self._X:    NumPy Array (N, p)
             self._Y:    NumPy Array (M, q)
         """
+        self.attribute_reset()
+
         if X.ndim == 1:
             self._X = X[:,np.newaxis].astype(np.float64)
         else:
@@ -173,26 +187,35 @@ class NeuralNet:
             self._Y = Y[:,np.newaxis].astype(np.float64)
         else:
             self._Y = Y.astype(np.float64)
+
         self._N = self._X.shape[0]
         self._M = self._Y.shape[0]
         self._p = self._X.shape[1]
         self._q = self._Y.shape[1]
 
-    def activation(self, function, x):
+    def activation(self, function, x, GPU = False):
         """
             Parameter "function" can take values:
                 function = "sigmoid"
                 function = "tanh"
                 function = "x"
         """
-        if function == "sigmoid":
-            return 1/(1 + np.exp(-x))
-        elif function == "tanh":
-            return np.tanh(x)
-        elif function == "x":
-            return x
+        if GPU is True:
+            if function == "sigmoid":
+                return 1/(1 + cp.exp(-x))
+            elif function == "tanh":
+                return cp.tanh(x)
+            elif function == "x":
+                return x
+        else:
+            if function == "sigmoid":
+                return 1/(1 + np.exp(-x))
+            elif function == "tanh":
+                return np.tanh(x)
+            elif function == "x":
+                return x
 
-    def diff_activation(self, function, x):
+    def diff_activation(self, function, x, GPU = False):
         """
             Parameter "function" can take values:
                 function = "sigmoid"
@@ -201,21 +224,32 @@ class NeuralNet:
             Assumes that the activation function outputs are passed in as "x",
             not the hidden layers pre-activation.
         """
-        if function == "sigmoid":
-            return x*(1 - x)
-        elif function == "tanh":
-            return 1 - x**2
-        elif function == "x":
-            return np.ones_like(x)
+        if GPU is True:
+            if function == "sigmoid":
+                return x*(1 - x)
+            elif function == "tanh":
+                return 1 - x**2
+            elif function == "x":
+                return cp.ones_like(x)
+        else:
+            if function == "sigmoid":
+                return x*(1 - x)
+            elif function == "tanh":
+                return 1 - x**2
+            elif function == "x":
+                return np.ones_like(x)
 
     def train(self, epochs, layers, batchsize, lr = 0.01, reg = 0,
-              activation_fxn = "sigmoid", output_activation_fxn = None):
+              activation_fxn = "sigmoid", output_activation_fxn = None,
+              dtype = np.float64, GPU = False):
         """
         epochs:     Number of fwdfeed-backprop epochs <int>, minimum of 1
         layers:     List of layer sizes, each element (e >= 1) must be an <int>
 
         Note:       The bias term is added automatically.
         """
+
+        dtype = cp.float32
 
         if output_activation_fxn is None:
             output_activation_fxn = activation_fxn
@@ -230,21 +264,35 @@ class NeuralNet:
         P, Q = X.shape[1], Y.shape[1]
 
         epochs = int(epochs)
-        layers = np.array(layers, dtype = np.int64)
+        layers = np.array(layers, dtype = np.int32)
         layers = np.concatenate([[P], layers, [Q]])
 
         rounded_len = (N//batchsize)*batchsize
         batches = N//batchsize
 
-        X_batches = np.split(X[:rounded_len,:,np.newaxis], batches)
-        Y_batches = np.split(Y[:rounded_len,:,np.newaxis], batches)
+
+        X = X[:rounded_len,:,np.newaxis]
+        Y = Y[:rounded_len,:,np.newaxis]
+
+        X_batches = np.split(X, batches)
+        Y_batches = np.split(Y, batches)
+
+        if GPU is True:
+            X_batches = cp.array(X_batches, dtype = dtype)
+            Y_batches = cp.array(Y_batches, dtype = dtype)
 
         W = []
         B = []
 
         for i in range(len(layers)-1):
-            W.append(np.random.normal(0, 0.5, (1, layers[i+1], layers[i])))
-            B.append(np.random.normal(0, 0.5, (1, layers[i+1], 1)))
+            W_temp = np.random.normal(0, 0.5, (1, layers[i+1], layers[i]))
+            B_temp = np.random.normal(0, 0.5, (1, layers[i+1], 1))
+            if GPU is True:
+                W.append(cp.array(W_temp, dtype = dtype))
+                B.append(cp.array(B_temp, dtype = dtype))
+            else:
+                W.append(W_temp)
+                B.append(B_temp)
 
         perc = 0
         N = X_batches[0].shape[0]
@@ -254,58 +302,115 @@ class NeuralNet:
         t0 = time()
         dt = 0
         print(f"\t{0:>3d}%", end = "")
-        for e in range(epochs):
-            for n in range(len(X_batches)):
-                X = X_batches[n]
-                Y = Y_batches[n]
-                Z = []
-                Z.append(X)
-                for i in layers[1:]:
-                    Z.append(np.zeros((N, i, 1)))
 
-                for m in range(len(W)):
-                    w = W[m]
-                    b = B[m]
-                    Z[m+1] = w @ Z[m] + b
-                    if m < len(W) - 1:
-                        Z[m+1] = self.activation(activation_fxn, Z[m+1])
-                    elif m == len(W) - 1:
-                        Z[m+1] = self.activation(output_activation_fxn, Z[m+1])
+        if GPU is True:
+            # Z = cp.zeros(int(np.sum(layers)*batchsize), dtype = dtype)
+            for e in range(epochs):
+                for n in range(len(X_batches)):
+                    X = X_batches[n]
+                    Y = Y_batches[n]
 
-                delta = 2*(Z[-1] - Y)
-                delta *= self.diff_activation(output_activation_fxn, Z[-1])
+                    Z = []
+                    Z.append(X)
+                    for i in layers[1:]:
+                        Z.append(cp.zeros((N, i, 1), dtype = dtype))
 
-                for i in range(1, len(Z)):
-                    dW = np.einsum("ijk,ikj->ijk", delta, Z[-i-1])
-                    W[-i] -= lr*(np.mean(dW, axis = 0) - reg*W[-i])
-                    B[-i] -= lr*np.mean(delta, axis = 0)
-                    W_T = W[-i].reshape(1, W[-i].shape[2], W[-i].shape[1])
-                    delta = W_T @ delta
-                    delta *= self.diff_activation(activation_fxn, Z[-i-1])
+                    for m in range(len(W)):
+                        w = W[m]
+                        b = B[m]
+                        Z[m+1] = w @ Z[m] + b
+                        if m < len(W) - 1:
+                            Z[m+1] = self.activation(activation_fxn, Z[m+1], GPU = GPU)
+                        elif m == len(W) - 1:
+                            Z[m+1] = self.activation(output_activation_fxn, Z[m+1], GPU = GPU)
 
-                counter += 1
-                new_perc = int(100*counter/tot_iter)
-                times[counter-1] = time()
-                if int(time() - t0) > dt:
-                    perc = new_perc
-                    t_avg = np.mean(np.diff(times[:counter]))
-                    eta = t_avg*(tot_iter - counter)
-                    hh = int(eta//3600)
-                    mm = int((eta//60)%60)
-                    ss = int(eta%60)
-                    msg = f"\r\t{perc:>3d}% – ETA {hh:02d}:{mm:02d}:{ss:02d}"
-                    print(msg, end = "")
-                dt = time() - t0
+                    delta = 2*(Z[-1] - Y)
+                    delta *= self.diff_activation(output_activation_fxn, Z[-1], GPU = GPU)
+
+                    for i in range(1, len(Z)):
+                        dW = cp.einsum("ijk,ikj->ijk", delta, Z[-i-1])
+                        W[-i] -= lr*(cp.mean(dW, axis = 0) - reg*W[-i])
+                        B[-i] -= lr*cp.mean(delta, axis = 0)
+                        W_T = W[-i].reshape(1, W[-i].shape[2], W[-i].shape[1])
+                        delta = W_T @ delta
+                        delta *= self.diff_activation(activation_fxn, Z[-i-1], GPU = GPU)
+
+                    counter += 1
+                    new_perc = int(100*counter/tot_iter)
+                    times[counter-1] = time()
+                    if int(time() - t0) > dt and counter > 10:
+                        perc = new_perc
+                        t_avg = np.mean(np.diff(times[:counter]))
+                        eta = t_avg*(tot_iter - counter)
+                        hh = int(eta//3600)
+                        mm = int((eta//60)%60)
+                        ss = int(eta%60)
+                        msg = f"\r\t{perc:>3d}% – ETA {hh:02d}:{mm:02d}:{ss:02d}"
+                        print(msg, end = "")
+                    dt = time() - t0
+        else:
+            for e in range(epochs):
+                for n in range(len(X_batches)):
+                    X = X_batches[n]
+                    Y = Y_batches[n]
+                    Z = []
+                    Z.append(X)
+                    for i in layers[1:]:
+                        Z.append(np.zeros((N, i, 1)))
+
+                    for m in range(len(W)):
+                        w = W[m]
+                        b = B[m]
+                        Z[m+1] = w @ Z[m] + b
+                        if m < len(W) - 1:
+                            Z[m+1] = self.activation(activation_fxn, Z[m+1], GPU = GPU)
+                        elif m == len(W) - 1:
+                            Z[m+1] = self.activation(output_activation_fxn, Z[m+1], GPU = GPU)
+
+                    delta = 2*(Z[-1] - Y)
+                    delta *= self.diff_activation(output_activation_fxn, Z[-1], GPU = GPU)
+
+                    for i in range(1, len(Z)):
+                        dW = np.einsum("ijk,ikj->ijk", delta, Z[-i-1])
+                        W[-i] -= lr*(np.mean(dW, axis = 0) - reg*W[-i])
+                        B[-i] -= lr*np.mean(delta, axis = 0)
+                        W_T = W[-i].reshape(1, W[-i].shape[2], W[-i].shape[1])
+                        delta = W_T @ delta
+                        delta *= self.diff_activation(activation_fxn, Z[-i-1], GPU = GPU)
+
+                    counter += 1
+                    new_perc = int(100*counter/tot_iter)
+                    times[counter-1] = time()
+                    if int(time() - t0) > dt:
+                        perc = new_perc
+                        t_avg = np.mean(np.diff(times[:counter]))
+                        eta = t_avg*(tot_iter - counter)
+                        hh = int(eta//3600)
+                        mm = int((eta//60)%60)
+                        ss = int(eta%60)
+                        msg = f"\r\t{perc:>3d}% – ETA {hh:02d}:{mm:02d}:{ss:02d}"
+                        print(msg, end = "")
+                    dt = time() - t0
         dt = time() - t0
         hh = int(dt//3600)
         mm = int((dt//60)%60)
         ss = int(dt%60)
         print(f"\r\t100% – Total Time Elapsed {hh:02d}:{mm:02d}:{ss:02d}")
 
-        self.W = W
-        self.B = B
+        W_new = []
+        B_new = []
+        for w,b in zip(W,B):
+            if GPU is True:
+                W_new.append(cp.asnumpy(w))
+                B_new.append(cp.asnumpy(b))
+            else:
+                W_new.append(w)
+                B_new.append(b)
 
-        return W,B
+        self.W = W_new
+        self.B = B_new
+
+        return self.W, self.B
 
     def predict(self, X):
         W = self.W
@@ -324,62 +429,86 @@ class NeuralNet:
         return Z
 
     def ROC(self, X_test, Y_test):
-        Y_test = Y_test.flatten()
-        Y_predict = self.predict(X_test).flatten()
-        Y_sort = Y_predict.copy()
-        Y_sort[Y_sort < 0.5] = Y_sort[Y_sort < 0.5] + 0.5
-        idx = np.argsort(Y_sort)[::-1]
 
-        Y_predict[Y_predict > 0.5] = 1
-        Y_predict[Y_predict <= 0.5] = 0
+        if X_test.ndim == 1:
+            X_test = X_test[:,np.newaxis].astype(np.float64)
+        else:
+            X_test = X_test.astype(np.float64)
+        if Y_test.ndim == 1:
+            Y_test = Y_test[:,np.newaxis].astype(np.float64)
+        else:
+            Y_test = Y_test.astype(np.float64)
 
-        Y_test = Y_test[idx]
-        Y_predict = Y_predict[idx]
+        tot_bin = np.count_nonzero(Y_test == 0) + np.count_nonzero(Y_test == 1)
+        binary_output = tot_bin == Y_test.size
 
-        TP_arr = np.logical_and(np.equal(Y_predict, Y_test),
-                                np.equal(Y_test, 1))
-        TN_arr = np.logical_and(np.equal(Y_predict, Y_test),
-                                np.equal(Y_test, 0))
-        FP_arr = np.logical_and(np.equal(Y_predict, np.logical_not(Y_test)),
-                                np.equal(Y_test, 0))
-        FN_arr = np.logical_and(np.equal(Y_predict, np.logical_not(Y_test)),
-                                np.equal(Y_test, 1))
+        if binary_output is False:
+            print("WARNING: May not work correctly for continuous outputs!!")
 
-        N = np.arange(1, len(Y_test)+1, dtype = np.uint32)
-        tpr = np.zeros_like(Y_test, dtype = np.float64)
-        fpr = np.zeros_like(Y_test, dtype = np.float64)
+        N,p = X_test.shape
+        M,q = Y_test.shape
+        Y_predict = self.predict(X_test)
+        for feature in range(q):
+            Yf_test = Y_test[:,feature].flatten()
+            Yf_predict = Y_predict[:,feature].flatten()
+            Y_sort = Yf_predict.copy()
+            Y_sort[Y_sort < 0.5] = Y_sort[Y_sort < 0.5] + 0.5
+            idx = np.argsort(Y_sort)[::-1]
 
-        for i,(TP, TN, FP, FN) in enumerate(zip(TP_arr, TN_arr, FP_arr, FN_arr)):
-            if TP + FN != 0:
-                tpr[i:] = tpr[i] + TP/(TP + FN)
-            if FP + TN != 0:
-                fpr[i:] = fpr[i] + FP/(FP + TN)
+            Yf_predict[Yf_predict > 0.5] = 1
+            Yf_predict[Yf_predict <= 0.5] = 0
 
-        # Integral of Best Curve
-        xBC = [0, np.sum(Y_test), len(Y_test)]
-        yBC = [0, np.max(tpr), np.max(tpr)]
-        A1 = np.trapz(yBC, xBC)
-        # Integral of Model
-        A2 = np.trapz(tpr, N)
-        # Integral of Baseline
-        xBl = [np.min(N), np.max(N)]
-        yBl = [np.min(tpr), np.max(tpr)]
-        A3 = np.trapz(yBl, xBl)
+            Yf_test = Yf_test[idx]
+            Yf_predict = Yf_predict[idx]
 
-        A_top = A1 - A3
-        A_btm = A2 - A3
+            TP_arr = np.logical_and(np.equal(Yf_predict, Yf_test),
+                                    np.equal(Yf_test, 1))
+            TN_arr = np.logical_and(np.equal(Yf_predict, Yf_test),
+                                    np.equal(Yf_test, 0))
+            FP_arr = np.logical_and(np.equal(Yf_predict, np.logical_not(Yf_test)),
+                                    np.equal(Yf_test, 0))
+            FN_arr = np.logical_and(np.equal(Yf_predict, np.logical_not(Yf_test)),
+                                    np.equal(Yf_test, 1))
 
-        ratio = A_btm/A_top
+            N = np.arange(1, len(Yf_test)+1, dtype = np.uint32)
+            tpr = np.zeros_like(Yf_test, dtype = np.float64)
+            fpr = np.zeros_like(Yf_test, dtype = np.float64)
 
-        print(ratio)
+            for i,(TP, TN, FP, FN) in enumerate(zip(TP_arr, TN_arr, FP_arr, FN_arr)):
+                if TP + FN != 0:
+                    tpr[i:] = tpr[i] + TP/(TP + FN)
+                if FP + TN != 0:
+                    fpr[i:] = fpr[i] + FP/(FP + TN)
 
-        # Model
-        plt.plot(N, tpr)
-        # Best Curve
-        plt.plot(xBC, yBC)
-        # Baseline
-        plt.plot(xBl, yBl)
+            # Normalization constant
+            norm = 1
 
-        plt.xlabel("FPR")
-        plt.ylabel("TPR")
+            tpr = norm*(tpr - np.min(tpr))/(np.max(tpr) - np.min(tpr))
+            fpr = norm*(fpr - np.min(fpr))/(np.max(fpr) - np.min(fpr))
+
+            # Integral of Model
+            AUC = np.trapz(tpr, fpr)
+            # Baseline
+            xBl = [np.min(fpr), np.max(fpr)]
+            yBl = [np.min(tpr), np.max(tpr)]
+
+
+            # Model
+            if q == 1:
+                model_label = "Model"
+                AUC_text = f"AUC = {AUC:.2f}"
+                x_text = norm*0.7
+                y_text = norm*0.1
+                plt.text(x_text, y_text, AUC_text, fontsize = 14)
+                plt.plot(fpr, tpr, "k-", label = model_label)
+            else:
+                model_label = f"Model Feature {feature+1}; AUC = {AUC:.2f}"
+                plt.plot(fpr, tpr, label = model_label)
+
+        plt.plot(xBl, yBl, "b-.", label = "Baseline")
+        plt.legend()
+        plt.axis([0,1,0,1])
+        plt.xlabel("False Positive Rate (FPR)")
+        plt.ylabel("True Positive Rate (TPR)")
+        plt.grid()
         plt.show()
