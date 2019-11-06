@@ -1,11 +1,13 @@
 import subprocess, os
+import numpy as np
 
-epochs = [1,2,4,8,16,32,64,128,256,512,1024]
+regparams = np.logspace(-16,-2, 15)
 try:
     os.mkdir("series")
 except FileExistsError:
     pass
-for e in epochs:
-    subprocess.call(['python3', 'credit_card.py', 'save=results_series_',
-                     f'epochs={e}', f'saveimg=series/{e}epochs.pdf',
-                     'GPU=True'])
+
+for reg in regparams:
+    subprocess.call(['python3', 'credit_card.py', 'save=results_series2_',
+                     f'reg={reg}', f'saveimg=series/{reg}reg.pdf',
+                     'epochs=256'])

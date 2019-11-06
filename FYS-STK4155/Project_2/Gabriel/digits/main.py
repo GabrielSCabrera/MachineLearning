@@ -76,7 +76,7 @@ batchsize = 100
 # Configuration of layers in the Neural Network
 NN_layers = [int(784*(2/3)**x) for x in range(10)]
 # Number of epochs, or total cycles over all batches
-NN_epochs = 1000
+NN_epochs = 10
 # Learning Rate
 learning_rate = 0.001
 # Ridge Regularization Parameter
@@ -86,7 +86,7 @@ activation_fxn = "sigmoid"
 # Activation function for output layer (None defaults to "activation_fxn")
 output_activation_fxn = None
 # Optimize for CUDA
-GPU = True
+GPU = False
 # File in which to save the terminal output
 terminal_output_file = "log.txt"
 # Directory in which to save the terminal output; underscore allows for

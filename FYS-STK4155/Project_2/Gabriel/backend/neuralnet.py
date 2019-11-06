@@ -287,49 +287,13 @@ class NeuralNet:
         B = []
 
         for i in range(len(layers)-1):
-            W.append(np.random.normal(0, 0.5, (1, layers[i+1], layers[i])))
-            B.append(np.random.normal(0, 0.5, (1, layers[i+1], 1)))
-
-        if GPU is True:
-            w_sizes = []
-            b_sizes = []
-            w_shapes = []
-            b_shapes = []
-
-            for w,b in zip(W,B):
-                w_sizes.append(w.size)
-                w_shapes.append(w.shape)
-                b_sizes.append(b.size)
-                b_shapes.append(b.shape)
-
-            w_sizes = cp.array(w_sizes, dtype = np.int32)
-            w_shift = w_sizes.copy()
-            w_shift[1:] = w_sizes[:-1]
-            w_shift[0] = 0
-            w_idxs = cp.stack([cp.cumsum(w_shift), cp.cumsum(w_sizes)]).T
-            w_size = int(np.sum(w_sizes))
-            W = cp.array(np.random.normal(0, 0.5, w_size), dtype = dtype)
-
-            b_sizes = cp.array(b_sizes, dtype = np.int32)
-            b_shift = b_sizes.copy()
-            b_shift[1:] = b_sizes[:-1]
-            b_shift[0] = 0
-            b_idxs = cp.stack([cp.cumsum(b_shift), cp.cumsum(b_sizes)]).T
-            b_size = int(np.sum(w_sizes))
-            B = cp.array(np.random.normal(0, 0.5, b_size), dtype = dtype)
-
-            Z_sizes = []
-            Z_shapes = []
-            for i in layers:
-                Z_sizes.append(N*i)
-                Z_shapes.append((N, i, 1))
-            Z_sizes = cp.array(Z_sizes, dtype = np.int32)
-            Z_shift = Z_sizes.copy()
-            Z_shift[1:] = Z_sizes[:-1]
-            Z_shift[0] = 0
-            Z_idxs = cp.stack([cp.cumsum(Z_shift), cp.cumsum(Z_sizes)]).T
-            Z_size = int(np.sum(Z_sizes))
-            Z = cp.zeros(Z_size, dtype = dtype)
+            W_step = np.random.normal(0, 0.5, (1, layers[i+1], layers[i]))
+            B_step = np.random.normal(0, 0.5, (1, layers[i+1], 1))
+            if GPU is True:
+                W_step = cp.array(W_step, dtype = dtype)
+                B_step = cp.array(B_step, dtype = dtype)
+            W.append(W_step)
+            B.append(B_step)
 
         perc = 0
         tot_iter = (epochs*len(X_batches))
@@ -340,74 +304,40 @@ class NeuralNet:
         print(f"\t{0:>3d}%", end = "")
 
         if GPU is True:
+            X = cp.array(X)
+            Y = cp.array(Y)
             for e in range(epochs):
                 for n in range(len(X_batches)):
                     X = X_batches[n]
                     Y = Y_batches[n]
-                    Z_idx = Z_idxs[0]
-                    Z[Z_idx[0]:Z_idx[1]] = X.flatten()
+                    Z = []
+                    Z.append(X)
+                    for i in layers[1:]:
+                        Z.append(cp.zeros((N, i, 1)))
 
-                    for m in range(len(layers)-1):
-                        w_idx = w_idxs[m]
-                        b_idx = b_idxs[m]
-                        Z_idx = Z_idxs[m]
+                    for m in range(len(W)):
+                        w = W[m]
+                        b = B[m]
+                        Z[m+1] = w @ Z[m] + b
+                        if m < len(W) - 1:
+                            Z[m+1] = self.activation(activation_fxn, Z[m+1], GPU = GPU)
+                        elif m == len(W) - 1:
+                            Z[m+1] = self.activation(output_activation_fxn, Z[m+1], GPU = GPU)
 
-                        w_shape = w_shapes[m]
-                        b_shape = b_shapes[m]
-                        Z_shape = Z_shapes[m]
-
-                        w = cp.reshape(W[w_idx[0]:w_idx[1]], w_shape)
-                        b = cp.reshape(B[b_idx[0]:b_idx[1]], b_shape)
-
-                        Z_step = cp.reshape(Z[Z_idx[0]:Z_idx[1]], Z_shape)
-                        Z_step = w @ Z_step + b
-
-                        if m < len(layers) - 1:
-                            Z_step = self.activation(activation_fxn, Z_step, GPU = GPU)
-                        elif m == len(layers) - 1:
-                            Z_step = self.activation(output_activation_fxn, Z_step, GPU = GPU)
-
-                        Z_idx_next = Z_idxs[m+1]
-                        Z[Z_idx_next[0]:Z_idx_next[1]] = Z_step.flatten()
-
-                    Z_idx_last = Z_idxs[-1]
-                    Z_shape_last = Z_shapes[-1]
-                    Z_last = cp.reshape(Z[Z_idx_last[0]:Z_idx_last[1]], Z_shape_last)
-                    delta = 2*(Z_last - Y)
-                    delta = delta * self.diff_activation(output_activation_fxn, Z_last, GPU = GPU)
-
-                    for i in range(1, len(layers)):
-
-                        Z_idx = Z_idxs[-i-1]
-                        Z_idx_prev = Z_idxs[-i]
-                        w_idx_prev = w_idxs[-i]
-                        b_idx_prev = b_idxs[-i]
-
-                        Z_shape = Z_shapes[-i-1]
-                        Z_shape_prev = Z_shapes[-i]
-                        w_shape_prev = w_shapes[-i]
-                        b_shape_prev = b_shapes[-i]
-
-                        Z_step = cp.reshape(Z[Z_idx[0]:Z_idx[1]], Z_shape)
-                        Z_prev = cp.reshape(Z[Z_idx_prev[0]:Z_idx_prev[1]], Z_shape_prev)
-                        w_prev = cp.reshape(W[w_idx_prev[0]:w_idx_prev[1]], w_shape_prev)
-                        b_prev = cp.reshape(B[b_idx_prev[0]:b_idx_prev[1]], b_shape_prev)
-
-                        dW = cp.einsum("ijk,ikj->ijk", delta, Z_step)
-                        dW = lr*(cp.mean(dW, axis = 0) - reg*w_prev)
-                        dB = lr*cp.mean(delta, axis = 0)
-                        w_prev = w_prev - dW
-                        b_prev = b_prev - dB
-                        W[w_idx_prev[0]:w_idx_prev[1]] = w_prev.flatten()
-                        B[b_idx_prev[0]:b_idx_prev[1]] = b_prev.flatten()
-                        W_T = cp.reshape(w_prev, (w_prev.shape[0], w_prev.shape[2], w_prev.shape[1]))
+                    delta = 2*(Z[-1] - Y)
+                    delta *= self.diff_activation(output_activation_fxn, Z[-1], GPU = GPU)
+                    for i in range(1, len(Z)):
+                        dW = cp.einsum("ijk,ikj->ijk", delta, Z[-i-1])
+                        W[-i] -= lr*(cp.mean(dW, axis = 0) - reg*W[-i])
+                        B[-i] -= lr*cp.mean(delta, axis = 0)
+                        W_T = cp.reshape(W[-i], (W[-i].shape[0], W[-i].shape[2], W[-i].shape[1]))
                         delta = W_T @ delta
-                        delta = delta*self.diff_activation(activation_fxn, Z_step, GPU = GPU)
+                        delta *= self.diff_activation(activation_fxn, Z[-i-1], GPU = GPU)
 
                     counter += 1
                     new_perc = int(100*counter/tot_iter)
                     times[counter-1] = time()
-                    if int(time() - t0) > dt and counter > 10:
+                    if int(time() - t0) > dt:
                         perc = new_perc
                         t_avg = np.mean(np.diff(times[:counter]))
                         eta = t_avg*(tot_iter - counter)
@@ -417,13 +347,9 @@ class NeuralNet:
                         msg = f"\r\t{perc:>3d}% – ETA {hh:02d}:{mm:02d}:{ss:02d}"
                         print(msg, end = "")
                     dt = time() - t0
-            W_new = []
-            B_new = []
-            for ws, bs, wi, bi in zip(w_shapes, b_shapes, w_idxs, b_idxs):
-                W_new.append(np.reshape(cp.asnumpy(W[wi[0]:wi[1]]), ws))
-                B_new.append(np.reshape(cp.asnumpy(B[bi[0]:bi[1]]), bs))
-            W = W_new
-            B = B_new
+            for n in range(len(W)):
+                W[n] = cp.asnumpy(W[n])
+                B[n] = cp.asnumpy(B[n])
         else:
             for e in range(epochs):
                 for n in range(len(X_batches)):

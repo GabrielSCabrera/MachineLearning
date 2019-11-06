@@ -96,17 +96,17 @@ def parse_args(all_args):
 """ PROGRAM PARAMETERS """
 
 # Size of each batch sent into the neural network
-batchsize = 25
+batchsize = 100
 # Percentage of data to set aside for testing
 test_percent = 25
 # Configuration of layers in the Neural Network
-NN_layers = [100]*4#[575,383,255,170,113,75,50]
+NN_layers = [100,60]#[575,383,255,170,113,75,50]
 # Number of epochs, or total cycles over all batches
-NN_epochs = 10
+NN_epochs = 300
 # Learning rate
 learning_rate = 0.01
 # Ridge regularization parameter
-regularization_param = 0
+regularization_param = 1E-7
 # Activation function
 activation_fxn = "sigmoid"
 # Activation function for output layer (None defaults to "activation_fxn")
@@ -121,7 +121,7 @@ dirname = "results_franke_"
 # If we want to load an older model, we can pass a string to the following
 loadname = None
 # Gaussian noise in Franke function
-sigma = 0.01
+sigma = 0.25
 # Random Seed
 rand_seed = 112358
 
