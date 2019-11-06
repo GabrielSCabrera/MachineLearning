@@ -68,7 +68,7 @@ batchsize = 100
 # Percentage of data to set aside for testing
 test_percent = 25
 # Configuration of layers in the Neural Network
-NN_layers = [100,60]
+NN_layers = [55,44,33]
 # Number of epochs, or total cycles over all batches
 NN_epochs = 30
 # Learning Rate
