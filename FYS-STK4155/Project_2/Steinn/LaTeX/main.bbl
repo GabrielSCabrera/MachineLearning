@@ -1,0 +1,80 @@
+\begin{thebibliography}{xx}
+
+\harvarditem{{\em \text{Classification Accuracy is Not Enough: More Performance
+  Measures You Can Use By Jason Brownlee}}}{n.d.}{2}
+{\em \text{Classification Accuracy is Not Enough: More Performance Measures You
+  Can Use By Jason Brownlee}}  \harvardyearleft n.d.\harvardyearright , \
+  \url{https://machinelearningmastery.com/classification-accuracy-is-not-enough-more-performance-measures-you-can-use/}.
+\newblock March 21, 2014 in Machine Learning Process. Accessed: 1. November,
+  2019.
+
+\harvarditem{{\em \text{Classification for Credit Card Default, by Theos
+  Evgeniou and Spyros Zoumpoulis}}}{n.d.}{1}
+{\em \text{Classification for Credit Card Default, by Theos Evgeniou and Spyros
+  Zoumpoulis}}  \harvardyearleft n.d.\harvardyearright , \
+  \url{http://inseaddataanalytics.github.io/INSEADAnalytics/CourseSessions/ClassificationProcessCreditCardDefault.html}.
+\newblock Accessed: 26. October, 2019.
+
+\harvarditem[Fombellida et~al.]{Fombellida, Torres-Alegre,
+  Pi{\~{n}}uela-Izquierdo \harvardand\ Andina}{2015}{breastcancer}
+Fombellida, J., Torres-Alegre, S., Pi{\~{n}}uela-Izquierdo, J.~A. \harvardand\
+  Andina, D.  \harvardyearleft 2015\harvardyearright , Artificial
+  metaplasticity for deep learning: Application to {WBCD} breast cancer
+  database classification, {\em in} `Lecture Notes in Computer Science',
+  Springer International Publishing, pp.~399--408.
+\newline\harvardurl{https://doi.org/10.1007/978-3-319-18833-1_42}
+
+\harvarditem[He et~al.]{He, Zhang, Ren \harvardand\ Sun}{2015}{He2015}
+He, K., Zhang, X., Ren, S. \harvardand\ Sun, J.  \harvardyearleft
+  2015\harvardyearright , Delving deep into rectifiers: Surpassing human-level
+  performance on {ImageNet} classification, {\em in} `2015 {IEEE} International
+  Conference on Computer Vision ({ICCV})', {IEEE}.
+\newline\harvardurl{https://doi.org/10.1109/iccv.2015.123}
+
+\harvarditem[Krizhevsky et~al.]{Krizhevsky, Sutskever \harvardand\
+  Hinton}{2012}{ReLUImagenet}
+Krizhevsky, A., Sutskever, I. \harvardand\ Hinton, G.~E.  \harvardyearleft
+  2012\harvardyearright , Imagenet classification with deep convolutional
+  neural networks, {\em in} `Advances in neural information processing
+  systems', pp.~1097--1105.
+
+\harvarditem[Mellit et~al.]{Mellit, Benghanem \harvardand\
+  Bendekhis}{n.d.}{NNWsunshine}
+Mellit, A., Benghanem, M. \harvardand\ Bendekhis, M.  \harvardyearleft
+  n.d.\harvardyearright , Artificial neural network model for prediction solar
+  radiation data: application for sizing stand-alone photovoltaic power system,
+  {\em in} `{IEEE} Power Engineering Society General Meeting, 2005', {IEEE}.
+\newline\harvardurl{https://doi.org/10.1109/pes.2005.1489526}
+
+\harvarditem{Morten}{2015}{lecturenotes}
+Morten, H.-J.  \harvardyearleft 2015\harvardyearright , `Lecture notes fall
+  2015'.
+\newline\harvardurl{https://compphysics.github.io/MachineLearning/doc/web/course.html}
+
+\harvarditem{Nielsen}{2018}{nielsenneural}
+Nielsen, M.~A.  \harvardyearleft 2018\harvardyearright , `Neural networks and
+  deep learning'.
+\newline\harvardurl{http://neuralnetworksanddeeplearning.com/}
+
+\harvarditem[Rowley et~al.]{Rowley, Baluja \harvardand\
+  Kanade}{1998}{NNWfacedetection}
+Rowley, H., Baluja, S. \harvardand\ Kanade, T.  \harvardyearleft
+  1998\harvardyearright , `Neural network-based face detection', {\em {IEEE}
+  Transactions on Pattern Analysis and Machine Intelligence} {\bf
+  20}(1),~23--38.
+\newline\harvardurl{https://doi.org/10.1109/34.655647}
+
+\harvarditem{user39663}{n.d.}{stackexchangeminimum}
+user39663  \harvardyearleft n.d.\harvardyearright , `How can stochastic
+  gradient descent avoid the problem of a local minimum?', Cross Validated.
+\newblock URL:https://stats.stackexchange.com/q/144631 (version: 2015-04-03).
+\newline\harvardurl{https://stats.stackexchange.com/q/144631}
+
+\harvarditem{Yeh \harvardand\ hui Lien}{2009}{CCdata}
+Yeh, I.-C. \harvardand\ hui Lien, C.  \harvardyearleft 2009\harvardyearright ,
+  `The comparisons of data mining techniques for the predictive accuracy of
+  probability of default of credit card clients', {\em Expert Systems with
+  Applications} {\bf 36}(2),~2473--2480.
+\newline\harvardurl{https://doi.org/10.1016/j.eswa.2007.12.020}
+
+\end{thebibliography}
