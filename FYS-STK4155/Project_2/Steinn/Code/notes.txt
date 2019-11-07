@@ -1,0 +1,30 @@
+epoch is a pass through the entire dataset.
+an iteration is one fb for a batch
+do one batch fb until all batches are done. Then reshuffle data.
+
+Class A, Class B: Don't use accuracy as ur only metric
+use Confusion matrix and F1 score
+
+Confusion matrix: want diagonality
+prediction metrics
+
+See Xavier He for for how to initialize weights and or biases
+
+Testing data must be 80%. You get false accuracies if you upsample testing data.
+Scale testing data using the training means and accuracies.
+
+
+TODO:
+Scale testing data using training data mean and std.
+Cancel the upsampling of the testing data. This produces false accuracies.
+Implement other metrics of accuracies. Confusion matrix, 0_acc, 1_acc etc.
+Implement Cumulative Gain Chart.
+Implement non-shuffling of batches in neural network.
+
+scikitplot.metrics.plot_cumulative_gain
+
+yp = np.concatenate((1-ypred, ypred), axis=1)
+
+scikit learn sin auc function for area under curve.
+Since the values are between zero and one then you have to subtract 0.5 (area of triangle)
+
