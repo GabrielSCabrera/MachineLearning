@@ -5,46 +5,46 @@ The style file: agsm.bst
 Database file #1: mainNotes.bib
 Database file #2: ref.bib.bib
 Warning--entry type for "lecturenotes" isn't style-file defined
---line 106 of file ref.bib.bib
-You've used 11 entries,
+--line 119 of file ref.bib.bib
+You've used 13 entries,
             2909 wiz_defined-function locations,
-            709 strings with 7375 characters,
-and the built_in function-call counts, 47715 in all, are:
-= -- 7927
+            715 strings with 7723 characters,
+and the built_in function-call counts, 55183 in all, are:
+= -- 9273
 > -- 511
 < -- 0
-+ -- 3749
++ -- 4357
 - -- 154
-* -- 4120
-:= -- 9385
-add.period$ -- 14
-call.type$ -- 11
-change.case$ -- 142
-chr.to.int$ -- 11
-cite$ -- 11
-duplicate$ -- 178
-empty$ -- 362
+* -- 4776
+:= -- 10743
+add.period$ -- 18
+call.type$ -- 13
+change.case$ -- 158
+chr.to.int$ -- 13
+cite$ -- 13
+duplicate$ -- 204
+empty$ -- 410
 format.name$ -- 181
-if$ -- 8659
+if$ -- 10063
 int.to.chr$ -- 5
 int.to.str$ -- 0
 missing$ -- 6
-newline$ -- 47
+newline$ -- 55
 num.names$ -- 95
-pop$ -- 83
+pop$ -- 103
 preamble$ -- 1
-purify$ -- 155
+purify$ -- 175
 quote$ -- 0
-skip$ -- 139
+skip$ -- 157
 stack$ -- 0
-substring$ -- 11180
-swap$ -- 45
-text.length$ -- 134
+substring$ -- 13046
+swap$ -- 59
+text.length$ -- 142
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 44
+type$ -- 52
 warning$ -- 0
-while$ -- 207
+while$ -- 215
 width$ -- 0
-write$ -- 159
+write$ -- 185
 (There was 1 warning)

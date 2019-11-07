@@ -44,4 +44,6 @@
         
         % May have been a good idea to add custom weight and bias initialization for each layer added? Would have solved the input mess.
         % There are several factors of the study which could have been performed better; some of which include data preprocessing, grid search rather than ..., and stochasticity between epochs.
-        % F1 score is 'ill defined' if the network declares all values to be 
+        % F1 score is 'ill defined' if the network declares all values to be zeros
+        % Should have maybe implemented MPI4PY (code parallelization), and
+        % Should have maybe performed some cross validation to find the optimal parameters. This would however have been very computationally inefficient.

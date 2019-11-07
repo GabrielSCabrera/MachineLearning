@@ -1,5 +1,5 @@
 \section{Theory and Algorithms}
-    The theory building up to the ANN expressions involves some simple linear regression method introduction. A similar introduction of the linear regression theory was conducted in a previous project, though a short reminder of the expressions is appropriate.
+    The theory building up to the ANN expressions involves some simple linear regression method introduction. A similar introduction of the linear regression theory was conducted in a previous project of the semester (G. S. Cabrera and B. S. Dalen's project 1 \cite{4}, and S. H. Magnússon and S. Håpnes' project 1 \cite{5}), though a short reminder of the expressions is appropriate.
     \subsection{Linear Regression}
         Linear regression is a standard method found in statistics used to (approximately) fit some function to a set of data. This is a system of regression which involves the following system for predicting an outcome $\hat{y}$ for some given input/set of features $X=[x_0, x_1, \hdots,  x_{p-1}]$:
         \begin{equation}
@@ -12,14 +12,14 @@
             \vdots\\
             \hat{y}_{n-1} &= \beta_0x_{n-1,0} + \beta_1x_{n-1,1} + \hdots + \beta_{p-1}x_{n-1,p-1},
         \end{align*}
-        where $n$ is the \textit{sample size} of the data set. In the case of the credit card data, this is the number of people we have to train/test on. This system of equations can be rewritten in matrix-vector multiplication form as:
+        where $n$ is the \textit{sample size} of the data set. In the case of the credit card data, this is the number of people which we have data regarding. This system of equations can be rewritten in matrix-vector multiplication form as:
         \begin{equation}
             \hat{y} = X\hat{\beta}
         \end{equation}
-        There are several schemes which aim to find the optimal predictor $\hat{\beta}$; two such schemes will be introduced in this report, though they have been explained in greater detail in a previous report. See to my previous project collaboration with Simen Håpnes on the following  \href{https://github.com/steinnhauser/Neural-Networks/tree/master/FYS-STK4155/Project1}{\textbf{Project 1 Github Repository}} for more detail on the subject.
+        There are several schemes which aim to find the optimal predictor $\hat{\beta}$; two such schemes will be introduced in this report, though they have been explained in greater detail in a previous report. See to the previous project collaboration of S. H. Magnússon and S. Håpnes \cite{5} for more detail on the subject.
         \subsubsection{Ordinary Least Squares}
             The Ordinary Least Squares regression method (or simply OLS) is the simplest and most intuitive to implement. This scheme involves minimizing a \textit{Cost Function}, something which is generally the goal of any linear or logistic regression method. The cost function is in general a measure of how well a calculated prediction $\hat{y}$ performs in relation to the 'true' data $y$. In the case of OLS, the cost function is the \textit{Mean-Squared Error} (or MSE):
-            \begin{equation}
+            \begin{equation}\label{eq:MSE}
                 MSE(y, \hat{y})=\frac1{2n}\sum_{i=0}^{n-1} \left( y-\hat{y} \right)^2,
             \end{equation}
             where $\hat{y}$ is the prediction $\hat{y}=X\hat{\beta}$ presented previously. Deriving the cost function w.r.t the predictor $\hat{\beta}$ yields the minimum (assuming there's no maximum) of the cost function, resulting in the optimal prediction $\hat{\beta}$ to be:
@@ -45,7 +45,7 @@
             This is the equation for the Ridge scheme, where $\lambda$ is adjustable and typically quite small, $X$ is the input/set of features, and $y$ is the outcomes corresponding to those features (the "goal" of the prediction). Some research will be conducted to find the optimal hyperparameter $\lambda$ of the Ridge scheme, though this has already been done in our previous project (linked to earlier).
             
     \subsection{Logistic Regression and Gradient Descent}
-        Logistic regression is similar to linear regression, though it aims to produce predictions for classification purposes. The study of predicting the credit card data presented in this report is one of logistic regression, as it regards classifying people into two categories, namely ($\text{yes}=1$) or ($\text{no}=1$). Other classification examples range from hand-written image detection (case of 10 classes, see to Michael Nielsen's book \cite{nielsenneural}), to declaring whether a breast cancer tumor is malicious or not (see to work by Fombellida J. et al. \cite{breastcancer}). Logistic regression works in approximately the same way as linear regression, though the output of the network should always be within the range of $\hat{y}_i\in [0,1]$ for $i \in [0,1,\hdots,n-1]$. Values between this are typically disregarded when testing the prediction (this is not the case for the training), such that:
+        Logistic regression is similar to linear regression, though it aims to produce predictions for classification purposes. The study of predicting the credit card data presented in this report is one of logistic regression, as it regards classifying people into two categories, namely ($\text{yes}=1$) or ($\text{no}=0$). Other classification examples range from hand-written image detection (case of 10 classes, see to Michael Nielsen's book \cite{nielsenneural}), to declaring whether a breast cancer tumor is malicious or not (see to work by Fombellida J. et al. \cite{breastcancer}). Logistic regression works in approximately the same way as linear regression, though the output of the network should always be within the range of $\hat{y}_i\in [0,1]$ for $i \in [0,1,\hdots,n-1]$. Values between this are typically disregarded when testing the prediction (this is not the case for the training), such that:
         \begin{equation}
             \hat{y}_i = \begin{cases} 1 & \text{if } \hat{y}_i\geq 1 \\ 0 & \text{if } \hat{y}_i < 1 \end{cases}.
         \end{equation}
@@ -176,11 +176,11 @@
                 \pdv{C}{W^l} &= \pdv{C}{z^l}\pdv{z^l}{W^l},\\\label{eq:NNWdC/db}
                 \pdv{C}{b^l} &= \pdv{C}{z^l}\pdv{z^l}{b^l},
             \end{align}
-            where $W^l$ and $b^l$ represent the weights and biases of layer $l$. These following four partial derivatives are therefore all that is needed to perform back propagation:
+            where $W^l$ and $b^l$ represent the weights and biases of layer $l$. The first component of layer $l=L$ needs to be calculated separately for the algorithm, before propagating backwards through layers $l \in [L-1, L-2, \hdots, 1]$. These following four partial derivatives are therefore all that is needed to perform back propagation:
             \begin{equation}\label{eq:bp_pdvs}
                 \pdv{C}{z^L} \text{, } \pdv{C}{z^l} \text{, } \pdv{z^l}{W^l} \text{, and } \pdv{z^l}{b^l}.
             \end{equation}
-            The first component of layer $l=L$ needs to be calculated separately, before propagating backwards through layers $l \in [L-1, L-2, \hdots, 1]$. In this paper, the partial derivative of the cost function with respect to the weighted output $z^l$ will often times be referred to as:
+            In this paper, the partial derivative of the cost function with respect to the weighted output $z^l$ will often times be referred to as:
             \begin{equation}
                 \delta^l = \pdv{C}{z^l}.
             \end{equation}
@@ -237,25 +237,26 @@
             The neural network gradient is segmented into batches in a similar way to what was done in the SGD section. This is done to avoid the problem of local minimum of the cost function; a problem which has been introduced already. This is once again done by averaging the gradients of multiple inputs at a time, making it so that the input matrix $X$ is now of size $(batchsize \times p)$, and the weights and biases are now updated using the sum of these average gradients. The data set must be shuffled after each batch is iterated over using the feed-forward and backwards propagation algorithms presented. This is done to further increase the likelihood of the algorithm to reach a global minimum, as the averages will differ slightly depending on the batchsize. If the batchsize is large, then the average of the batch gradient will typically not change very drastically; the batchsize is therefore recommended to be around $B=100$. This is already quite a large number of cases, so should not be increased much more. After each of the batches have updated the weights and bias gradients and the data set is shuffled, a new \textit{epoch} begins. This signifies all the data has been cycled through and the gradients have been updated accordingly. This equates to one 'iteration' $k\rightarrow k+1$ of the SGD method presented previously. The number of epochs is not quite as important as the change in the gradients $per$ epoch. As, if an epoch does not cause the weights and biases to change very much, then the current parameters are declared as sufficient to produce a cost function minimum.\\\\
             Once more subject is introduced before moving onto an introduction of cost- and activation functions, namely l2 regularization. The learning rate is one of the parameters which is adjustable and of interest, the other one being the l2 regularization hyperparameter $\lambda$. The l2 regularization involves adding an additional factor/penalty to the original cost function $C_0$, such that:
             \begin{equation}
-                C = C_0 + \frac{\lambda}{2p} \sum_j |W_j|^2
+                C = C_0 + \frac{\lambda}{2n} \sum_j |W_j|^2
             \end{equation}{}
             is the new cost function, where $p$ is the number of features. This ultimately penalizes the weights if they are too large, making it so that the weights $W$ are encouraged to be smaller. The net impact of this factor is that the derivative of the cost function w.r.t the weights presented earlier now has an additional factor which subtracts a fraction of the current weights:
             \begin{align}
-                W^l_{j,k} &= W^l_{j,k} - \eta\left[ \pdv{C_0}{W^l_{j,k}} + \frac{\lambda}{p} W^l_{j,k} \right]\\
-                W^l_{j,k} &= \left(1-\frac{\eta\lambda}{p}\right)W^l_{j,k} - \eta \pdv{C_0}{W^l_{j,k}},
+                W^l_{j,k} &= W^l_{j,k} - \eta\left[ \pdv{C_0}{W^l_{j,k}} + \frac{\lambda}{n} W^l_{j,k} \right]\\
+                W^l_{j,k} &= \left(1-\frac{\eta\lambda}{n}\right)W^l_{j,k} - \eta \pdv{C_0}{W^l_{j,k}},
             \end{align}
             where $\eta$ is the learning rate, $\lambda$ is the $l2$ regularization hyperparameter, $C_0$ is the cost function without $l2$ regularization, and $p$ is the number of features/inputs into the network. This hyperparameter $\lambda$ is something which will be studied in detail in an attempt to find the value which produces the most accurate $\hat{y}$ prediction (best weights and biases).
             
     \subsection{Cost- and Activation functions}
-        A quintessential component to the neural network system is the choice of cost- and activation functions. The feed-forward system is dictated and fed through multiple activation functions, vastly influencing the outcome. This will be a large point of debate in the methods, results and the discussion section. A few cost- and activation functions will be presented here for this study, though far more variants exist in their respectful families.
+        A quintessential component to the neural network system is the choice of cost- and activation functions. The feed-forward system is dictated and fed through multiple activation functions, vastly influencing the outcome. This will be a large point of debate in the methods, results and the discussion section. A few cost- and activation functions will be presented here for this study, though far more variants exist in their respectful families. Table \ref{tab:cost_functions} lists a few cost functions which are explored, and their respectful derivatives:
         \begin{table}[H]
             \centering
             \begin{tabular}[t]{l@{\hskip 0.1in}c@{\hskip 0.1in}c}
                 \toprule
                  & $C(y, a^L)$ & $\nabla_aC(y, a^L)$\\
-                \midrule\\
-                Mean-Squared Error & $\mathds{E} \left[ \frac12 (y-a^L)^2\right]$ & $y-a^L$ \\\\
-                Cross-Entropy & \begin{cases}-\log(a^L) & \text{if } y=1\\ -\log(1-a^L) & \text{if } y=0\end{cases} & $a^L-y$ \\\\
+                \midrule
+                 &  & \\
+                Mean-Squared Error & $\mathds{E} \left[ \frac12 (y-a^L)^2\right]$ & $a^L-y$ \\ & & \\
+                Cross-Entropy & $\begin{cases}-\log(a^L) & \text{if } y=1\\ -\log(1-a^L) & \text{if } y=0\end{cases}$ & $a^L-y$ \\ & & \\
                 \bottomrule
             \end{tabular}
             \caption{Several cost function examples. Mainly, the cross-entropy and mean-squared error (MSE) functions will be explored in this study. As explained previously, the activations of the final layer $a^L$ are equivalent with the prediction of $y$, namely $\hat{y}$. }
@@ -274,7 +275,7 @@
         \subsubsection{Cross-Entropy}
             The most common cost function used in logistic regression is the cross entropy, or \textit{log-loss} function. The function listed in the table measures the performance of a classification model, where all outputs are set to be between 0 and 1. This function stems from the \textit{Maximum Likelihood Estimation} principle presented previously.
             This cross entropy expression is specific to the case of binary classification (two outcomes). This is the case for the credit card data logistic regression (default or not default), so the cross-entropy is the cost function of choice for neural network logistic regression study. \\\\
-        These are the two choice cost functions to perform the classification and regression research. In addition to choosing a cost function for predicting, one must also make a choice of activation functions. Following is a table listing a few activation functions which are explored and their respectful derivatives:
+        These are the two choice cost functions to perform the classification and regression research. In addition to choosing a cost function for predicting, one must also make a choice of activation functions. Table \ref{tab:activation_functions} lists a few activation functions which are explored, and their respectful derivatives:
         \begin{table}[H]
             \centering
             \begin{tabular}[t]{l@{\hskip 0.4in}c@{\hskip 0.3in}c}
@@ -292,7 +293,7 @@
             \caption{Table listing a number of common activation functions and their derivatives. Several of these are of interest and are implemented into the study.}
             \label{tab:activation_functions}
         \end{table}
-        These are some key activation functions which may be studied. One thing to note is that the derivative of the softmax function is a matrix since the activation of node $a_j$ can depend on all the other activations from the denominator $\sum_ke^{z_k}$ of the function. Technically, the derivative stated in the table is really the derivative $\pdv{}{a_j}f(z_i)$. The 6-bounded Rectified Linear Unit (ReLU6) and hyperbolic tangent ($\tanh$) functions will be the primary functions of comparison in the hidden layers. Following is a short discussion of the strengths and some weaknesses of some of the activation functions from the table:
+        These are some key activation functions which may be studied. One thing to note is that the derivative of the softmax function is a matrix since the activation of node $a_j$ can depend on all the other activations from the denominator $\sum_ke^{z_k}$ of the function. Technically, the derivative stated in the table is really the derivative $\pdv{}{a_j}f(z_i)$. Following is a short discussion of the strengths and some weaknesses of some of the activation functions introduced in table \ref{tab:activation_functions}:
         \subsubsection{Sigmoid function}     % Problem of vanishing gradients. Be sure to initialize the weights with too large values. Proper preprocessing of the data can also circumvent the problem.
             The Sigmoid function is typical for predictive applications as it is bounded to $\sigma \in [0,1]$. This is useful for logistic regression purposes as discussed previously, though it does not come without its flaws. The sigmoid function has the problem of \textit{vanishing gradients} for values outside of the range (approximately) $x \in [-6,6]$. The derivative of the sigmoid is consistently vanishing in these areas $\sigma'(z)\approx 0$ for $z\in [\leftarrow, -6]\vee[6, \rightarrow]$, resulting in the weights and biases not being updated properly in the backwards propagation algorithm. This problem can however be circumvented through proper data preprocessing and weights initialization. If the node values $z$ values are within this range, the network should be able to tell the difference between them in the gradient. This requires the inputs $X$ to be scaled correctly as well as the weights and biases to not be too large.
         \subsubsection{Tanh function}
@@ -339,7 +340,7 @@
         % INSPO
         % 2.1.5. Artificial neural networks (ANNs)Artificial neural networks use non-linear mathematicalequations to successively develop meaningful relationships between input and output variables through a learning pro-cess. We applied back propagation networks to classify data. A back propagation neural network uses a feed-for-ward topology and supervised learning. The structure of back propagation networks is typically composed of aninput layer, one or more hidden layers, and an outputlayer, each consisting of several neurons. ANNs can easilyhandle the non-linear and interactive effects of explanatoryvariables. The major drawback of ANNs is – they cannotresult in a simple probabilistic formula of classification
         % WHY multilayer perceptrons (Lectrue notes NN) According to the Universal approximation theorem, a feed-forward neural network with just a single hidden layer containing a finite number of neurons can approximate a continuous multidimensional function to arbitrary accuracy, assuming the activation function for the hidden layer is a non-constant, bounded and monotonically-increasing continuous function.
-        \subsubsection{Accuracy Assertion}
+        \subsubsection{Accuracy Assertion of Classification}
             There are several ways to assert the accuracy of the logistic model. One which is the simplest and most intuitive is the \textit{accuracy score}, which measures the fraction of correctly guessed targets:
             \begin{equation}
                 Acc = \frac1n\sum^{n-1}_{i=0} \mathds{1}(\hat{y}_i=y_i),
@@ -350,7 +351,7 @@
             \end{equation}
             This is the simplest accuracy metric possible, though there are some weaknesses to designing a model around maximizing this. A few more accuracy metrics are therefore introduced in this section for a more in-depth analysis of the performance of the classification methods. One of these is the so-called \textit{confusion matrix}:
             \begin{table}[H]
-                \centering
+                \centering                                                                                           
                 \begin{tabular}{cc|cc}
                      & & \multicolumn{2}{c}{True}\\
                      & & 0 & 1\\\hline
@@ -358,19 +359,17 @@
                      & 1 & $a_{0,1}$ & $a_{1,1}$
                 \end{tabular}
             \end{table}
-            This matrix conveys the model performance in greater detail than the accuracy score, as the errors $a_{0,1}$ and $a_{1,0}$ are \textit{not equivalent}. If the data being predicted is something like patient data rather than credit card data and the logistic regression involves predicting whether or not a patient has a malicious disease, then it is easier to imagine why this is true. It is far worse to misclassify a sick patient than a healthy one. In our case, if $1=$ sick, then we would like for $a_{0,1}$ to be as small as possible, but it is far more important that $a_{1,0}\rightarrow 0$. Ultimately though, in any case, the perfect model diagonalizes this matrix, such that $a_{1,0}=a_{0,1}=0$. \\\\
+            This matrix conveys the model performance in greater detail than the accuracy score, as the errors $a_{0,1}$ and $a_{1,0}$ are \textit{not equivalent}. They are called \textit{false positives} and \textit{false negatives}, respectively. If the data being predicted is something like patient data rather than credit card data and the logistic regression involves predicting whether or not a patient has a malicious disease, then it is easier to imagine how these two differ. It is far worse to mis-classify a sick patient than a healthy one. In our case, if $1=$ sick, then we would like for $a_{0,1}$ to be as small as possible, but it is far more important that $a_{1,0}\rightarrow 0$. Ultimately though, in any case, the perfect model diagonalizes this matrix, such that $a_{1,0}=a_{0,1}=0$. \\\\
             One more accuracy metric is the area under a \textit{cumulative gain chart}. The cumulative gain chart is designed to evaluate binary classifiers by calculating the following two parameters:
             \begin{align}
-                \text{TPR} &= \\
-                \text{SUP} &= \\
+                \text{TPR} &= \frac{a_{1,1}}{a_{1,1}+a_{1,0}}\\
+                \text{SUP} &= \frac{a_{1,1}}{a_{1,1}+a_{0,1}}
             \end{align}
-            TPR is the \textit{True Positive Rate} (often times referred to as the sensitivity), and SUP is the \textit{Support}, or \textit{Predictive Positive Rate} of the prediction
-            
-            Following is a figure of a cumulative gain chart of a model with an accuracy of $68\%$, produced to conceptualize the metric:
+            TPR is the \textit{True Positive Rate} (often times referred to as the sensitivity), and SUP is the \textit{Support}, or \textit{Predictive Positive Rate} of the prediction. To construct the cumulative gain chart, the TPR and SUP must be calculated for every data point. Once this is accomplished, the values are ordered such that the predicted outputs furthest from 0.5 are prioritized. Next, the values are cumulatively summed up and the resulting series are normalized to 1. This normalization is important, as we are interested in the \textit{rates} of the prediction. Following is a figure of a cumulative gain chart of a model with an accuracy of $68\%$, produced to conceptualize the accuracy metric:
             \begin{figure}[H]
                 \centering
                 \includegraphics[width=0.4\textwidth]{figures/cumulative-gain_curve-concept.png}
-                \caption{Conceptualized figure of a cumulative gain chart. The figure includes all cases of 0 and 1 predictions, and a perfect 1 model. The model also includes a baseline illustrating what a random $50/50$ pick of 0's and 1's looks like.}
+                \caption{Conceptualized figure of a cumulative gain chart. The figure includes all cases of 0 and 1 predictions, and a perfect 1 model. The model also includes a b                                                                                 aseline illustrating what a random $50/50$ pick of 0's and 1's looks like.}
                 \label{fig:conceptual_cumulative_gains}
             \end{figure}
             Hopefully, a prediction model will be somewhere in between the perfect model and the $50\%$ random pick baseline. The better the model, the larger the area between the cumulative model curve and the baseline will be. This is therefore the measure of the model accuracy.\\\\
@@ -401,8 +400,36 @@
                 &- \frac{1}{5}\text{exp}\left(-(9x - 4)^2 - (9y - 7)^2\right),
             \end{split}
         \end{align}
-        This function exhibits a very interesting surface plot which is very recognizable in prediction data; two methods are implemented to attempt to reproduce Franke's function: \textit{Ridge Regression} (presented previously) and a \textit{Neural Network}.
+        This function exhibits a very interesting surface plot which is very recognizable in prediction data. The function surface is illustrated in figure \ref{fig:frankesfunction}
+        \begin{figure}[H]
+        	\centering
+        	\includegraphics[width = 0.4\textwidth]{figures/Franke.png}
+        	\caption{The \textit{Franke function} surface plot illustration for $x$ and $y$ values ranging from zero to one.}
+        	\label{fig:frankesfunction}
+        \end{figure}
+       	Attempting to recreate this function using ridge regression and a neural network would be improper without some functional noise. Adding some noise (as a Gaussian distribution with $\mu=0$ and $\sigma=0.01$) produces the following data set:
+        \begin{figure}[H]
+        	\centering
+        	\includegraphics[width = 0.4\textwidth]{figures/Franke_noise.png}
+        	\caption{The \textit{Franke function} surface plot illustration for $x$ and $y$ values ranging from zero to one. Random Gaussian noise with mean value $\mu=0$ and standard deviation $\sigma=0.01$ is added to each data point $f(x_i,y_i)$.}
+        	\label{fig:frankesfunction}
+        \end{figure}
+        This is more similar to the data the methods will attempt to recreate. Two methods are implemented to attempt to reproduce Franke's function: \textit{Ridge Regression} (presented previously) and a \textit{Neural Network} (this time applied to data which is not classification-oriented).
         \subsubsection{Neural Network Application}
             % Cost function for regression case: RSS?
             % Best fit a surface by adjusting regularization parameters (RP) and learning rates: minimize MSE
             The neural network applied to the regression data is very similar to the classification network described previously (multilayer perceptron). Now however, instead of a constant binary output $a^L\in[0,1]$, the network is trained to output the results of Franke's function. This means that the output activation function cannot be a function which bounded asymptotically; some common activation functions such as the \textit{Leaky ReLU} come to mind, though the most intuitive one is simply using the \textit{identity} $f(x)=x$. The research conducted on Franke's function will include the learning rate and hyperparameter as previously, so a search for an optimal value for both of these will once again be performed.
+        \subsubsection{Accuracy Assertion of Regression}
+        	% MSE for regression and R2 score. Introduce these.
+        	The accuracy metrics used for the prediction of Franke's function are the MSE (introduced earlier) and the so-called R2-Score. These two accuracy metrics are given by the following expressions:
+        	\begin{align}
+        		MSE(y, \hat{y}) &= \frac{1}{2n}\sum_{n-1}^{i=0} \left(y-\hat{y}\right)\\
+        		R2(y, \hat{y}) &= 1 - \frac{RSS}{TSS},
+        	\end{align}
+        	where $RSS$ is the \textit{residual sum of squares}, and $TSS$ is the \textit{total sum of squares}. These are respectively defined as:
+        	\begin{align}
+        		RSS(y, \hat{y}) &= \sum^{n-1}_{i=0} \left(y-\hat{y}\right)^2\\
+        		RSS(y, \hat{y}) &= \sum^{n-1}_{i=0} \left(y-\bar{y}\right)^2\\
+        		\bar{y} &= \frac{1}{n}\sum^{n-1}_{i=0}y_i. 
+        	\end{align}
+        	These expressions are all that is needed to calculate the R2 score and MSE. As discussed earlier, we would like the MSE (cost function in the case of regression) to be as small as possible. The R2 score is different, it is a score which is always in the domain of $R2\in [0,1]$, where $R2\rightarrow 1$ for a 'perfect model', meaning that the R2 score is a parameter we would like to maximize.

@@ -20,23 +20,23 @@
 \BOOKMARK [3][-]{section*.20}{Weight- and Bias Initialization}{section*.14}% 20
 \BOOKMARK [2][-]{section*.21}{Classification}{section*.4}% 21
 \BOOKMARK [3][-]{section*.22}{Neural Network Application}{section*.21}% 22
-\BOOKMARK [3][-]{section*.23}{Accuracy Assertion}{section*.21}% 23
+\BOOKMARK [3][-]{section*.23}{Accuracy Assertion of Classification}{section*.21}% 23
 \BOOKMARK [2][-]{section*.24}{Regression}{section*.4}% 24
 \BOOKMARK [3][-]{section*.25}{Neural Network Application}{section*.24}% 25
-\BOOKMARK [1][-]{section*.26}{Method}{section*.2}% 26
-\BOOKMARK [2][-]{section*.27}{Preprocessing of the Data Set}{section*.26}% 27
-\BOOKMARK [3][-]{section*.28}{Outlier Filtration}{section*.27}% 28
-\BOOKMARK [3][-]{section*.29}{Column Scaling}{section*.27}% 29
-\BOOKMARK [3][-]{section*.30}{One-Hot Encoding classifiers}{section*.27}% 30
-\BOOKMARK [3][-]{section*.31}{History of past payment columns}{section*.27}% 31
-\BOOKMARK [3][-]{section*.32}{Principle Component Analysis}{section*.27}% 32
-\BOOKMARK [2][-]{section*.33}{Neural Network Design}{section*.26}% 33
+\BOOKMARK [3][-]{section*.26}{Accuracy Assertion of Regression}{section*.24}% 26
+\BOOKMARK [1][-]{section*.27}{Method}{section*.2}% 27
+\BOOKMARK [2][-]{section*.28}{Preprocessing of the Data Set}{section*.27}% 28
+\BOOKMARK [3][-]{section*.29}{Outlier Filtration}{section*.28}% 29
+\BOOKMARK [3][-]{section*.30}{Column Scaling}{section*.28}% 30
+\BOOKMARK [3][-]{section*.31}{One-Hot Encoding classifiers}{section*.28}% 31
+\BOOKMARK [3][-]{section*.32}{History of past payment columns}{section*.28}% 32
+\BOOKMARK [2][-]{section*.33}{Neural Network Design}{section*.27}% 33
 \BOOKMARK [3][-]{section*.34}{Weight- and Bias Initialization}{section*.33}% 34
 \BOOKMARK [3][-]{section*.35}{Hyperparameter and Learning Rate analysis}{section*.33}% 35
-\BOOKMARK [2][-]{section*.36}{Classification}{section*.26}% 36
+\BOOKMARK [2][-]{section*.36}{Classification}{section*.27}% 36
 \BOOKMARK [3][-]{section*.37}{Logistic Regression}{section*.36}% 37
 \BOOKMARK [3][-]{section*.38}{Neural Network: Classification}{section*.36}% 38
-\BOOKMARK [2][-]{section*.39}{Regression}{section*.26}% 39
+\BOOKMARK [2][-]{section*.39}{Regression}{section*.27}% 39
 \BOOKMARK [3][-]{section*.40}{Linear Regression}{section*.39}% 40
 \BOOKMARK [3][-]{section*.41}{Neural Network: Regression}{section*.39}% 41
 \BOOKMARK [1][-]{section*.42}{Results}{section*.2}% 42

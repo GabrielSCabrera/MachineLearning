@@ -1,5 +1,5 @@
 \section{Method}
-    The algorithms presented are implemented and simulated in python using several libraries. Some of these have functions which are implemented explicitly; the PCA is for example implemented using a package from the scikit-learn library. This will be gone into further detail later on. Before building the neural network, the data must be prepared. This is called preprocessing.
+    The algorithms presented are implemented and simulated in Python3.6 using several libraries. Some of these have functions which are implemented explicitly; the PCA is for example implemented using a package from the scikit-learn library. This will be gone into further detail later on. Before building the neural network, the data must be prepared. This is called preprocessing.
     \subsection{Preprocessing of the Data Set}
         The most important section of any data analysis is getting to know and performing a preprocessing of the data set. This involves formating the data in a manner which is easily interpreted and understood by the neural network nodes. Firstly, an outlier filtration is performed on the data.
         \subsubsection{Outlier Filtration}
@@ -10,14 +10,14 @@
                 \item X2: Gender (1=male, 2=female)
                 \item X3: Education (1=graduate school, 2=university, 3=highschool, 4=other).
                 \item X4: Marital Status (1=married, 2=single, 3=others)
-                \item X5: Age
+                \item X5: Age. Must be positive.
                 \item X6 - X11: History of past payment. Can be any integer from -2 to 9.
                 \item X12-X17: Amount of bill statement. Can be negative.
                 \item X18-X23: Amount of previous payment. Must be positive.
             \end{itemize}
             Before any scaling is applied, these categorical outliers are removed.
         \subsubsection{Column Scaling}
-            Some of the columns have values which require scaling before they are input into the network. If the data were not scaled in the preprocessing, then the sigmoid activation function of the age (values from 20 upwards) would just result in values which are very close to one. The network would not be able to distinguish between these values as well as it would if the ages were centered around 0 with a standard deviation of one (the typical way to scale). In this case, the 'resolution' of the sigmoid (or similar functions such as the hyperbolic tangent) would be far better, resulting in a network which can tell the difference between the behaviour of a 20 and a 40 year old.
+            Some of the columns have values which require scaling before they are input into the network. If the data were not scaled in the preprocessing, then the sigmoid activation function (as mentioned in the disappearing gradient discussion) of the columns with large values would produce redundant outputs (impossible to tell from each other). The network would not be able to distinguish between these values as well as it would if the ages were centered around 0 with a standard deviation of one (the typical way to scale). In this case, the 'resolution' of the sigmoid (or similar functions such as the hyperbolic tangent) would be far better, resulting in a network which can tell the difference between the behaviour of a 20 and a 40 year old.
         \subsubsection{One-Hot Encoding classifiers}
             % One hot encoding the classified
             Columns X2, X3, and X4 classify the person in a different way than, say, column X1. The difference between the two is that one is a spectrum while the other is binary. For example, the numbers in column X1 express the \textit{degree} of something (e.g. 2 is twice that of 1). However, column X2 places the person in either category 1 (male) or 2 (female). In this case the numbers are not related in the same way as previously. These are two categories and must therefore be expressed in out neural network using \textit{One-Hot Encoding}. This would be done in the following manner for five people:
@@ -70,42 +70,6 @@
                 \item 0 is 'customer payed minimum due amount but not entire balance'.
             \end{itemize}
             This is based on how banks operate and is what this research will use as a basis.\\\\
-            The values -2, -1, 0 differ fundamentally from values 1-9; the first three are categorical i.e. express the cases listed above, while the final nine are a spectrum of the same category (the category being 'payment delay in months'). This motivates more categorical one-hot encoding which conserves the continuous values of the 'months later' units. The one-hot encoding for the case of columns X6-X11 is therefore performed as such:
-            \begin{equation}
-                \begin{bmatrix}
-                \text{-1}\\
-                \text{7}\\
-                \text{-2}\\
-                \text{4}\\
-                \text{0}\\
-                \end{bmatrix}
-                \rightarrow
-                \begin{bmatrix}
-                0 & 1 & 0 & 0\\
-                0 & 0 & 0 & 7\\
-                1 & 0 & 0 & 0\\
-                0 & 0 & 0 & 4\\
-                0 & 0 & 1 & 0\\
-                \end{bmatrix}
-            \end{equation}
-            This semi-one-hot encoding preserves the elements of the columns which are continuous as well as the ones which are categorical. This is the method which will be applied to columns X6-X11, and since the final continuous column ranges from 1-9, it is also normalized to have a mean value zero and standard deviation 1. 
-        
-        \subsubsection{Principle Component Analysis}
-            After the dataset is properly scaled, outliers are removed, and the categorical variables are properly encoded, the data set has over 40 features. This is not an efficient way of calculating the probability of the outcome (default/not default) as several of these features are likely to be irrelevant. To reduce the number of features of the data, a method called the Principle Component Analysis (PCA) is applied: This function evaluates each column vector of the data and declares which of them are most influential to the outcome $y$. The details of PCA will not be presented in this report, though there are several excellent sources online for this (such as the lecture notes mentioned previously \cite{lecturenotes}). All in all, before the PCA was performed on the features, the correlation of $X$ looked like:
-            \begin{figure}[H]
-                \centering
-                \includegraphics[width=0.5\textwidth]{figures/corr_pre-PCA.png}
-                \caption{Correlation matrix heatmap before PCA was performed. }
-                \label{fig:pre_PCA}
-            \end{figure}
-            It is clear here that there are many features that have linear dependencies. The goal is to diagonalize this such that all the features are linearly independent. This is why PCA was implemented. After the PCA was performed (with an eigenvalue limit of $\lambda > 0.1$), the features matrix looked like:
-            \begin{figure}[H]
-                \centering
-                \includegraphics[width=0.5\textwidth]{figures/corr_post-PCA.png}
-                \caption{Correlation matrix heatmap after PCA was performed. }
-                \label{fig:post_PCA}
-            \end{figure}
-            This was the goal of the PCA. The features are now completely linearly independent of each other (correlation matrix is diagonalized), and the number of features is drastically reduced from 47 to 21. Now that the features are more computationally efficient and relevant, they can be input into the neural network system for training.
     
     \subsection{Neural Network Design}
         An object oriented code was built in Python 3.6.8 with the aim to make a generalized reusable code which has little to no specifications to the problem at hand. A large number of libraries are used for various different functionalities, the most important (excluding trivial unnecessary libraries) of them being:
@@ -114,6 +78,8 @@
                 \2 NumPy is an excellent scientific programming library for handling of large array structures (e.g. matrix-matrix multiplication) and has a large number of useful built in functions (e.g. exponential and logarithm functions)
             \1 Pandas version 0.25.1
                 \2 Pandas is primarily used for large data set manipulation and data processing. Several pandas functionalities are used when extracting and pre-processing the credit card data set.
+            \1 CuPy version 6.5.0
+            	\2 CuPy is a package which allows python to make full use of GPU architecture, accelerating matrix library operations using NVIDIA CUDA.
             \1 Scikit-Learn version 0.21.3
                 \2 Scikit-Learn (or sklearn) is a large library with a lot of useful functionality when it comes to regression and machine learning tasks. Many functions from sklearn are used throughout the study.
             \1 Matplotlib version 3.1.1
