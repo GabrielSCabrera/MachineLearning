@@ -69,8 +69,6 @@ def F1_AUC(Y_predict, Y_test):
     FP_arr = np.logical_and(np.equal(Yf_predict, np.logical_not(Yf_test)),
                             np.equal(Yf_test, 0))
 
-    recall = 0
-    precision = 0
     tpr = np.zeros_like(Yf_test, dtype = np.float64)
     fpr = np.zeros_like(Yf_test, dtype = np.float64)
 
@@ -82,8 +80,8 @@ def F1_AUC(Y_predict, Y_test):
     denom3[denom3 == 0] = np.inf
     tpr = np.cumsum(TP_arr/denom1)
     fpr = np.cumsum(FP_arr/denom2)
-    recall = np.sum(TP_arr/denom1)
-    precision = np.sum(TP_arr/denom3)
+    precision = np.sum(TP_arr)/(np.sum(TP_arr)+np.sum(FP_arr))
+    recall = np.sum(TP_arr)/(np.sum(TP_arr)+np.sum(FN_arr))
 
     # Normalization constant
     norm = 1
