@@ -100,7 +100,7 @@ batchsize = 100
 # Percentage of data to set aside for testing
 test_percent = 25
 # Configuration of layers in the Neural Network
-NN_layers = [100,60]#[575,383,255,170,113,75,50]
+NN_layers = [100,100]#[575,383,255,170,113,75,50]
 # Number of epochs, or total cycles over all batches
 NN_epochs = 300
 # Learning rate
@@ -121,9 +121,11 @@ dirname = "results_franke_"
 # If we want to load an older model, we can pass a string to the following
 loadname = None
 # Gaussian noise in Franke function
-sigma = 0.25
+sigma = 0.1
 # Random Seed
 rand_seed = 112358
+# Plot filename
+franke_img = None
 
 """ IMPORTING COMMAND-LINE ARGUMENT SETTINGS """
 
@@ -131,10 +133,10 @@ rand_seed = 112358
 all_args = {"save":[str, "dirname"], "load":[str, "loadname"],
             "display":[int, "N_display"], "epochs":[int, "NN_epochs"],
             "batchsize":[int, "batchsize"], "lr":[float,"learning_rate"],
-            "reg":[float,"regularization_param"], "seed":[int, "rand_seed"],
+            "reg":[float, "regularization_param"], "seed":[int, "rand_seed"],
             "activation":[str, "activation_fxn"],
             "activation_out":[str, "output_activation_fxn"],
-            "GPU":[bool, "GPU"]}
+            "GPU":[bool, "GPU"], "saveimg":[str, "franke_img"]}
 parse_args(all_args)
 
 np.random.seed(rand_seed)
@@ -209,14 +211,6 @@ print(msg2)
 
 """ Plotting the test output """
 
-fig = plt.figure()
-ax = fig.gca(projection="3d")
-fig.set_size_inches(8, 6)
-fig.tight_layout()
-ax.plot(X_test[:,0], X_test[:,1], Y_test[:,0], "b.")
-ax.plot(X_test[:,0], X_test[:,1], Y_predict[:,0], "r.")
-plt.show()
-
 """ SAVING DATA IF A NEW NETWORK IS CREATED"""
 
 if loadname is None:
@@ -238,6 +232,11 @@ if loadname is None:
         os.mkdir(dirname)
         os.mkdir(dirname + "/W")
         os.mkdir(dirname + "/B")
+    else:
+        if not os.path.isdir(dirname + "/W"):
+            os.mkdir(dirname + "/W")
+        if not os.path.isdir(dirname + "/B"):
+            os.mkdir(dirname + "/B")
 
     for layer in range(len(W)):
         np.save(f"{dirname}/W/layer_{layer:03.0f}", W[layer])
@@ -248,3 +247,19 @@ if loadname is None:
 
     with open(f"{dirname}/{terminal_output_file}", "w+") as outfile:
         outfile.write(msg1 + msg2)
+
+    fig = plt.figure()
+    ax = fig.gca(projection="3d")
+    fig.set_size_inches(8, 6)
+    fig.tight_layout()
+    ax.plot(X_test[:,0], X_test[:,1], Y_test[:,0], "b.", label = "Expected")
+    ax.plot(X_test[:,0], X_test[:,1], Y_predict[:,0], "r.", label = "Predicted")
+    plt.legend()
+    ax.set_xlabel("$x$")
+    ax.set_ylabel("$y$")
+    ax.set_zlabel("$f(x,y)$")
+    if franke_img is None:
+        plt.show()
+    else:
+        plt.savefig(f"{dirname}/{franke_img}", dpi = 250)
+        plt.close()

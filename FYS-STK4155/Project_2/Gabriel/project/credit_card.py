@@ -66,9 +66,9 @@ def parse_args(all_args):
 # Size of each batch sent into the neural network
 batchsize = 100
 # Percentage of data to set aside for testing
-test_percent = 25
+test_percent = 33
 # Configuration of layers in the Neural Network
-NN_layers = [55,44,33]
+NN_layers = [100,100]
 # Number of epochs, or total cycles over all batches
 NN_epochs = 30
 # Learning Rate
@@ -202,7 +202,6 @@ msg2 = (f"\nTest Results\n\n\tNumber of incorrect outputs: {incorrect:.0f}/"
        f"\n\tNo. of zeros:\t{Y_predict.shape[0] - np.sum(Y_predict):.0f}\n")
 print(msg2)
 
-NN.ROC(X_test, Y_test, savepath = roc_img)
 
 """ SAVING DATA IF A NEW NETWORK IS CREATED"""
 
@@ -225,10 +224,17 @@ if loadname is None:
         os.mkdir(dirname)
         os.mkdir(dirname + "/W")
         os.mkdir(dirname + "/B")
+    else:
+        if not os.path.isdir(dirname + "/W"):
+            os.mkdir(dirname + "/W")
+        if not os.path.isdir(dirname + "/B"):
+            os.mkdir(dirname + "/B")
 
     for layer in range(len(W)):
         np.save(f"{dirname}/W/layer_{layer:03.0f}", W[layer])
         np.save(f"{dirname}/B/layer_{layer:03.0f}", B[layer])
+
+    NN.ROC(X_test, Y_test, savepath = f"{dirname}/roc.png")
 
     NN_layers = np.concatenate([[X_train.shape[1]], NN_layers, [Y_train.shape[1]]])
     np.save(f"{dirname}/layers", NN_layers)

@@ -226,6 +226,11 @@ if loadname is None:
         os.mkdir(dirname)
         os.mkdir(dirname + "/W")
         os.mkdir(dirname + "/B")
+    else:
+        if not os.path.isdir(dirname + "/W"):
+            os.mkdir(dirname + "/W")
+        if not os.path.isdir(dirname + "/B"):
+            os.mkdir(dirname + "/B")
 
     for layer in range(len(W)):
         np.save(f"{dirname}/W/layer_{layer:03.0f}", W[layer])

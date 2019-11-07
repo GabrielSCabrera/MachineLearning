@@ -1,0 +1,28 @@
+
+Processed Dataset Dimensions:
+
+	X_train: (N= 16875, p= 2)
+	Y_train: (M= 16875, q= 1)
+
+	X_test:  (N= 10605, p= 2)
+	Y_test:  (M= 10605, q= 1)
+
+Neural Network Parameters
+
+	Batch Size: 100
+	Layer Configuration: [100, 100]
+	Epochs: 200
+	Learning Rate: 0.135
+	Regularization Parameter: 2.15443e-07
+	Random Seed: 112358
+
+Activation Functions
+
+	Hidden Layers: sigmoid
+	Output Layer sigmoid
+	CUDA: True
+
+Test Results
+
+	MSE: 0.01379
+	R²: 0.8515
