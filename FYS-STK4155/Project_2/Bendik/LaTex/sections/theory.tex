@@ -18,15 +18,17 @@
         \end{equation}
         There are several schemes which aim to find the optimal predictor $\hat{\beta}$; two such schemes will be introduced in this report, though they have been explained in greater detail in a previous report. See to the previous project collaboration of S. H. Magnússon and S. Håpnes \cite{5} for more detail on the subject.
         \subsubsection{Ordinary Least Squares}
-            The Ordinary Least Squares regression method (or simply OLS) is the simplest and most intuitive to implement. This scheme involves minimizing a \textit{Cost Function}, something which is generally the goal of any linear or logistic regression method. The cost function is in general a measure of how well a calculated prediction $\hat{y}$ performs in relation to the 'true' data $y$. In the case of OLS, the cost function is the \textit{Mean-Squared Error} (or MSE):
+            The Ordinary Least Squares regression method (OLS) is the simplest and most intuitive to implement. This scheme involves minimizing a \textit{Cost Function}, something which is generally the goal of any linear or logistic regression method. The cost function is in general a measure of how well a calculated prediction $\hat{y}$ performs in relation to the 'true' data $y$. In the case of OLS, the cost function is the \textit{Mean-Squared Error} (MSE):
             \begin{equation}\label{eq:MSE}
                 MSE(y, \hat{y})=\frac1{2n}\sum_{i=0}^{n-1} \left( y-\hat{y} \right)^2,
             \end{equation}
-            where $\hat{y}$ is the prediction $\hat{y}=X\hat{\beta}$ presented previously. Deriving the cost function w.r.t the predictor $\hat{\beta}$ yields the minimum (assuming there's no maximum) of the cost function, resulting in the optimal prediction $\hat{\beta}$ to be:
+            where $\hat{y}$ is the prediction $\hat{y}=X\hat{\beta}$ presented previously. Deriving the cost function w.r.t the predictor $\hat{\beta}$ yields the minimum of the cost function, assuming there's no maximum. This results in the optimal prediction of $\hat{\beta}$ to be:
             \begin{equation}
                 \pdv{}{\hat{\beta}}MSE=0\Rightarrow \hat{\beta}^{OLS} = \left( X^TX \right)^{-1}X^Ty
             \end{equation}
-            See to appendix A (copied from project 1) for the proof of this. It's worth noting that the appendix introduces the cost function as the \textit{Residual Sum of Squares} (RSS). This function is identical to the $MSE$ function except for a factor of $(1/2n)$, meaning that the minimum of both functions is still the same $\hat{\beta}$ expression. \\\\
+            See to appendix A 
+%            (copied from project 1) 
+			for the proof of this. It's worth noting that the appendix introduces the cost function as the \textit{Residual Sum of Squares} (RSS). This function is identical to the $MSE$ function except for a factor of $1/2n$, meaning that the minimum of both functions is still the same $\hat{\beta}$ expression. \\\\
             This is the baseline simplest model for a prediction, and is the foundation for several other variants of regression. One of which being the method which will be compared to the neural network, namely the \textit{Ridge Regression} scheme.
             
         \subsubsection{Ridge Regression}
@@ -42,21 +44,28 @@
             \begin{equation}
                 \pdv{C}{\hat{\beta}}=0\Rightarrow \hat{\beta}^{Ridge} = \left( X^TX + \lambda I \right)^{-1}X^Ty
             \end{equation}
-            This is the equation for the Ridge scheme, where $\lambda$ is adjustable and typically quite small, $X$ is the input/set of features, and $y$ is the outcomes corresponding to those features (the "goal" of the prediction). Some research will be conducted to find the optimal hyperparameter $\lambda$ of the Ridge scheme, though this has already been done in our previous project (linked to earlier).
+            This is the equation for the Ridge scheme, where $\lambda$ is adjustable and typically quite small, $X$ is the input/set of features, and $y$ is the outcomes corresponding to those features, the "goal" of the prediction.
+            Some research will be conducted to find the optimal hyperparameter $\lambda$ of the Ridge scheme, though this has already been done in our previous project (linked to earlier).
             
     \subsection{Logistic Regression and Gradient Descent}
-        Logistic regression is similar to linear regression, though it aims to produce predictions for classification purposes. The study of predicting the credit card data presented in this report is one of logistic regression, as it regards classifying people into two categories, namely ($\text{yes}=1$) or ($\text{no}=0$). Other classification examples range from hand-written image detection (case of 10 classes, see to Michael Nielsen's book \cite{nielsenneural}), to declaring whether a breast cancer tumor is malicious or not (see to work by Fombellida J. et al. \cite{breastcancer}). Logistic regression works in approximately the same way as linear regression, though the output of the network should always be within the range of $\hat{y}_i\in [0,1]$ for $i \in [0,1,\hdots,n-1]$. Values between this are typically disregarded when testing the prediction (this is not the case for the training), such that:
+        Logistic regression is similar to linear regression, though it aims to produce predictions for classification purposes. The study of predicting the credit card data presented in this report is one of logistic regression, as it regards classifying people into two categories, namely ($\text{yes}=1$) or ($\text{no}=0$). Other classification examples range from hand-written image detection (case of 10 classes, see to Michael Nielsen's book \cite{nielsenneural}), to declaring whether a breast cancer tumor is malicious or not (see to work by Fombellida J. et al. \cite{breastcancer}). Logistic regression works in approximately the same way as linear regression, though the output of the network should always be within the range of $\hat{y}_i\in [0,1]$ for $i \in [0,1,\hdots,n-1]$. Values between this are typically disregarded when testing the prediction,
+        %(this is not the case for the training)
+        such that:
         \begin{equation}
             \hat{y}_i = \begin{cases} 1 & \text{if } \hat{y}_i\geq 1 \\ 0 & \text{if } \hat{y}_i < 1 \end{cases}.
         \end{equation}
-        If the number of \textit{classes} is larger than two (as it is in the binary yes/no credit card data), then this is not quite the case. However, this report will not go into logistic regression cases which are not binary, so this definition of how we determine the outcomes will hold for the present study.
+        If the number of \textit{classes} is larger than two, %(as it is in the binary yes/no credit card data), 
+        then this is not quite the case. However, this report will not go into logistic regression cases which are not binary, so this definition of how we determine the outcomes will hold for the present study.
         \subsubsection{Stochastic Gradient Descent method}
             The primary comparison to the logistic neural network system is one of \textit{stochastic gradient descent} (SGD). This system is comprised of a prediction $\hat{y}$ which is fed through the so-called \textit{sigmoid} function, defined as:
             \begin{equation}\label{eq:sigmoid}
                 \sigma (\hat{y}) = \frac{1}{1+\exp(-\hat{y})}.
             \end{equation}
-            The sigmoid function is used to place the prediction into the domain of $\sigma(\hat{y}) \in [0,1]$, where the prediction accuracy is then assessed using a cost function and the training data (or "target") $y$. The typical function to use in the logistic regression case is the \textit{categorical cross entropy} function. The $MSE$ function is most useful in the regression case. However, both cost functions will be presented in further detail later on.\\\\ 
-            The stochastic gradient descent method is \textit{iterative}, where the goal of the method is to update the predictor $\hat{\beta}$ in a way that decreases the cost function with each iteration. Ultimately this will produce a solution $\hat{\beta}$ which is in a local (and hopefully global, if the cost function is non-convex) minimum of the cost function. Once the corrections/updates made to the predictor are sufficiently small (negligible improvements to be made), the method declares that it has found an approximate solution to the task of minimizing the cost function. As mentioned, this method can get caught in a local minimum of the cost function, resulting in a not-so-optimal predictor $\hat{\beta}$. Figure \ref{fig:local_min} illustrates a conceptualization of such a local minimum case.
+            The sigmoid function is used to place the prediction into the domain of $\sigma(\hat{y}) \in [0,1]$, where the prediction accuracy is then assessed using a cost function and the training data %(or "target") 
+            $y$. The typical function to use in the logistic regression case is the \textit{categorical cross entropy} function. The $MSE$ function is most useful in the regression case. Both cost functions will be presented in further detail later on.\\\\ 
+            The stochastic gradient descent method is \textit{iterative}, where the goal of the method is to update the predictor $\hat{\beta}$ in a way that decreases the cost function with each iteration. 
+            Ultimately this will produce a solution $\hat{\beta}$ which is in a local minimum of the cost function. Hopefully this minimum is also global, if the cost function is non-convex.
+            Once the corrections/updates made to the predictor are sufficiently small, or the improvements are negligible, the method declares that it has found an approximate solution to the task of minimizing the cost function. As mentioned, this method can get caught in a local minimum of the cost function, resulting in a not-so-optimal predictor $\hat{\beta}$. Figure \ref{fig:local_min} illustrates a conceptualization of such a local minimum case.
             \begin{figure}[H]
                 \centering
                 \includegraphics[width=0.4\textwidth]{figures/local_min_concept.png}
@@ -68,14 +77,17 @@
             \begin{equation}
                 \hat{\beta}_1 = \hat{\beta}_0 - \eta \nabla_{\hat{\beta}_0}C,
             \end{equation}
-            where $\nabla_{\hat{\beta}_0}C$ is the gradient of the cost function with respect to the first guess $\hat{\beta}_0$, and $\eta$ is the so-called \textit{learning rate}. This is referred to as one iteration of the method, where $C(\hat{\beta}_1) < C(\hat{\beta}_0)$ is guaranteed given that the learning rate is well adjusted. This learning rate $\eta$ is a subject which dictates how large the step size of the descent is, if the step is too large, then the cost function is not guaranteed to decrease after the iteration. There are many ways of modeling the learning rate, making this a central parameter of interest of the study presented. The learning rate will be discussed in greater detail later, though keep in mind that it is an adjustable parameter that is typically quite small (similar to the $l2$ regularization hyperparameter $\lambda$, which is presented later on).\\\\
-            As previously mentioned, the $MSE$ cost function is used for linear regression, and the \textit{categorical cross-entropy} cost function is used for logistic regression (classification) cases. The categorical cross-entropy is found by taking the negative log of the so-called \textit{Maximum Likelihood Estimation}:
+            where $\nabla_{\hat{\beta}_0}C$ is the gradient of the cost function with respect to the first guess $\hat{\beta}_0$, and $\eta$ is the so-called \textit{learning rate}. This is referred to as one iteration of the method, where $C(\hat{\beta}_1) < C(\hat{\beta}_0)$ is guaranteed given that the learning rate is well adjusted. This learning rate $\eta$ is a subject which dictates how large the step size of the descent is, if the step is too large, then the cost function is not guaranteed to decrease after the iteration. There are many ways of modeling the learning rate, making this a central parameter of interest of the study presented. The learning rate will be discussed in greater detail later, though keep in mind that it is an adjustable parameter that is typically quite small, similar to the $l2$ regularization hyperparameter $\lambda$. %which is presented later on.
+            \\\\
+            As previously mentioned, the $MSE$ cost function is used for linear regression, and the \textit{categorical cross-entropy} cost function is used for logistic regression
+            %(classification) 
+            cases. The categorical cross-entropy is found by taking the negative log of the so-called \textit{Maximum Likelihood Estimation}:
             \begin{align}
                 \begin{split}
                     &P(\mathds{D}|\hat{\beta}) =\\ \prod^{n-1}_{i=0} \left[ p(y_i=1|x_i, \hat{\beta}) \right]^{y_i}&\left[ 1-p(y_i=1|x_i, \hat{\beta}) \right]^{1-y_i},
                 \end{split}
             \end{align}
-            which is defined as the total likelihood for all possible outcomes of a data set $\mathds{D}=\{ (x_i, y_i) \}$ which has binary labels $y_i \in \{ 0,1 \}$. Taking the negative logarithm of these probabilities produces the generalized categorical cross-entropy (or log-likelihood) cost function expression:
+            which is defined as the total likelihood for all possible outcomes of a data set $\mathds{D}=\{ (x_i, y_i) \}$ which has binary labels $y_i \in \{ 0,1 \}$. Taking the negative logarithm of these probabilities produces the generalized categorical cross-entropy, or log-likelihood, cost function expression:
             \begin{align}
                 \begin{split}
                     C(\hat{\beta}) &= \sum_{i=0}^{n-1} \bigg( y_i\log p(y_i=1|x_i, \hat{\beta}) \\&+ (1-y_i)\log\left[1-p(y_i=1|x_i, \hat{\beta})\right] \bigg),
@@ -103,15 +115,17 @@
             \begin{equation}
                 \hat{\beta}_{k+1} = \hat{\beta}_k - \eta \left( -X^T\left( y-\sigma(X\hat{\beta}_k) \right) \right).
             \end{equation}
-            This is iterated until the gradient is so small that $\hat{\beta}_{k+1} \approx \hat{\beta}_k$, which is declared to be a sufficient predictor. This is the iterative gradient descent method used to minimize the categorical cross-entropy cost function (specifically for the sigmoid function $\sigma (\hat{y})$). See to M.H. Jensen's FYS-STK4155 Lecture notes for more detail on deriving these expressions \cite{lecturenotes} (Logistic Regression section of the citation).\\\\
-            To avoid encountering any local minimum of the cost function, there is a random (or stochastic) factor included. This is known as the application of \textit{mini-batches}, where the gradient is split up into multiple 'sub-gradients':
+            This is iterated until the gradient is so small that $\hat{\beta}_{k+1} \approx \hat{\beta}_k$, which is declared to be a sufficient predictor. This is the iterative gradient descent method used to minimize the categorical cross-entropy cost function, specifically for the sigmoid function $\sigma (\hat{y})$. See to M.H. Jensen's FYS-STK4155 Lecture notes for more detail on deriving these expressions \cite{lecturenotes} (Logistic Regression section of the citation).\\\\
+            To avoid encountering any local minimum of the cost function, there is a random, or stochastic, factor included. This is known as the application of \textit{mini-batches}, where the gradient is split up into multiple 'sub-gradients':
             \begin{equation}
                 \nabla_{\hat{\beta}} C = \sum^{B}_{b=1} \nabla_{\hat{\beta}_b} c,
             \end{equation}
-            where $B$ is the number of batches and $b$ is a mini-batch. This concept of batches will be described in greater detail later on, when they are put into an ANN context.
+            where $B$ is the number of batches and $b$ is a mini-batch. %This concept of batches will be described in greater detail later on, when they are put into an ANN context.
     
     \subsection{Neural Network Dynamics}
-        An ANN is generally a large system of many components which can be customized to conduct all kinds of studies. The design of the network will be gone into more detail later on; for now the two most important algorithms to a neural network are introduced. These are the algorithm responsible for prediction and the algorithm responsible for learning, the so-called \textit{Feed-Forward}, and \textit{Backwards-Propagation} algorithms, respectively.
+        An ANN is generally a large system of many components which can be customized to conduct all kinds of studies. Before we can go into detial on the design of the network we will introduce the two most important algorithms to a neural network.
+        %The design of the network will be gone into more detail later on; for now the two most important algorithms to a neural network are introduced. 
+        These are the algorithm responsible for prediction and the algorithm responsible for learning, the so-called \textit{Feed-Forward}, and \textit{Backwards-Propagation} algorithms, respectively.
         \subsubsection{Feed-Forward}
             The general theory of the neural network is to predict using the following linear equation:
             \begin{equation}\label{eq:z1}
@@ -129,7 +143,9 @@
                 a = f\left( X W + b \right),
             \end{equation}
             where $f$ is the activation function. In figure \ref{fig:MLP_conc}, the symbol $\varphi$ represents the activation function. In this report, the function will be signified by $f$.\\\\
-            It is worth noting that this is identical to the SGD system introduced in the previous section, where the predictor $\hat{\beta}$ is now replaced by the weights $W$, and the activation for the $SGD$ method was the sigmoid function $f=\sigma$. The difference is that the neural network is designed to have multiple \textit{layers} of such equations. Increasing the number of layers within the neural network is simple: The outputs of one layer become the inputs to the next layer, and so on. Figure \ref{fig:MLP_full} illustrates what this looks like for three such layers (two of which are referred to as 'hidden'):
+            It is worth noting that this is identical to the SGD system introduced in the previous section, where the predictor $\hat{\beta}$ is now replaced by the weights $W$, and the activation for the $SGD$ method was the sigmoid function $f=\sigma$. The difference is that the neural network is designed to have multiple \textit{layers} of such equations. Increasing the number of layers within the neural network is simple: The outputs of one layer become the inputs to the next layer, and so on. The extra/new
+            %not sure which fracing is best here
+            layers are referred to as 'hidden'. Figure \ref{fig:MLP_full} illustrates what this looks like for three such layers:% (two of which are referred to as 'hidden'):
             \begin{figure}[H]
                 \centering
                 \includegraphics[width=0.4\textwidth]{figures/MLP2.png}
