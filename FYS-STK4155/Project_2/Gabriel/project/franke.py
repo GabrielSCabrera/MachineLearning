@@ -201,7 +201,7 @@ else:
     NN.load(loadname)
 
 # Predicting outputs for the testing data
-Y_predict, Y_test = NN.predict(X_test, Y_test)
+Y_predict, Y_test2 = NN.predict(X_test, Y_test)
 
 """ ERROR ANALYSIS """
 
