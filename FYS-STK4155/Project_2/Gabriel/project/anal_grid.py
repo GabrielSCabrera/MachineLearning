@@ -187,11 +187,11 @@ def parse_args(all_args):
 time_0 = time()
 grid_size = 10
 
-regs1 = np.logspace(-7, -4, grid_size)
-lrs1 = np.linspace(0.01, 0.15, grid_size)
+regs1 = np.logspace(-8, -6, grid_size)
+lrs1 = np.linspace(0.06, 0.2, grid_size)
 
-regs2 = np.logspace(-7, -1, grid_size)
-lrs2 = np.linspace(0.001, 0.09, grid_size)
+regs2 = np.logspace(-6, -5, grid_size)
+lrs2 = np.linspace(0.08, 0.2, grid_size)
 
 epochs = 200
 gpu = True
@@ -413,7 +413,10 @@ elif cmdlinearg == "plot":
         cbar.ax.set_ylabel(label)
         for i,j,k in zip(x2_text, y2_text, value):
             for x,y,z in zip(i,j,k):
-                val = "." + f"{z:.3f}".split(".")[1]
+                if "." in f"{z:.3f}":
+                    val = "." + f"{z:.3f}".split(".")[1]
+                else:
+                    val = z
                 txt = plt.text(x, y, val, weight = 'bold')
                 txt.set_path_effects([PathEffects.withStroke(linewidth=2, foreground='w')])
         plt.yscale('log')
