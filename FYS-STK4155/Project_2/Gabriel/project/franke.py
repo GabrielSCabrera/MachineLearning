@@ -150,7 +150,6 @@ X, Y, f_xy = generate_Franke_data(N = 150)
 # Splitting the data into training and testing sets
 X_train, Y_train, X_test, Y_test = split(X, Y, test_percent)
 
-
 """ INFORMATION FOR THE USER """
 
 msg1 = (f"\nProcessed Dataset Dimensions:\n"
@@ -181,8 +180,8 @@ if loadname is None:
     # Implements normalization and one-hot encoding
     NN.preprocess({}, False, output_activation_fxn)
 
-    # Upsamples the training data
-    NN.upsample_binary()
+    # # Upsamples the training data
+    # NN.upsample_binary()
 
     print("Training the Network:\n")
 
@@ -219,42 +218,6 @@ print(msg2)
 """ Plotting the test output """
 
 """ SAVING DATA IF A NEW NETWORK IS CREATED"""
-
-# if loadname is None:
-#     if dirname[-1] == "_":
-#         ID = 0.0
-#         while True:
-#             ID_text = f"{ID:03.0f}"
-#             name_W = "W"
-#             name_B = "B"
-#             if os.path.isdir(dirname + ID_text):
-#                 ID += 1
-#             else:
-#                 dirname = dirname + ID_text
-#                 os.mkdir(dirname)
-#                 os.mkdir(dirname + "/W")
-#                 os.mkdir(dirname + "/B")
-#                 break
-#     elif not os.path.isdir(dirname):
-#         os.mkdir(dirname)
-#         os.mkdir(dirname + "/W")
-#         os.mkdir(dirname + "/B")
-#     else:
-#         if not os.path.isdir(dirname + "/W"):
-#             os.mkdir(dirname + "/W")
-#         if not os.path.isdir(dirname + "/B"):
-#             os.mkdir(dirname + "/B")
-#
-#     for layer in range(len(W)):
-#         np.save(f"{dirname}/W/layer_{layer:03.0f}", W[layer])
-#         np.save(f"{dirname}/B/layer_{layer:03.0f}", B[layer])
-#
-#     NN_layers = np.concatenate([[X_train.shape[1]], NN_layers, [Y_train.shape[1]]])
-#     np.save(f"{dirname}/layers", NN_layers)
-#
-#     with open(f"{dirname}/{terminal_output_file}", "w+") as outfile:
-#         outfile.write(msg1 + msg2)
-#
 
 if loadname is None:
     if dirname[-1] == "_":
