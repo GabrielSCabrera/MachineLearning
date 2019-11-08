@@ -1,0 +1,56 @@
+\section*{Appendix A:\\OLS Predictor Derivation}
+    Setting the Residual Sum of Squares (RSS) partial derivative with respect to the predictor $\beta$ equal zero yields:
+    \begin{equation}
+        \pdv{}{\beta}\ RSS = 0
+    \end{equation}
+    Inserting the expression for RSS (given by $2n\cdot MSE$, where MSE is defined in equation \ref{eq:MSE}) yields:
+    \begin{equation}
+        \pdv{}{\beta}\ \left( y - X \beta \right)^2 = 0,
+    \end{equation}
+    rewriting as:
+    \begin{equation}
+        \pdv{}{\beta}\left( \left( y - X \beta \right)^T\left( y - X \beta \right)\right) = 0,
+    \end{equation}
+    expanding:
+    \begin{equation}
+        \pdv{}{\beta}\left( y^Ty - y^TX\beta - \left( X\beta \right)^Ty + \left( X\beta \right)^T\left( X\beta \right) \right) = 0,
+    \end{equation}
+    removing the factors which are independent of $\beta$ and utilizing the rule
+    \begin{equation}
+        \left( A^TB \right)^T = B^TA
+    \end{equation}
+    yields:
+    \begin{equation}\label{eq:appA_beta-rel}
+        \pdv{}{\beta}\left(- y^TX\beta - \beta^TX^T y + \beta^TX^TX\beta \right) = 0,
+    \end{equation}
+    Also, seeing as the product $y^TX\beta$ is a scalar, we have that:
+    \begin{equation}
+        y^TX\beta = \left( y^TX\beta \right)^T = \beta^TX^Ty
+    \end{equation}
+    Since the transposed of a scalar equals the scalar. This allows us to rewrite equation \ref{eq:appA_beta-rel} to
+    \begin{equation}
+        \pdv{}{\beta}\left(- 2 \beta^TX^T y + \beta^TX^TX\beta \right) = 0,
+    \end{equation}
+    Differentiating with respect to $\beta$ yields:
+    \begin{equation}
+        -2 X^Ty + \pdv{}{\beta} \left( \beta^TX^TX\beta \right) = 0
+    \end{equation}
+    One more matrix-vector differentiation formula is needed for the final product:
+    \begin{align}
+        \pdv{(a^TAa)}{a} = 2Aa = 2a^TA
+    \end{align}
+    for vectors $a$ and a symmetric matrix $A$. We can now derive the final formula for $\beta$:
+    \begin{align}
+        -2 X^Ty + \pdv{}{\beta} \left( \beta^TX^TX\beta \right) &= 0 \\
+        -2 X^Ty + \pdv{}{\beta} \left( \beta^TA\beta \right) &= 0 \\
+        -2 X^Ty + 2A\beta &= 0 \\
+        -2 X^Ty + 2X^TX\beta &= 0 \\
+        -X^Ty + X^TX\beta &= 0
+    \end{align}
+    by the declaration of $X^TX=A$ being symmetric. This finally yields:
+    \begin{align}
+        X^TX\beta &= X^Ty \\
+        \beta &= \left( X^TX \right)^{-1}X^Ty.
+    \end{align}
+    \\
+    
