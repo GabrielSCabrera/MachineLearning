@@ -22,7 +22,7 @@
             \begin{equation}\label{eq:MSE}
                 MSE(y, \hat{y})=\frac1{2n}\sum_{i=0}^{n-1} \left( y-\hat{y} \right)^2,
             \end{equation}
-            where $\hat{y}$ is the prediction $\hat{y}=X\hat{\beta}$ presented previously. Deriving the cost function w.r.t the predictor $\hat{\beta}$ yields the minimum of the cost function, assuming there's no maximum. This results in the optimal prediction of $\hat{\beta}$ to be:
+            where $\hat{y}$ is the prediction $\hat{y}=X\hat{\beta}$ presented previously. Deriving the cost function w.r.t. the predictor $\hat{\beta}$ yields the minimum of the cost function, assuming there's no maximum. This results in the optimal prediction of $\hat{\beta}$ to be:
             \begin{equation}
                 \pdv{}{\hat{\beta}}MSE=0\Rightarrow \hat{\beta}^{OLS} = \left( X^TX \right)^{-1}X^Ty
             \end{equation}
@@ -40,7 +40,7 @@
             \begin{equation}
                 \text{det} \left(X^TX +\lambda I \right) \neq 0 \Rightarrow \left(X^TX +\lambda I \right)^{-1} \text{ exists,}
             \end{equation}
-            where $I$ is the identity matrix and $\lambda$ is some adjustable hyperparameter. Minimizing the MSE by setting the partial derivative w.r.t $\hat{\beta}$ equal to zero yields the following optimal Ridge scheme solution:
+            where $I$ is the identity matrix and $\lambda$ is some adjustable hyperparameter. Minimizing the MSE by setting the partial derivative w.r.t. $\hat{\beta}$ equal to zero yields the following optimal Ridge scheme solution:
             \begin{equation}
                 \pdv{C}{\hat{\beta}}=0\Rightarrow \hat{\beta}^{Ridge} = \left( X^TX + \lambda I \right)^{-1}X^Ty
             \end{equation}
@@ -218,7 +218,8 @@
                 \pdv{z^{l+1}}{a^l} &= \pdv{}{a^l}\left( a^lW^{l+1} + b^{l+1} \right)=W^{l+1}\text{, and}\\\label{eq:C/zl2}
                 \pdv{a^l}{z^l} &= f'^l(z^l).
             \end{align}
-            This leaves us with the following expression (inserting equations \ref{eq:C/zl1} and \ref{eq:C/zl2} into equation \ref{eq:C/zl}):
+            Inserting equations \ref{eq:C/zl1} and \ref{eq:C/zl2} into equation \ref{eq:C/zl} leaves us with the following expression:
+            %This leaves us with the following expression (inserting equations \ref{eq:C/zl1} and \ref{eq:C/zl2} into equation \ref{eq:C/zl}):
             \begin{align}
                 \pdv{C}{z^l} &= \left( (W^{l+1})^T \pdv{C}{z^{l+1}}  \right) \odot f'^l(z^l)\\
                 \delta^l &= \left( (W^{l+1})^T \delta^{l+1}  \right) \odot f'^l(z^l)
@@ -233,14 +234,14 @@
                 \pdv{C}{b^l} &= \delta^l \ \text{,  and}\\
                 \pdv{C}{W^l} &= (a^{l-1})^T\delta^l.
             \end{align}
-            The four equations for the backwards propagation algorithm can then be summarized as (rewriting the vectors with index notation):
+            The four equations for the backwards propagation algorithm can then be summarized as:% (rewriting the vectors with index notation):
             \begin{align}
                 \delta^L &= \nabla_a C \odot f'^L(z^L), \\
                 \delta^l &= ((W^{l+1})^T\delta^{l+1})\odot f'^l(z^l), \\
                 \pdv{C}{b^l_j} &= \delta^l_j, \\
                 \pdv{C}{W^l_{j,k}} &= a^{l-1}_k\delta^l_j,
             \end{align}
-            where $\nabla_aC$ is the gradient of the cost function w.r.t the output $a$, and $f'^l$ is the derivative of the activation function of layer $l$ w.r.t $z^l$. \\\\
+            where $\nabla_aC$ is the gradient of the cost function w.r.t. the output $a$, and $f'^l$ is the derivative of the activation function of layer $l$ w.r.t. $z^l$. \\\\
             This is all that is needed to ensure that the weights and biases can be corrected in a manner that reduces the cost function $C$ in relation to the adjustable parameters $\theta \in \left(W,b\right)$. Once again, there is the possibility of being caught in a local minimum in the case of a non-convex cost function $C$. The learning rate $\eta$ and batch concepts are therefore presented in the ANN context, though they are very similar to what was presented for the SGD section.
             
         \subsubsection{Learning rate, batches and $l2$ regularization}
@@ -249,18 +250,18 @@
                 b^l_j &= b^l_j - \eta \pdv{C}{b^l_j}, \\
                 W^l_{j,k} &= W^l_{j,k} - \eta \pdv{C}{W^l_{j,k}}.
             \end{align}
-            There are several ways of modeling the learning rate, some of which involves the \textit{adaptive} learning rate or the \textit{time-based} learning rate. However, these are not implemented into the current research. The learning rate will be set to a (typically small) constant value throughout the project. The best learning rate value is a topic which will be of interest when a search of the ANN which produces the most accurate predictions is researched.\\\\
+            There are several ways of modeling the learning rate, some of which involves the \textit{adaptive} learning rate or the \textit{time-based} learning rate. However, these are not implemented into the current research. The learning rate will be set to a typically small constant value throughout the project. The best learning rate value is a topic which will be of interest when a search of the ANN which produces the most accurate predictions is researched.\\\\
             The neural network gradient is segmented into batches in a similar way to what was done in the SGD section. This is done to avoid the problem of local minimum of the cost function; a problem which has been introduced already. This is once again done by averaging the gradients of multiple inputs at a time, making it so that the input matrix $X$ is now of size $(batchsize \times p)$, and the weights and biases are now updated using the sum of these average gradients. The data set must be shuffled after each batch is iterated over using the feed-forward and backwards propagation algorithms presented. This is done to further increase the likelihood of the algorithm to reach a global minimum, as the averages will differ slightly depending on the batchsize. If the batchsize is large, then the average of the batch gradient will typically not change very drastically; the batchsize is therefore recommended to be around $B=100$. This is already quite a large number of cases, so should not be increased much more. After each of the batches have updated the weights and bias gradients and the data set is shuffled, a new \textit{epoch} begins. This signifies all the data has been cycled through and the gradients have been updated accordingly. This equates to one 'iteration' $k\rightarrow k+1$ of the SGD method presented previously. The number of epochs is not quite as important as the change in the gradients $per$ epoch. As, if an epoch does not cause the weights and biases to change very much, then the current parameters are declared as sufficient to produce a cost function minimum.\\\\
-            Once more subject is introduced before moving onto an introduction of cost- and activation functions, namely l2 regularization. The learning rate is one of the parameters which is adjustable and of interest, the other one being the l2 regularization hyperparameter $\lambda$. The l2 regularization involves adding an additional factor/penalty to the original cost function $C_0$, such that:
+            One more subject is introduced before moving onto an introduction of cost- and activation functions, namely l2 regularization. The learning rate is one of the parameters which is adjustable and of interest, the other one being the l2 regularization hyperparameter $\lambda$. The l2 regularization involves adding an additional factor/penalty to the original cost function $C_0$, such that:
             \begin{equation}
                 C = C_0 + \frac{\lambda}{2n} \sum_j |W_j|^2
-            \end{equation}{}
-            is the new cost function, where $p$ is the number of features. This ultimately penalizes the weights if they are too large, making it so that the weights $W$ are encouraged to be smaller. The net impact of this factor is that the derivative of the cost function w.r.t the weights presented earlier now has an additional factor which subtracts a fraction of the current weights:
+            \end{equation}
+            is the new cost function, where $p$ is the number of features. This ultimately penalizes the weights if they are too large, making it so that the weights $W$ are encouraged to be smaller. The net impact of this factor is that the derivative of the cost function w.r.t. the weights presented earlier now has an additional factor which subtracts a fraction of the current weights:
             \begin{align}
                 W^l_{j,k} &= W^l_{j,k} - \eta\left[ \pdv{C_0}{W^l_{j,k}} + \frac{\lambda}{n} W^l_{j,k} \right]\\
                 W^l_{j,k} &= \left(1-\frac{\eta\lambda}{n}\right)W^l_{j,k} - \eta \pdv{C_0}{W^l_{j,k}},
             \end{align}
-            where $\eta$ is the learning rate, $\lambda$ is the $l2$ regularization hyperparameter, $C_0$ is the cost function without $l2$ regularization, and $p$ is the number of features/inputs into the network. This hyperparameter $\lambda$ is something which will be studied in detail in an attempt to find the value which produces the most accurate $\hat{y}$ prediction (best weights and biases).
+            where $\eta$ is the learning rate, $\lambda$ is the $l2$ regularization hyperparameter, $C_0$ is the cost function without $l2$ regularization, and $p$ is the number of features/inputs into the network. This hyperparameter $\lambda$ is something which will be studied in detail in an attempt to find the value which produces the most accurate $\hat{y}$ prediction.% (best weights and biases).
             
     \subsection{Cost- and Activation functions}
         A quintessential component to the neural network system is the choice of cost- and activation functions. The feed-forward system is dictated and fed through multiple activation functions, vastly influencing the outcome. This will be a large point of debate in the methods, results and the discussion section. A few cost- and activation functions will be presented here for this study, though far more variants exist in their respectful families. Table \ref{tab:cost_functions} lists a few cost functions which are explored, and their respectful derivatives:
@@ -282,7 +283,7 @@
         \begin{equation}
             \mathds{E}\left[a\right] = \sum_{i=0}^{n-1} a_i \cdot P(a_i),
         \end{equation}
-        where $P(a_i)$ is the probability of the outcome $a_i$. When the results are uniformly distributed (have equal outcomes), then the expectation value is given by
+        where $P(a_i)$ is the probability of the outcome $a_i$. When the results are uniformly distributed, or have equal outcomes, then the expectation value is given by
         \begin{equation}
             \mathds{E}\left[a\right] = \frac1n\sum_{i=0}^{n-1} a_i.
         \end{equation}
@@ -290,30 +291,35 @@
             Mean-squared error, or the \textit{L2 loss function} is the most typical cost function to use in non-logistic regression cases. This is a very consistent and simple function to measure the performance of a prediction $\hat{y}$ in relation to the training data $y$.
         \subsubsection{Cross-Entropy}
             The most common cost function used in logistic regression is the cross entropy, or \textit{log-loss} function. The function listed in the table measures the performance of a classification model, where all outputs are set to be between 0 and 1. This function stems from the \textit{Maximum Likelihood Estimation} principle presented previously.
-            This cross entropy expression is specific to the case of binary classification (two outcomes). This is the case for the credit card data logistic regression (default or not default), so the cross-entropy is the cost function of choice for neural network logistic regression study. \\\\
-        These are the two choice cost functions to perform the classification and regression research. In addition to choosing a cost function for predicting, one must also make a choice of activation functions. Table \ref{tab:activation_functions} lists a few activation functions which are explored, and their respectful derivatives:
-        \begin{table}[H]
-            \centering
-            \begin{tabular}[t]{l@{\hskip 0.4in}c@{\hskip 0.3in}c}
-                \toprule
-                 & $f(z_i)$ & $f'(z_i)$ \\
-                \midrule\\
-                Sigmoid & $(1+e^{-z_i})^{-1}$ & $f(z_i)\left( 1-f(z_i) \right)$ \\\\
-                tanh & $\tanh (z_i)$ & $1-f^2(z_i)$ \\\\
-                ReLU & $\begin{cases} z_i & \text{for } z_i>0 \\ 0 & \text{else} \end{cases}$ & $\begin{cases} 1 & \text{for } z_i>0 \\ 0 & \text{else} \end{cases}$ \\\\
-                ReLU6 & $\begin{cases} z_i & \text{for } z_i\in[0,6] \\ 0 & \text{for } z_i<0 \\ 6 & \text{for } z_i>6 \end{cases}$ & $\begin{cases} 1 & \text{for } z_i\in [0,6] \\ 0 & \text{else} \end{cases}$ \\\\
-                Softmax & $e^{z_i}\cdot(\sum_k e^{z_k})^{-1}$ & $\begin{cases}s_i(1-s_j) & \text{for } i=j\\ -s_i\cdot s_j & \text{for } i\neq j \end{cases}$ \\\\
-                Softsign & $z_i\cdot \left( 1+|z_i| \right)^{-1}$ & $\left( 1+|z_i| \right)^{-2}$\\\\
-                \bottomrule
-            \end{tabular}
-            \caption{Table listing a number of common activation functions and their derivatives. Several of these are of interest and are implemented into the study.}
-            \label{tab:activation_functions}
-        \end{table}
-        These are some key activation functions which may be studied. One thing to note is that the derivative of the softmax function is a matrix since the activation of node $a_j$ can depend on all the other activations from the denominator $\sum_ke^{z_k}$ of the function. Technically, the derivative stated in the table is really the derivative $\pdv{}{a_j}f(z_i)$. Following is a short discussion of the strengths and some weaknesses of some of the activation functions introduced in table \ref{tab:activation_functions}:
+            This cross entropy expression is specific to the case of binary classification. %(two outcomes). 
+            This is the case for the credit card data logistic regression,
+            %(default or not default), 
+            so the cross-entropy is the cost function of choice for neural network logistic regression study. \\\\
+	        These are the two choice cost functions to perform the classification and regression research. In addition to choosing a cost function for predicting, one must also make a choice of activation functions. Table \ref{tab:activation_functions} lists a few activation functions which are explored, and their respectful derivatives:
+	        \begin{table}[H]
+	            \centering
+	            \begin{tabular}[t]{l@{\hskip 0.4in}c@{\hskip 0.3in}c}
+	                \toprule
+	                 & $f(z_i)$ & $f'(z_i)$ \\
+	                \midrule\\
+	                Sigmoid & $(1+e^{-z_i})^{-1}$ & $f(z_i)\left( 1-f(z_i) \right)$ \\\\
+	                tanh & $\tanh (z_i)$ & $1-f^2(z_i)$ \\\\
+	                ReLU & $\begin{cases} z_i & \text{for } z_i>0 \\ 0 & \text{else} \end{cases}$ & $\begin{cases} 1 & \text{for } z_i>0 \\ 0 & \text{else} \end{cases}$ \\\\
+	                ReLU6 & $\begin{cases} z_i & \text{for } z_i\in[0,6] \\ 0 & \text{for } z_i<0 \\ 6 & \text{for } z_i>6 \end{cases}$ & $\begin{cases} 1 & \text{for } z_i\in [0,6] \\ 0 & \text{else} \end{cases}$ \\\\
+	                Softmax & $e^{z_i}\cdot(\sum_k e^{z_k})^{-1}$ & $\begin{cases}s_i(1-s_j) & \text{for } i=j\\ -s_i\cdot s_j & \text{for } i\neq j \end{cases}$ \\\\
+	                Softsign & $z_i\cdot \left( 1+|z_i| \right)^{-1}$ & $\left( 1+|z_i| \right)^{-2}$\\\\
+	                \bottomrule
+	            \end{tabular}
+	            \caption{Table listing a number of common activation functions and their derivatives. Several of these are of interest and are implemented into the study.}
+	            \label{tab:activation_functions}
+	        \end{table}
+	        These are some key activation functions which may be studied. One thing to note is that the derivative of the softmax function is a matrix since the activation of node $a_j$ can depend on all the other activations from the denominator $\sum_ke^{z_k}$ of the function. Technically, the derivative stated in the table is really the derivative $\pdv{}{a_j}f(z_i)$. Following is a short discussion of the strengths and some weaknesses of some of the activation functions introduced in table \ref{tab:activation_functions}:
         \subsubsection{Sigmoid function}     % Problem of vanishing gradients. Be sure to initialize the weights with too large values. Proper preprocessing of the data can also circumvent the problem.
             The Sigmoid function is typical for predictive applications as it is bounded to $\sigma \in [0,1]$. This is useful for logistic regression purposes as discussed previously, though it does not come without its flaws. The sigmoid function has the problem of \textit{vanishing gradients} for values outside of the range (approximately) $x \in [-6,6]$. The derivative of the sigmoid is consistently vanishing in these areas $\sigma'(z)\approx 0$ for $z\in [\leftarrow, -6]\vee[6, \rightarrow]$, resulting in the weights and biases not being updated properly in the backwards propagation algorithm. This problem can however be circumvented through proper data preprocessing and weights initialization. If the node values $z$ values are within this range, the network should be able to tell the difference between them in the gradient. This requires the inputs $X$ to be scaled correctly as well as the weights and biases to not be too large.
         \subsubsection{Tanh function}
-            Although the hyperbolic tangent function has different bounds than the sigmoid function (ranging from $-1$ to $1$), it can just as easily be applied to binary classification cases. The only difference needed is to edit the input (training and testing) data to have the same ranges. In the case of the binary credit card classification, all the zeros (not default) would need to be changed to $-1$'s. This is not done in this study, though it is a possibility. This function also has vanishing gradients for large values, though this can be avoided by proper data processing once again. 
+            Although the hyperbolic tangent function has different bounds than the sigmoid function, ranging from $-1$ to $1$, it can just as easily be applied to binary classification cases. The only difference needed is to edit the %input 
+            training and testing data to have the same ranges. In the case of the binary credit card classification, all the zeros % (not default) 
+            would need to be changed to $-1$'s. This is not done in this study, though it is a possibility. This function also has vanishing gradients for large values, though this can be avoided by proper data processing once again. 
         \subsubsection{ReLU6}        % Rectified Linear Unit. \cite{ReLUImagenet} Proved it to be specificly good for image recognition. 
             ReLU is shown to be specifically good for image recognition applications \cite{ReLUImagenet}. Keeping to the same family, though introducing an upper bound of $6$ is useful in this case. ReLU6 is therefore an excellent variant of the ReLU function, keeping some of it's characteristics and making sure that it is bounded from both below and above.
         
@@ -322,7 +328,7 @@
             \begin{equation}\label{eq:xavier}
                 \mu = 0 \text{ and } \sigma = \sqrt{\frac{2}{n_i+n_{i+1}}},
             \end{equation}
-            where $n_i$ is the number of nodes in the current layer, and $n_{i+1}$ is the number of nodes in the next layer. The weights are initialized randomly with these parameters, and the biases are initialized as zero in this scheme (henceforth referred to as the \textit{Xavier initialization}).\\\\
+            where $n_i$ is the number of nodes in the current layer, and $n_{i+1}$ is the number of nodes in the next layer. The weights are initialized randomly with these parameters, and the biases are initialized as zero in this scheme, henceforth referred to as the \textit{Xavier initialization}.\\\\
             Other initialization schemes can come up, though it is very important that these are not large in absolute value. This may cause vanishing gradients in some of the activation functions, as mentioned above. 
         
     \subsection{Classification}
@@ -345,7 +351,7 @@
         % ---- The weaknesses are that LR cannot properly deal with the problems of non-linear and interactive effects of explanatory variables.
         
         \subsubsection{Neural Network Application}
-            The neural network applied to the classification data is what is known as a \textit{multilayer perceptron}. This means that the network consists of non-linear activation functions and a scheme of fully-connected weights and biases. This means that each of the neurons from layer $i$ are connected by a weight and a bias to the neurons in layer $i+1$ and so on.
+            The neural network applied to the classification data is what is known as a \textit{multilayer perceptron}. This means that the network consists of non-linear activation functions and a scheme of fully-connected weights and biases. Also, each of the neurons from layer $i$ are connected by a weight and a bias to the neurons in layer $i+1$ and so on.
         % Present what a NN is and how it is set up
         % Present our NN: which is feed forward neural network by using back propagation
         % Introduce weights, biases, regularization parameters and learning rates
@@ -385,7 +391,7 @@
             \begin{figure}[H]
                 \centering
                 \includegraphics[width=0.4\textwidth]{figures/cumulative-gain_curve-concept.png}
-                \caption{Conceptualized figure of a cumulative gain chart. The figure includes all cases of 0 and 1 predictions, and a perfect 1 model. The model also includes a b                                                                                 aseline illustrating what a random $50/50$ pick of 0's and 1's looks like.}
+                \caption{Conceptualized figure of a cumulative gain chart. The figure includes all cases of 0 and 1 predictions, and a perfect 1 model. The model also includes a baseline illustrating what a random $50/50$ pick of 0's and 1's looks like.}
                 \label{fig:conceptual_cumulative_gains}
             \end{figure}
             Hopefully, a prediction model will be somewhere in between the perfect model and the $50\%$ random pick baseline. The better the model, the larger the area between the cumulative model curve and the baseline will be. This is therefore the measure of the model accuracy.\\\\
@@ -430,14 +436,17 @@
         	\caption{The \textit{Franke function} surface plot illustration for $x$ and $y$ values ranging from zero to one. Random Gaussian noise with mean value $\mu=0$ and standard deviation $\sigma=0.01$ is added to each data point $f(x_i,y_i)$.}
         	\label{fig:frankesfunction}
         \end{figure}
-        This is more similar to the data the methods will attempt to recreate. Two methods are implemented to attempt to reproduce Franke's function: \textit{Ridge Regression} (presented previously) and a \textit{Neural Network} (this time applied to data which is not classification-oriented).
+        This is more similar to the data the methods will attempt to recreate. Two methods are implemented to attempt to reproduce Franke's function: \textit{Ridge Regression} %(presented previously) 
+        and a \textit{Neural Network}, this time applied to data which is not classification-oriented.
         \subsubsection{Neural Network Application}
             % Cost function for regression case: RSS?
             % Best fit a surface by adjusting regularization parameters (RP) and learning rates: minimize MSE
-            The neural network applied to the regression data is very similar to the classification network described previously (multilayer perceptron). Now however, instead of a constant binary output $a^L\in[0,1]$, the network is trained to output the results of Franke's function. This means that the output activation function cannot be a function which bounded asymptotically; some common activation functions such as the \textit{Leaky ReLU} come to mind, though the most intuitive one is simply using the \textit{identity} $f(x)=x$. The research conducted on Franke's function will include the learning rate and hyperparameter as previously, so a search for an optimal value for both of these will once again be performed.
+            The neural network applied to the regression data is very similar to the classification network described previously. %(multilayer perceptron). 
+            Now however, instead of a constant binary output $a^L\in[0,1]$, the network is trained to output the results of Franke's function. This means that the output activation function cannot be a function which bounded asymptotically; some common activation functions such as the \textit{Leaky ReLU} come to mind, though the most intuitive one is simply using the \textit{identity} $f(x)=x$. The research conducted on Franke's function will include the learning rate and hyperparameter as previously, so a search for an optimal value for both of these will once again be performed.
         \subsubsection{Accuracy Assertion of Regression}
         	% MSE for regression and R2 score. Introduce these.
-        	The accuracy metrics used for the prediction of Franke's function are the MSE (introduced earlier) and the so-called R2-Score. These two accuracy metrics are given by the following expressions:
+        	The accuracy metrics used for the prediction of Franke's function are the MSE,%(introduced earlier)
+        	and the so-called R2-Score. These two accuracy metrics are given by the following expressions:
         	\begin{align}
         		MSE(y, \hat{y}) &= \frac{1}{2n}\sum_{n-1}^{i=0} \left(y-\hat{y}\right)\\
         		R2(y, \hat{y}) &= 1 - \frac{RSS}{TSS},
@@ -448,4 +457,5 @@
         		RSS(y, \hat{y}) &= \sum^{n-1}_{i=0} \left(y-\bar{y}\right)^2\\
         		\bar{y} &= \frac{1}{n}\sum^{n-1}_{i=0}y_i. 
         	\end{align}
-        	These expressions are all that is needed to calculate the R2 score and MSE. As discussed earlier, we would like the MSE (cost function in the case of regression) to be as small as possible. The R2 score is different, it is a score which is always in the domain of $R2\in [0,1]$, where $R2\rightarrow 1$ for a 'perfect model', meaning that the R2 score is a parameter we would like to maximize.
+        	These expressions are all that is needed to calculate the R2 score and MSE. As discussed earlier, we would like the MSE %(cost function in the case of regression) 
+        	to be as small as possible. The R2 score is different, it is a score which is always in the domain of $R2\in [0,1]$, where $R2\rightarrow 1$ for a 'perfect model', meaning that the R2 score is a parameter we would like to maximize.
