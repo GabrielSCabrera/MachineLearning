@@ -139,6 +139,8 @@ class NeuralNet:
         tol = 1E-15
         if XY is not None:
             X, Y = XY
+            X = X.copy()
+            Y = Y.copy()
         else:
             X, Y = self._X, self._Y
 
@@ -511,7 +513,7 @@ class NeuralNet:
         if Y is None:
             Y_placeholder = X
         else:
-            Y_placeholder = Y
+            Y_placeholder = Y.copy()
         X,y = self.preprocess(categorical_cols = self._cat_cols,
                               delete_outliers = True,
                               output_activation_fxn = self.output_activation_fxn,

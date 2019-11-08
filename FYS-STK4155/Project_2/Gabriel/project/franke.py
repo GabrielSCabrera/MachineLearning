@@ -104,9 +104,9 @@ NN_layers = [100,100]#[575,383,255,170,113,75,50]
 # Number of epochs, or total cycles over all batches
 NN_epochs = 100
 # Learning rate
-learning_rate = 0.01
+learning_rate = 0.0183333#0.01
 # Ridge regularization parameter
-regularization_param = 1E-7
+regularization_param = 0.000215443#1E-7
 # Activation function
 activation_fxn = "tanh"
 # Activation function for output layer (None defaults to "activation_fxn")

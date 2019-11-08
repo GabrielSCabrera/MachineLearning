@@ -188,10 +188,10 @@ time_0 = time()
 grid_size = 10
 
 regs1 = np.logspace(-7, -4, grid_size)
-lrs1 = np.logspace(-5, -1, grid_size)
+lrs1 = np.linspace(0.01, 0.15, grid_size)
 
 regs2 = np.logspace(-7, -1, grid_size)
-lrs2 = np.logspace(-0.8, -0.6, grid_size)
+lrs2 = np.linspace(0.001, 0.09, grid_size)
 
 epochs = 200
 gpu = True
@@ -248,9 +248,9 @@ if cmdlinearg == "write":
     np.save(f"{dir2}/regs", regs2)
     np.save(f"{dir2}/lrs", lrs2)
 
-    for m,lr in enumerate(lrs1):
-        for n,reg in enumerate(regs1):
-            execute(lr, reg, dir1, epochs, gpu, 'credit_card.py',m,n, "roc.png")
+    # for m,lr in enumerate(lrs1):
+    #     for n,reg in enumerate(regs1):
+    #         execute(lr, reg, dir1, epochs, gpu, 'credit_card.py',m,n, "roc.png")
 
     for m,lr in enumerate(lrs2):
         for n,reg in enumerate(regs2):
@@ -275,8 +275,7 @@ if cmdlinearg in ["write", "read"]:
 
     categorical_cols = {"1":[1,2], "2":[1,2,3,4], "3":[1,2,3]}
     X_train, Y_train, X_test_cc, Y_test_cc = split(X, Y, test_percent)
-    X_test_cc, Y_test_cc = preprocess(X_test_cc, Y_test_cc, categorical_cols,
-                                      True, output_activation_fxn)
+
     del X_train
     del Y_train
 
@@ -284,8 +283,7 @@ if cmdlinearg in ["write", "read"]:
 
     X, Y, f_xy = generate_Franke_data(N = 150)
     X_train, Y_train, X_test_franke, Y_test_franke = split(X, Y, test_percent)
-    X_test_franke, Y_test_franke = preprocess(X_test_franke, Y_test_franke, {},
-                                              True, output_activation_fxn)
+
     del X_train
     del Y_train
 
@@ -299,11 +297,14 @@ if cmdlinearg in ["write", "read"]:
     dirs1 = []
     dirs2 = []
 
-    for n,(d1,d2) in enumerate(zip(dirs1_unprocessed, dirs2_unprocessed)):
+    for n,d1 in enumerate(dirs1_unprocessed):
         if "." not in d1:
             dirs1.append(d1)
+
+    for n,d2 in enumerate(dirs2_unprocessed):
         if "." not in d2:
             dirs2.append(d2)
+
 
     arg_map = [(i,j) for i in range(grid_size) for j in range(grid_size)]
 
@@ -317,13 +318,18 @@ if cmdlinearg in ["write", "read"]:
     for n1,d1 in enumerate(dirs1):
         NN.set(X_test_cc, Y_test_cc)
         NN.load(f"{dir1}/{d1}")
-        Y_predict_cc = NN.predict(X_test_cc)
-        acc_cc[arg_map[n1]] = accuracy(Y_predict_cc, Y_test_cc)
-        AUC_cc[arg_map[n1]], F1_cc[arg_map[n1]] = F1_AUC(Y_predict_cc, Y_test_cc)
-        gains_cc[arg_map[n1]] = cum_gains(Y_predict_cc, Y_test_cc)
+        Y_predict_cc, Y_test_cc2 = NN.predict(X_test_cc, Y_test_cc)
+        acc_cc[arg_map[n1]] = accuracy(Y_predict_cc, Y_test_cc2)
+        AUC_cc[arg_map[n1]], F1_cc[arg_map[n1]] = F1_AUC(Y_predict_cc, Y_test_cc2)
+        gains_cc[arg_map[n1]] = cum_gains(Y_predict_cc, Y_test_cc2)
         perc1 = int(100*n1/tot1)
         print(f"\rProcessing Credit Card Data:\t{perc1:4d}%", end = "")
     print(f"\rProcessing Credit Card Data:\t{100:4d}%")
+
+    np.save(f"{dir1}/acc", acc_cc)
+    np.save(f"{dir1}/F1", F1_cc)
+    np.save(f"{dir1}/AUC", AUC_cc)
+    np.save(f"{dir1}/gains", gains_cc)
 
     MSE_franke = np.zeros((grid_size, grid_size))
     R2_franke = np.zeros((grid_size, grid_size))
@@ -333,17 +339,12 @@ if cmdlinearg in ["write", "read"]:
     for n2,d2 in enumerate(dirs2):
         NN.set(X_test_franke, Y_test_franke)
         NN.load(f"{dir2}/{d2}")
-        Y_predict_franke = NN.predict(X_test_franke)
-        MSE_franke[arg_map[n2]] = MSE(Y_predict_franke, Y_test_franke)
-        R2_franke[arg_map[n2]] = R2(Y_predict_franke, Y_test_franke)
+        Y_predict_franke, Y_test_franke2 = NN.predict(X_test_franke, Y_test_franke)
+        MSE_franke[arg_map[n2]] = MSE(Y_predict_franke, Y_test_franke2)
+        R2_franke[arg_map[n2]] = R2(Y_predict_franke, Y_test_franke2)
         perc2 = int(100*n2/tot2)
         print(f"\rProcessing Franke Data:\t\t{perc2:4d}%", end = "")
     print(f"\rProcessing Franke Data:\t\t{100:4d}%")
-
-    np.save(f"{dir1}/acc", acc_cc)
-    np.save(f"{dir1}/F1", F1_cc)
-    np.save(f"{dir1}/AUC", AUC_cc)
-    np.save(f"{dir1}/gains", gains_cc)
 
     np.save(f"{dir2}/MSE", MSE_franke)
     np.save(f"{dir2}/R2", R2_franke)
@@ -355,24 +356,15 @@ elif cmdlinearg == "plot":
     AUC_cc = np.load(f"{dir1}/AUC.npy")
     gains_cc = np.load(f"{dir1}/gains.npy")
 
-    MSE_franke = np.load(f"{dir2}/MSE.npy")
-    R2_franke = np.load(f"{dir2}/R2.npy")
-
     regs1 = np.load(f"{dir1}/regs.npy")
     lrs1 = np.load(f"{dir1}/lrs.npy")
-    regs2 = np.load(f"{dir2}/regs.npy")
-    lrs2 = np.load(f"{dir2}/lrs.npy")
 
     X1,Y1 = np.meshgrid(lrs1, regs1)
-    X2,Y2 = np.meshgrid(lrs2, regs2)
 
     cmap = cm.magma
 
     labels1 = ["Accuracy-Score", "F1-Score", "AUC-Score", "Gains-Ratio"]
     values1 = [acc_cc, F1_cc, AUC_cc, gains_cc]
-
-    labels2 = ["MSE", "R²-Score"]
-    values2 = [MSE_franke, R2_franke]
 
     x1_diffs = np.diff(X1, axis = 1)
     x1_text = X1.copy()[:,:-1]
@@ -381,14 +373,6 @@ elif cmdlinearg == "plot":
     y1_diffs = np.diff(Y1, axis = 0)
     y1_text = Y1.copy()[:-1]
     y1_text = y1_text + y1_diffs/4.25
-
-    x2_diffs = np.diff(X2, axis = 1)
-    x2_text = X2.copy()[:,:-1]
-    x2_text = x2_text + x2_diffs/9
-
-    y2_diffs = np.diff(Y2, axis = 0)
-    y2_text = Y2.copy()[:-1]
-    y2_text = y2_text + y2_diffs/4.25
 
     for label, value in zip(labels1, values1):
         heatmap = plt.pcolormesh(X1, Y1, value, cmap=cmap)
@@ -399,11 +383,29 @@ elif cmdlinearg == "plot":
                 val = "." + f"{z:.3f}".split(".")[1]
                 txt = plt.text(x, y, val, weight = 'bold')
                 txt.set_path_effects([PathEffects.withStroke(linewidth=2, foreground='w')])
-        plt.xscale('log')
         plt.yscale('log')
         plt.xlabel("Learning Rate $\eta$")
         plt.ylabel("Regularization Parameter $\lambda$")
         plt.show()
+
+    MSE_franke = np.load(f"{dir2}/MSE.npy")
+    R2_franke = np.load(f"{dir2}/R2.npy")
+
+    regs2 = np.load(f"{dir2}/regs.npy")
+    lrs2 = np.load(f"{dir2}/lrs.npy")
+
+    X2,Y2 = np.meshgrid(lrs2, regs2)
+
+    labels2 = ["MSE", "R²-Score"]
+    values2 = [MSE_franke, R2_franke]
+
+    x2_diffs = np.diff(X2, axis = 1)
+    x2_text = X2.copy()[:,:-1]
+    x2_text = x2_text + x2_diffs/9
+
+    y2_diffs = np.diff(Y2, axis = 0)
+    y2_text = Y2.copy()[:-1]
+    y2_text = y2_text + y2_diffs/4.25
 
     for label, value in zip(labels2, values2):
         heatmap = plt.pcolormesh(X2, Y2, value, cmap=cmap)
@@ -414,7 +416,6 @@ elif cmdlinearg == "plot":
                 val = "." + f"{z:.3f}".split(".")[1]
                 txt = plt.text(x, y, val, weight = 'bold')
                 txt.set_path_effects([PathEffects.withStroke(linewidth=2, foreground='w')])
-        plt.xscale('log')
         plt.yscale('log')
         plt.xlabel("Learning Rate $\eta$")
         plt.ylabel("Regularization Parameter $\lambda$")
