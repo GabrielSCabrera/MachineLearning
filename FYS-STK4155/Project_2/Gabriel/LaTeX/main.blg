@@ -4,19 +4,21 @@ The top-level auxiliary file: main.aux
 The style file: agsm.bst
 Database file #1: mainNotes.bib
 Database file #2: ref.bib.bib
+Warning--string name "ieee" is undefined
+--line 86 of file ref.bib.bib
 Warning--entry type for "lecturenotes" isn't style-file defined
 --line 119 of file ref.bib.bib
 You've used 13 entries,
             2909 wiz_defined-function locations,
-            715 strings with 7723 characters,
-and the built_in function-call counts, 55183 in all, are:
-= -- 9273
+            715 strings with 7762 characters,
+and the built_in function-call counts, 54629 in all, are:
+= -- 9172
 > -- 511
 < -- 0
-+ -- 4357
++ -- 4307
 - -- 154
-* -- 4776
-:= -- 10743
+* -- 4725
+:= -- 10642
 add.period$ -- 18
 call.type$ -- 13
 change.case$ -- 158
@@ -25,19 +27,19 @@ cite$ -- 13
 duplicate$ -- 204
 empty$ -- 410
 format.name$ -- 181
-if$ -- 10063
+if$ -- 9962
 int.to.chr$ -- 5
 int.to.str$ -- 0
 missing$ -- 6
 newline$ -- 55
 num.names$ -- 95
-pop$ -- 103
+pop$ -- 104
 preamble$ -- 1
 purify$ -- 175
 quote$ -- 0
 skip$ -- 157
 stack$ -- 0
-substring$ -- 13046
+substring$ -- 12896
 swap$ -- 59
 text.length$ -- 142
 text.prefix$ -- 0
@@ -46,5 +48,5 @@ type$ -- 52
 warning$ -- 0
 while$ -- 215
 width$ -- 0
-write$ -- 185
-(There was 1 warning)
+write$ -- 184
+(There were 2 warnings)
