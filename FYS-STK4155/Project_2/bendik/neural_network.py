@@ -340,7 +340,7 @@ if __name__ == "__main__":
     etas = np.logspace(-5, 1, 7)
     lambds = np.logspace(-5, 1, 7)
     
-    accs = find_best_learn_vals(etas, lambds, n_test=1)
+    accs = find_best_learn_vals(etas, lambds, n_test=20)
     
     loc = np.where(accs == np.max(accs))
     print("\nBest values: ")
