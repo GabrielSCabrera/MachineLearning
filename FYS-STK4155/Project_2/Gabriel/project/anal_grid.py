@@ -231,7 +231,7 @@ if cmdlinearg == "write":
             pass
         subprocess.call(['python3', filename,
                         f'save={loc}', f'lr={lr}', f'saveimg={savename}',
-                        f'epochs={epochs}', f"reg={reg}", f"GPU={gpu}"])
+                        f'epochs={epochs}', f"reg={reg}"])#, f"GPU={gpu}"])
     try:
         os.mkdir(dir1)
     except FileExistsError:
