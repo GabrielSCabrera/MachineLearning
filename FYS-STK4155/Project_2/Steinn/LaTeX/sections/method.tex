@@ -17,7 +17,11 @@
             \end{itemize}
             Before any scaling is applied, these categorical outliers are removed.
         \subsubsection{Column Scaling}
-            Some of the columns have values which require scaling before they are input into the network. If the data were not scaled in the preprocessing, then the sigmoid activation function (as mentioned in the disappearing gradient discussion) of the columns with large values would produce redundant outputs (impossible to tell from each other). The network would not be able to distinguish between these values as well as it would if the ages were centered around 0 with a standard deviation of one (the typical way to scale). In this case, the 'resolution' of the sigmoid (or similar functions such as the hyperbolic tangent) would be far better, resulting in a network which can tell the difference between the behaviour of a 20 and a 40 year old.
+            Some of the columns have values which require scaling before they are input into the network. If the data were not scaled in the preprocessing, then the sigmoid activation function %(as mentioned in the disappearing gradient discussion)
+            of the columns with large values would produce redundant outputs which are impossible to tell from each other. The network would not be able to distinguish between these values as well as it would if the ages were centered around 0 with a standard deviation of one. %(the typical way to scale). 
+            In this case, the 'resolution' of the activation function 
+            %sigmoid (or similar functions such as the hyperbolic tangent) 
+            would be far better, resulting in a network which can tell the difference between the behaviour of a 20 and a 40 year old.
         \subsubsection{One-Hot Encoding classifiers}
             % One hot encoding the classified
             Columns X2, X3, and X4 classify the person in a different way than, say, column X1. The difference between the two is that one is a spectrum while the other is binary. For example, the numbers in column X1 express the \textit{degree} of something (e.g. 2 is twice that of 1). However, column X2 places the person in either category 1 (male) or 2 (female). In this case the numbers are not related in the same way as previously. These are two categories and must therefore be expressed in out neural network using \textit{One-Hot Encoding}. This would be done in the following manner for five people:
@@ -63,7 +67,7 @@
             \begin{displayquote}
                 X6–X11: History of past payment. We tracked the pastmonthly payment records (from April to September,2005) as follows: X6 = the repayment status in Septem-ber,  2005;  X7 = the  repayment  status  in  August,2005;...;X11 = the repayment status in April, 2005.The measurement scale for the repayment status is:-1 = pay duly; 1 = payment delay for one month;2 = payment delay for two months;...; 8 = paymentdelay for eight months; 9 = payment delay for ninemonths and above.
             \end{displayquote}
-            This is descriptive enough, though upon examination of the data listed in these columns, there are several cases of -2 and 0 (though only -1 and 1-9 are defined). This indicates to outliers, though a very significant amount of the dataset has values -2 and 0 in columns X6-X11. Upon further research into what the values represent, an article (link to it \href{http://inseaddataanalytics.github.io/INSEADAnalytics/CourseSessions/ClassificationProcessCreditCardDefault.html}{\textbf{here}}) theorizes that\cite{1}:
+            This is descriptive enough, though upon examination of the data listed in these columns, there are several cases of -2 and 0, though only -1 and 1-9 are defined. This indicates two outliers, though a very significant amount of the dataset has values -2 and 0 in columns X6-X11. Upon further research into what the values represent, an article (link to it \href{http://inseaddataanalytics.github.io/INSEADAnalytics/CourseSessions/ClassificationProcessCreditCardDefault.html}{\textbf{here}}) theorizes that\cite{1}:
             \begin{itemize}
                 \item -2 is 'Balance payed in full and no transactions in this period' (inactive card).
                 \item -1 is 'Balance payed in full, but account has a positive balance at the end of period' (as previously).
@@ -72,7 +76,8 @@
             This is based on how banks operate and is what this research will use as a basis.\\\\
     
     \subsection{Neural Network Design}
-        An object oriented code was built in Python 3.6.8 with the aim to make a generalized reusable code which has little to no specifications to the problem at hand. A large number of libraries are used for various different functionalities, the most important (excluding trivial unnecessary libraries) of them being:
+        An object oriented code was built in Python 3.6.8 with the aim to make a generalized reusable code which has little to no specifications to the problem at hand. A large number of libraries are used for various different functionalities, the most important (excluding trivial %unnecessary 
+        libraries) of them being:
         \begin{outline}[itemize]
             \1 NumPy version 1.17.2
                 \2 NumPy is an excellent scientific programming library for handling of large array structures (e.g. matrix-matrix multiplication) and has a large number of useful built in functions (e.g. exponential and logarithm functions)
@@ -89,19 +94,21 @@
             \1 Imbalanced-learn version 0.5.0
                 \2 Imbalanced-learn (imblearn) is a package mainly used to up- and down-sample the data sets presented. The functionality of imblearn's package is quite easy to implement and is very time-efficient.
         \end{outline}
-        Some packages implemented but left out of this list are Seaborn version 0.9.0 (used to produce the heatmaps illustrated in figures \ref{fig:pre_PCA} and \ref{fig:post_PCA}), Dill version 0.3.1.1 (used to save some trained neural network objects), and python utilities such as \textbf{os} (used for operating system functionality) and \textbf{time} (used to output the time taken to conduct calculations).
+        Some packages implemented but left out of this list are Seaborn version 0.9.0 (used to produce the heatmaps illustrated in figures \ref{fig:pre_PCA} and \ref{fig:post_PCA}),
+        %the refs here dosen't work
+        Dill version 0.3.1.1 (used to save some trained neural network objects), and python utilities such as \textbf{os} (used for operating system functionality) and \textbf{time} (used to output the time taken to conduct calculations).
         
         \subsubsection{Weight- and Bias Initialization}
             Several different weight and bias initialization methods are implemented into the network class. The weights and bias initialization functions include the Xavier method introduced in equation \ref{eq:xavier}, a \textit{small} functionality, which initializes all weights and/or biases as $0.01$, and a \textit{random} functionality, initializing them using a random uniform distribution.
             
         \subsubsection{Hyperparameter and Learning Rate analysis}
             The simplest way of performing a search for the optimal parameters is initializing a grid search over multiple hyperparameter values $\lambda_i \in [\lambda_1, \lambda_2, \hdots, \lambda_{r1}]$ and learning rates $\eta_i \in [\eta_1, \eta_2, \hdots, \eta_{r2}]$, producing an array of $(r1 \times r2)$ trained neural networks. These networks must all have the same design to perform the analysis of $\lambda$ and $\eta$ properly.\\\\
-            Several network designs are initialized with variations structures of hidden layers, node number per layer, activation function per layer, etc. The network structures researched were designed out of simple interest, where several of the networks are similar but have slight tweaks (such as increasing the number of nodes per layer by 10). This is done to research both the impact of the parameters $\lambda$ and $\eta$ simultaneously with the influence of other factors (such as the nodes per layer).
+            Several network designs are initialized with variations structures of hidden layers, node number per layer, activation function per layer, etc. The network structures researched were designed out of simple interest, where several of the networks are similar but have slight tweaks, such as increasing the number of nodes per layer by 10. This is done to research both the impact of the parameters $\lambda$ and $\eta$ simultaneously with the influence of other factors, such as the nodes per layer.
           
     \subsection{Classification}
         The goal of the classification research presented is to use the accuracy metric to compare the two methods of stochastic gradient descent and artificial neural network. A supplementary research study is conducted on the neural network, where an extensive search of which network structure produces the best results. The additional accuracy metrics of the area under the cumulative gain curve and $F1$ score are included for this study.
         \subsubsection{Logistic Regression}
-            A class is built in python to perform the stochastic gradient descent presented in the theory section. several different initializing guesses $\hat{\beta}_0$ functionalities are included in this case, allowing for a custom guess to be passed in, or a request for the class to generate a random uniform distribution from $\hat{\beta}_i \in [-0.7, 0.7]$.
+            A class is built in python to perform the stochastic gradient descent presented in the theory section. Several different initializing guesses $\hat{\beta}_0$ functionalities are included in this case, allowing for a custom guess to be passed in, or a request for the class to generate a random uniform distribution from $\hat{\beta}_i \in [-0.7, 0.7]$.
             % How did we set up LR?
                 % Cost-function
                 % SGD with mini-batched
