@@ -5,7 +5,7 @@ import sys
 import os
 
 sys.path.append("..")
-from backend.neuralnet import NeuralNet, preprocess, upsample_binary, split
+from backend.neuralnet import NeuralNet, split
 
 def parse_args(all_args):
     N_args = len(sys.argv)
@@ -70,15 +70,15 @@ test_percent = 33
 # Configuration of layers in the Neural Network
 NN_layers = [100,100]
 # Number of epochs, or total cycles over all batches
-NN_epochs = 30
+NN_epochs = 3
 # Learning Rate
 learning_rate = 0.01
 # Ridge Regularization Parameter
 regularization_param = 1E-7
 # Activation function
-activation_fxn = "sigmoid"
+activation_fxn = "tanh"
 # Activation function for output layer (None defaults to "activation_fxn")
-output_activation_fxn = None
+output_activation_fxn = "sigmoid"
 # Optimize for CUDA
 GPU = False
 # File in which to save the terminal output
@@ -128,17 +128,10 @@ X = np.array(df.iloc()[1:,1:-1], dtype = np.int64)
 Y = np.array(df.iloc()[1:,-1], dtype = np.int64)[:,np.newaxis]
 del df
 
-""" PREPROCESSING, SPLITTING, AND RESHAPING THE DATA """
+""" SPLITTING THE DATA """
 
 # Splitting the data into training and testing sets
 X_train, Y_train, X_test, Y_test = split(X, Y, test_percent)
-# Implements normalization and one-hot encoding
-X_train, Y_train = preprocess(X_train, Y_train, categorical_cols, True,
-                              output_activation_fxn)
-X_test, Y_test = preprocess(X_test, Y_test, categorical_cols, True,
-                              output_activation_fxn)
-# Upsamples the training data
-X_train, Y_train = upsample_binary(X_train, Y_train)
 
 """ INFORMATION FOR THE USER """
 
@@ -164,29 +157,45 @@ NN = NeuralNet()
 """ TRAINING OR LOADING A MODEL, DEPENDING ON COMMAND-LINE ARGUMENTS """
 
 if loadname is None:
-    print("Training the Network:\n")
 
     # Inserting the training data into the network
     NN.set(X_train, Y_train)
+
+    # Implements normalization and one-hot encoding
+    NN.preprocess(categorical_cols, True, output_activation_fxn)
+
+    # Upsamples the training data
+    NN.upsample_binary()
+
+    print("Training the Network:\n")
 
     # Training the neural network with the parameters given earlier
     W,B = NN.train(epochs = NN_epochs, layers = NN_layers, lr = learning_rate,
     reg = regularization_param, batchsize = batchsize, GPU = GPU,
     activation_fxn = activation_fxn,
     output_activation_fxn = output_activation_fxn)
+    scale_shift = NN._scale_shift
+    scale_shift_X = np.array(scale_shift[:2])
+    scale_shift_Y = np.array(scale_shift[2:])
 else:
     print(f"Loading from directory <{loadname}>\n")
     # Loading a previous neural network
     NN.load(loadname)
 
 # Predicting outputs for the testing data
-Y_predict = NN.predict(X_test)
+Y_predict, Y_test = NN.predict(X_test, Y_test)
 
 """ ERROR ANALYSIS """
 
-# Rounding the predicted values to zero and one for sigmoid
-Y_predict[Y_predict >= 0.5] = 1
-Y_predict[Y_predict < 1] = 0
+if output_activation_fxn == "sigmoid":
+    # Rounding the predicted values to zero and one for sigmoid
+    Y_predict[Y_predict >= 0.5] = 1
+    Y_predict[Y_predict < 0.5] = 0
+elif output_activation_fxn == "tanh":
+    # Rounding the predicted values to zero and one for tanh
+    Y_predict[Y_predict >= 0] = 1
+    Y_predict[Y_predict < 0] = 0
+    Y_test = (Y_test*2)-1
 
 # Calculating the elementwise difference in the predicted and expected outputs
 diffs = Y_predict-Y_test
@@ -238,6 +247,20 @@ if loadname is None:
 
     NN_layers = np.concatenate([[X_train.shape[1]], NN_layers, [Y_train.shape[1]]])
     np.save(f"{dirname}/layers", NN_layers)
+    np.save(f"{dirname}/scale_shift_X", scale_shift_X)
+    np.save(f"{dirname}/scale_shift_Y", scale_shift_Y)
 
     with open(f"{dirname}/{terminal_output_file}", "w+") as outfile:
         outfile.write(msg1 + msg2)
+
+    with open(f"{dirname}/activations.dat", "w+") as outfile:
+        outfile.write(f"{activation_fxn} {output_activation_fxn}")
+
+    with open(f"{dirname}/categorical_cols.dat", "w+") as outfile:
+        string = ""
+        for key,val in categorical_cols.items():
+            rhs = ""
+            for i in val:
+                rhs += f"{i} "
+            string += f"{key}:{rhs[:-1]}\n"
+        outfile.write(string[:-1])

@@ -6,7 +6,7 @@ import numpy as np
 import os, sys
 
 sys.path.append("..")
-from backend.neuralnet import NeuralNet, preprocess, upsample_binary, split
+from backend.neuralnet import NeuralNet, split
 
 def parse_args(all_args):
     N_args = len(sys.argv)
@@ -74,11 +74,11 @@ def one_hot_Y(Y):
 # Size of each batch sent into the neural network
 batchsize = 100
 # Configuration of layers in the Neural Network
-NN_layers = [int(784*(2/3)**x) for x in range(10)]
+NN_layers = [int(154*(2/3)**x) for x in range(6)]#784 x 10
 # Number of epochs, or total cycles over all batches
-NN_epochs = 10
+NN_epochs = 50
 # Learning Rate
-learning_rate = 0.001
+learning_rate = 0.01
 # Ridge Regularization Parameter
 regularization_param = 1E-7
 # Activation function
@@ -112,6 +112,9 @@ all_args = {"save":[str, "dirname"], "load":[str, "loadname"],
 parse_args(all_args)
 
 np.random.seed(rand_seed)
+
+if output_activation_fxn is None:
+    output_activation_fxn = activation_fxn
 
 """ READING THE DATA (using mnist) """
 
@@ -157,24 +160,37 @@ if loadname is None:
     # Inserting the training data into the network
     NN.set(X_train, Y_train)
 
+    # Implements normalization and one-hot encoding
+    # NN.preprocess({}, False, output_activation_fxn)
+
     # Training the neural network with the parameters given earlier
     W,B = NN.train(epochs = NN_epochs, layers = NN_layers, lr = learning_rate,
     reg = regularization_param, batchsize = batchsize, GPU = GPU,
     activation_fxn = activation_fxn,
     output_activation_fxn = output_activation_fxn)
+
+    scale_shift = NN._scale_shift
+    scale_shift_X = np.array(scale_shift[:2])
+    scale_shift_Y = np.array(scale_shift[2:])
 else:
     print(f"Loading from directory <{loadname}>\n")
     # Loading a previous neural network
     NN.load(loadname)
 
 # Predicting outputs for the testing data
-Y_predict = NN.predict(X_test)
+Y_predict, Y_test = NN.predict(X_test, Y_test)
 
 """ ERROR ANALYSIS """
 
-# Rounding the predicted values to zero and one
-Y_predict[Y_predict >= 0.5] = 1
-Y_predict[Y_predict < 1] = 0
+if output_activation_fxn == "sigmoid":
+    # Rounding the predicted values to zero and one for sigmoid
+    Y_predict[Y_predict >= 0.5] = 1
+    Y_predict[Y_predict < 0.5] = 0
+elif output_activation_fxn == "tanh":
+    # Rounding the predicted values to zero and one for tanh
+    Y_predict[Y_predict >= 0] = 1
+    Y_predict[Y_predict < 0] = 0
+    Y_test = (Y_test*2)-1
 
 # Displaying N example tests
 img_dims = (28, 28)
@@ -203,7 +219,7 @@ msg2 = (f"\nTest Results\n\n\tNumber of incorrect outputs: {incorrect:.0f}/"
        f"Percent correct: {100*correct/total:.0f}%\n")
 print(msg2)
 
-NN.ROC(X_test, Y_test)
+# NN.ROC(X_test, Y_test)
 
 """ SAVING DATA IF A NEW NETWORK IS CREATED"""
 
@@ -238,6 +254,20 @@ if loadname is None:
 
     NN_layers = np.concatenate([[X_train.shape[1]], NN_layers, [Y_train.shape[1]]])
     np.save(f"{dirname}/layers", NN_layers)
+    np.save(f"{dirname}/scale_shift_X", scale_shift_X)
+    np.save(f"{dirname}/scale_shift_Y", scale_shift_Y)
 
     with open(f"{dirname}/{terminal_output_file}", "w+") as outfile:
-        outfile.write(msg1 + "\n" + msg2 + "\n")
+        outfile.write(msg1 + msg2)
+
+    with open(f"{dirname}/activations.dat", "w+") as outfile:
+        outfile.write(f"{activation_fxn} {output_activation_fxn}")
+
+    with open(f"{dirname}/categorical_cols.dat", "w+") as outfile:
+        string = ""
+        for key,val in {}.items():
+            rhs = ""
+            for i in val:
+                rhs += f"{i} "
+            string += f"{key}:{rhs[:-1]}\n"
+        outfile.write(string[:-1])

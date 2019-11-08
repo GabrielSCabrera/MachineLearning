@@ -20,103 +20,6 @@ def split(X, Y, test_percent = 0.25):
     X_test, Y_test = X[test_idx], Y[test_idx]
     return X_train, Y_train, X_test, Y_test
 
-def preprocess(X, Y, categorical_cols, delete_outliers = True, output_activation_fxn = "sigmoid"):
-    """
-        categorical_cols should be a dict with:
-        {"index_1"              :       [cat_11, cat_12, cat_13, ...],
-         "index_2 index_3"      :       [cat_21, cat_22, cat_23, ...]}
-
-        Where index_1, index_2, ... must always be of type <int>,
-        Each index_i must be unique!
-
-        One-hot encoding sorts the input cat_ij from least to greatest, and
-        assigns new column indices 0,1,... to each cat_ij based on this order.
-    """
-    if output_activation_fxn == "sigmoid":
-        false_val = 0
-        true_val = 1
-    elif output_activation_fxn == "tanh":
-        false_val = -1
-        true_val = 1
-    N,M = X.shape
-    X_new = []
-    categories = {}
-    del_rows = []
-    for i,j in categorical_cols.items():
-        cat_keys = i.split(" ")
-        cat_vals = np.sort(j)
-        for k in cat_keys:
-            categories[k] = cat_vals
-    for i in range(M):
-        if str(i) in categories.keys():
-            key = str(i)
-            val = categories[key]
-            valmap = {v:n for n,v in enumerate(val)}
-            new_cols = np.ones((len(val), N))*false_val
-            col = X[:,i]
-            for n,c in enumerate(col):
-                if int(c) not in val:
-                    if delete_outliers is True:
-                        del_rows.append(n)
-                    else:
-                        msg = (f"Found outlier {int(c)} at index ({n}, {k})\n"
-                               f"Expected values: {val}")
-                        raise Exception(msg)
-                else:
-                    new_cols[valmap[c],n] = true_val
-            for j in new_cols:
-                X_new.append(j)
-        else:
-            col = X[:,i]
-            # Scaling based on mean and std
-            X_new.append((col - np.mean(col))/np.std(col))
-    del_rows = np.sort(del_rows)
-    for row in del_rows[::-1]:
-        X_new = np.delete(X_new, row, axis = 1)
-        Y = np.delete(Y, row, axis = 0)
-    return np.array(X_new).T, Y
-
-def upsample_binary(X, Y):
-    """
-        Creates "new" datapoints from previously existing data, so as to
-        make the distribution of outputs Y half-zero and half-one.  Helps to
-        prevent the network from being biased one way or the other.
-
-        Warning: may drastically increase the array sizes
-    """
-    tol = 1E-15
-    idx_zeros = np.argwhere(np.abs(Y - 0) < tol)[:,0]
-    idx_ones = np.argwhere(np.abs(Y - 1) < tol)[:,0]
-    N_zeros = len(idx_zeros)
-    N_ones = len(idx_ones)
-    if N_zeros > N_ones:
-        ratio = int(N_zeros//N_ones)
-        new_len = ratio*N_ones + N_zeros
-        X_up = np.zeros((new_len, X.shape[1]))
-        Y_up = np.zeros((new_len, Y.shape[1]))
-        sample_idx = np.random.choice(idx_ones, (ratio - 1)*N_ones)
-        X_up[:X.shape[0]] = X
-        Y_up[:Y.shape[0]] = Y
-        X_up[X.shape[0]:] = X[sample_idx]
-        Y_up[Y.shape[0]:] = Y[sample_idx]
-    elif N_zeros < N_ones:
-        ratio = int(N_ones//N_zeros)
-        new_len = ratio*N_zeros + N_ones
-        X_up = np.zeros((new_len, X.shape[1]))
-        Y_up = np.zeros((new_len, Y.shape[1]))
-        sample_idx = np.random.choice(idx_zeros, (ratio - 1)*N_zeros)
-        X_up[:X.shape[0]] = X
-        Y_up[:Y.shape[0]] = Y
-        X_up[X.shape[0]:] = X[sample_idx]
-        Y_up[Y.shape[0]:] = Y[sample_idx]
-    else:
-        X_up, Y_up = X, Y
-
-    shuffle_idx = np.random.choice(X_up.shape[0], (X_up.shape[0]))
-    X_up = X_up[shuffle_idx]
-    Y_up = Y_up[shuffle_idx]
-    return X_up, Y_up
-
 class NeuralNet:
 
     def __init__(self):
@@ -135,28 +38,52 @@ class NeuralNet:
 
         # Loading the layer configuration
         layers = np.load(f"{path}/layers.npy")
+        # Loading the scaling factors
+        scale_shift_X = np.load(f"{path}/scale_shift_X.npy")
+        scale_shift_Y = np.load(f"{path}/scale_shift_Y.npy")
+        self._scale_shift = \
+        (scale_shift_X[0], scale_shift_X[1], scale_shift_Y[0], scale_shift_Y[1])
+
+        with open(f"{path}/activations.dat", "r") as infile:
+            activations = infile.read().split(" ")
+            self.activation_fxn = activations[0]
+            self.output_activation_fxn = activations[1]
+
+        with open(f"{path}/categorical_cols.dat", "r") as infile:
+            keys = []
+            values = []
+            for line in infile.readlines():
+                key, val = line.split(":")
+                keys.append(key)
+                val_list = []
+                for i in val.split():
+                    val_list.append(int(i))
+                values.append(val_list)
+            self._cat_cols = {}
+            for key, value in zip(keys, values):
+                self._cat_cols[key] = value
 
         # Loading the weights
         W_filenames = np.sort(os.listdir(f"{path}/W/"))
 
         msg = (f"Data corrupted – inconsistencies detected in saved data\n"
         f"\tdir: {path}/W")
-        if len(W_filenames) != len(layers)-1:
-            raise ValueError(msg)
+        # if len(W_filenames) != len(layers)-1:
+        #     raise ValueError(msg)
 
         W = []
         for f,l,l_prev in zip(W_filenames, layers[1:], layers[:-1]):
             W.append(np.load(f"{path}/W/{f}"))
-            if W[-1].shape[0] != 1 or W[-1].shape[1] != l or W[-1].shape[2] != l_prev:
-                raise ValueError(msg)
+            # if W[-1].shape[0] != 1 or W[-1].shape[1] != l or W[-1].shape[2] != l_prev:
+            #     raise ValueError(msg)
 
         # Loading the biases
         B_filenames = np.sort(os.listdir(f"{path}/B/"))
 
         msg = (f"Data corrupted – inconsistencies detected in saved data\n"
         f"\tdir: {path}/B")
-        if len(B_filenames) != len(layers)-1:
-            raise ValueError(msg)
+        # if len(B_filenames) != len(layers)-1:
+        #     raise ValueError(msg)
 
         B = []
         for f,l in zip(B_filenames, layers[1:]):
@@ -178,6 +105,8 @@ class NeuralNet:
             self._Y:    NumPy Array (M, q)
         """
         self.attribute_reset()
+        self._scale_shift = (np.ones(X.shape[1]), np.zeros(X.shape[1]),1,0)
+        self._cat_cols = {}
 
         if X.ndim == 1:
             self._X = X[:,np.newaxis].astype(np.float64)
@@ -193,12 +122,173 @@ class NeuralNet:
         self._p = self._X.shape[1]
         self._q = self._Y.shape[1]
 
+    def preprocess(self, categorical_cols = None, delete_outliers = True,
+                   output_activation_fxn = "sigmoid", scale_shift = None,
+                   XY = None):
+        """
+            categorical_cols should be a dict with:
+            {"index_1"              :       [cat_11, cat_12, cat_13, ...],
+             "index_2 index_3"      :       [cat_21, cat_22, cat_23, ...]}
+
+            Where index_1, index_2, ... must always be of type <int>,
+            Each index_i must be unique!
+
+            One-hot encoding sorts the input cat_ij from least to greatest, and
+            assigns new column indices 0,1,... to each cat_ij based on this order.
+        """
+        tol = 1E-15
+        if XY is not None:
+            X, Y = XY
+        else:
+            X, Y = self._X, self._Y
+
+        if categorical_cols is None:
+            cat_cols = self._cat_cols
+        else:
+            cat_cols = categorical_cols
+
+        if output_activation_fxn in ["sigmoid", "x", "relu"]:
+            false_val = 0
+            true_val = 1
+        elif output_activation_fxn == "tanh":
+            false_val = -1
+            true_val = 1
+        else:
+            raise ValueError("Invalid activation function")
+
+        N,M = X.shape
+        X_new = []
+        categories = {}
+        del_rows = []
+        col_scale = []
+        col_shift = []
+        for i,j in cat_cols.items():
+            cat_keys = i.split(" ")
+            cat_vals = np.sort(j)
+            for k in cat_keys:
+                categories[k] = cat_vals
+        for i in range(M):
+            if str(i) in categories.keys():
+                key = str(i)
+                val = categories[key]
+                valmap = {v:n for n,v in enumerate(val)}
+                new_cols = np.ones((len(val), N))*false_val
+                col = X[:,i]
+                for n,c in enumerate(col):
+                    if int(c) not in val:
+                        if delete_outliers is True:
+                            del_rows.append(n)
+                        else:
+                            msg = (f"Found outlier {int(c)} at index ({n}, {k})\n"
+                                   f"Expected values: {val}")
+                            raise Exception(msg)
+                    else:
+                        new_cols[valmap[c],n] = true_val
+                for j in new_cols:
+                    X_new.append(j)
+                if scale_shift is None:
+                    col_scale.append(1)
+                    col_shift.append(0)
+            else:
+                col = X[:,i]
+                if scale_shift is not None:
+                    col_std = scale_shift[0][i]
+                    col_mean = scale_shift[1][i]
+                else:
+                    col_std = np.std(col)
+                    if abs(col_std) < tol:
+                        col_std = 1
+                    col_mean = np.mean(col)
+                    col_scale.append(col_std)
+                    col_shift.append(col_mean)
+                    # Scaling based on mean and std
+                X_new.append((col - col_mean)/col_std)
+        del_rows = np.sort(del_rows)
+        for row in del_rows[::-1]:
+            X_new = np.delete(X_new, row, axis = 1)
+            Y = np.delete(Y, row, axis = 0)
+
+        if output_activation_fxn == "sigmoid":
+            Y_scale = np.max(Y) - np.min(Y)
+            Y_shift = np.min(Y)
+            Y = (Y - Y_shift)/Y_scale
+        elif output_activation_fxn == "tanh":
+            Y_scale = 0.5*(np.max(Y) - np.min(Y))
+            Y_shift = 0.5*(np.max(Y) + np.min(Y))
+            Y = (Y - Y_shift)/Y_scale
+        elif output_activation_fxn == "relu":
+            Y_scale = 1
+            Y_shift = np.min(Y)
+            Y = Y - Y_shift
+        elif output_activation_fxn == "x":
+            Y_scale = 1
+            Y_shift = 0
+
+        if scale_shift is not None:
+            Y_scale, Y_shift = self._scale_shift[2], self._scale_shift[3]
+            # Y = (Y - Y_scale)/Y_shift
+        else:
+            self._scale_shift = (col_scale, col_shift, Y_scale, Y_shift)
+
+        if categorical_cols is not None:
+            self._cat_cols = cat_cols
+
+        if XY is None:
+            self._X = np.array(X_new).T
+            self._Y = Y
+        elif XY is not None:
+            return np.array(X_new).T, Y
+
+    def upsample_binary(self):
+        """
+            Creates "new" datapoints from previously existing data, so as to
+            make the distribution of outputs Y half-zero and half-one.  Helps to
+            prevent the network from being biased one way or the other.
+
+            Warning: may drastically increase the array sizes
+        """
+        X, Y = self._X, self._Y
+        tol = 1E-15
+        idx_zeros = np.argwhere(np.abs(Y - np.min(Y)) < tol)[:,0]
+        idx_ones = np.argwhere(np.abs(Y - np.max(Y)) < tol)[:,0]
+        N_zeros = len(idx_zeros)
+        N_ones = len(idx_ones)
+        if N_zeros > N_ones:
+            ratio = int(N_zeros//N_ones)
+            new_len = ratio*N_ones + N_zeros
+            X_up = np.zeros((new_len, X.shape[1]))
+            Y_up = np.zeros((new_len, Y.shape[1]))
+            sample_idx = np.random.choice(idx_ones, (ratio - 1)*N_ones)
+            X_up[:X.shape[0]] = X
+            Y_up[:Y.shape[0]] = Y
+            X_up[X.shape[0]:] = X[sample_idx]
+            Y_up[Y.shape[0]:] = Y[sample_idx]
+        elif N_zeros < N_ones:
+            ratio = int(N_ones//N_zeros)
+            new_len = ratio*N_zeros + N_ones
+            X_up = np.zeros((new_len, X.shape[1]))
+            Y_up = np.zeros((new_len, Y.shape[1]))
+            sample_idx = np.random.choice(idx_zeros, (ratio - 1)*N_zeros)
+            X_up[:X.shape[0]] = X
+            Y_up[:Y.shape[0]] = Y
+            X_up[X.shape[0]:] = X[sample_idx]
+            Y_up[Y.shape[0]:] = Y[sample_idx]
+        else:
+            X_up, Y_up = X, Y
+
+        shuffle_idx = np.random.choice(X_up.shape[0], (X_up.shape[0]))
+        X_up = X_up[shuffle_idx]
+        Y_up = Y_up[shuffle_idx]
+
+        self._X, self._Y = X_up, Y_up
+
     def activation(self, function, x, GPU = False):
         """
-            Parameter "function" can take values:
+            Parameter "function" can take the following values:
                 function = "sigmoid"
                 function = "tanh"
                 function = "x"
+                function = "relu"
         """
         if GPU is True:
             if function == "sigmoid":
@@ -207,6 +297,8 @@ class NeuralNet:
                 return cp.tanh(x)
             elif function == "x":
                 return x
+            elif function == "relu":
+                return cp.maximum(0, x)
         else:
             if function == "sigmoid":
                 return 1/(1 + np.exp(-x))
@@ -214,6 +306,8 @@ class NeuralNet:
                 return np.tanh(x)
             elif function == "x":
                 return x
+            elif function == "relu":
+                return np.maximum(0, x)
 
     def diff_activation(self, function, x, GPU = False):
         """
@@ -231,6 +325,8 @@ class NeuralNet:
                 return 1 - x**2
             elif function == "x":
                 return cp.ones_like(x)
+            elif function == "relu":
+                return cp.greater(x, 0).astype(np.float64)
         else:
             if function == "sigmoid":
                 return x*(1 - x)
@@ -238,6 +334,8 @@ class NeuralNet:
                 return 1 - x**2
             elif function == "x":
                 return np.ones_like(x)
+            elif function == "relu":
+                return np.greater(x, 0).astype(np.float64)
 
     def train(self, epochs, layers, batchsize, lr = 0.01, reg = 0,
               activation_fxn = "sigmoid", output_activation_fxn = None,
@@ -260,6 +358,9 @@ class NeuralNet:
 
         N, M = X.shape[0], Y.shape[0]
         P, Q = X.shape[1], Y.shape[1]
+
+        self.activation_fxn = activation_fxn
+        self.output_activation_fxn = output_activation_fxn
 
         epochs = int(epochs)
         layers = np.array(layers, dtype = np.int32)
@@ -403,21 +504,40 @@ class NeuralNet:
 
         return self.W, self.B
 
-    def predict(self, X):
+    def predict(self, X, Y = None):
         W = self.W
         B = self.B
+
+        if Y is None:
+            Y_placeholder = X
+        else:
+            Y_placeholder = Y
+        X,y = self.preprocess(categorical_cols = self._cat_cols,
+                              delete_outliers = True,
+                              output_activation_fxn = self.output_activation_fxn,
+                              scale_shift = self._scale_shift,
+                              XY = (X,Y_placeholder))
 
         Z = X[:,:,np.newaxis]
         for m in range(len(W)):
             w = W[m]
             b = B[m]
             Z = w @ Z + b
-            Z = 1/(1 + np.exp(-Z))                    # sigmoid
-            # Z = np.tanh(Z)                              # tanh
+            if m < len(W) - 1:
+                Z = self.activation(self.activation_fxn, Z)
+            elif m == len(W) - 1:
+                Z = self.activation(self.output_activation_fxn, Z)
+
+        Z_scale, Z_shift = self._scale_shift[2], self._scale_shift[3]
+        Z = Z*Z_scale + Z_shift
+
         Z = np.squeeze(Z)
         if Z.ndim == 1:
             Z = Z[:,np.newaxis]
-        return Z
+        if Y is None:
+            return Z
+        else:
+            return Z, y
 
     def ROC(self, X_test, Y_test, savepath = None):
 
@@ -495,7 +615,7 @@ class NeuralNet:
                 model_label = f"Model Feature {feature+1}; AUC = {AUC:.2f}"
                 plt.plot(fpr, tpr, label = model_label)
 
-        plt.plot(xBl, yBl, "b-.", label = "Baseline")
+        plt.plot(xBl, yBl, "b-.", label = "Random Classifier")
         plt.legend()
         plt.axis([0,1,0,1])
         plt.xlabel("False Positive Rate (FPR)")

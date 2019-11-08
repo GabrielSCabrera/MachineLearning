@@ -1,15 +1,15 @@
 import matplotlib.patheffects as PathEffects
 import matplotlib.pyplot as plt
+import subprocess, os, sys
 from matplotlib import cm
-import subprocess, os
+from time import time
 import pandas as pd
 import numpy as np
-import sys
 
 np.seterr("ignore")
 
 sys.path.append("..")
-from backend.neuralnet import NeuralNet, preprocess, split
+from backend.neuralnet import NeuralNet, split
 
 def FrankeFunction(x,y):
     term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
@@ -130,9 +130,69 @@ def accuracy(Y_predict, Y_test):
     total = diffs.shape[0]
     return correct/total
 
+def parse_args(all_args):
+    N_args = len(sys.argv)
+    sp = 20
+    valid_args = f"\n{'keywords':^{sp}s}{'type':^{sp}s}{'value':^{sp}s}\n"
+    valid_args += "-"*len(valid_args) + "\n"
+    valid_args = "\n\nValid options are as follows:\n" + valid_args
+    for key, val in all_args.items():
+        valid_args += f"{key:^{sp}s}{str(val[0]):^{sp}s}{val[1]:^{sp}s}\n"
+
+    if N_args > 1:
+        args = sys.argv[1:]
+        prev_keys = []
+        prev_vals = []
+        prev_locs = []
+        for arg in args:
+            arg = arg.strip().split("=")
+            # arg = arg.lower().strip().split("=")
+            if len(arg) != 2:
+                msg = (f"\n\nInvalid command-line argument format.  Keyword "
+                       f"arguments are expected.  Attempted to pass {len(arg)}"
+                       f" term(s) in one argument\n\t{arg}")
+                msg += valid_args
+                raise ValueError(msg)
+
+            key = arg[0].strip()
+            val = arg[1].strip()
+            if key in prev_keys:
+                msg = (f"\n\nAttempting to pass a command-line argument "
+                       f"multiple times.\n\tkeyword:\t{key}\n\t  value:\t{val}")
+                msg += valid_args
+                raise NameError(msg)
+            elif key in all_args.keys():
+                new_type = all_args[key][0]
+                msg = (f"\n\nAttempting to pass an argument of invalid "
+                f"type.\n\tkeyword:\t{key}\n\t  value:\t{val}"
+                f"\n\texpects:\t{all_args[key][0]}")
+                msg += valid_args
+                try:
+                    val = new_type(val)
+                except ValueError:
+                    raise ValueError(msg)
+                except TypeError:
+                    raise TypeError(msg)
+                prev_keys.append(key)
+                prev_vals.append(val)
+                prev_locs.append(all_args[key][1])
+            else:
+                msg = (f"\n\nAttempting to pass invalid command-line argument"
+                       f"\n\tkeyword:\t{key}\n\t  value:\t{val}")
+                msg += valid_args
+                raise NameError(msg)
+        for key,val,loc in zip(prev_keys, prev_vals, prev_locs):
+            globals()[loc] = val
+
+time_0 = time()
 grid_size = 10
-regs = np.logspace(-8, -2, grid_size)
-lrs = np.linspace(0.005, 0.2, grid_size)
+
+regs1 = np.logspace(-7, -4, grid_size)
+lrs1 = np.logspace(-5, -1, grid_size)
+
+regs2 = np.logspace(-7, -1, grid_size)
+lrs2 = np.logspace(-0.8, -0.6, grid_size)
+
 epochs = 200
 gpu = True
 dir1 = "grid_cc"
@@ -144,17 +204,22 @@ sigma = 0.1
 activation_fxn = "sigmoid"
 # Activation function for output layer (None defaults to "activation_fxn")
 output_activation_fxn = None
+# Random Seed
 rand_seed = 112358
+
+all_args = {"gridsize":[int, "grid_size"], "epochs":[int, "epochs"],
+            "gpu":[bool, "gpu"], "dir1":[str, "dir1"], "dir2":[str, "dir2"],
+            "test_percent":[float, "test_percent"], "sigma":[float, "sigma"],
+            "activation_fxn":[str, "activation_fxn"],
+            "output_activation_fxn":[str, "output_activation_fxn"],
+            "rand_seed":[int, "rand_seed"], "mode":[str, "cmdlinearg"]}
+
+parse_args(all_args)
 
 if output_activation_fxn is None:
     output_activation_fxn = activation_fxn
 
 np.random.seed(rand_seed)
-
-if len(sys.argv) == 1:
-    cmdlinearg = None
-else:
-    cmdlinearg = sys.argv[1]
 
 if cmdlinearg == "write":
 
@@ -172,23 +237,31 @@ if cmdlinearg == "write":
     except FileExistsError:
         pass
 
-    np.save(f"{dir1}/regs", regs)
-    np.save(f"{dir1}/lrs", lrs)
+    np.save(f"{dir1}/regs", regs1)
+    np.save(f"{dir1}/lrs", lrs1)
 
     try:
         os.mkdir(dir2)
     except FileExistsError:
         pass
 
-    np.save(f"{dir2}/regs", regs)
-    np.save(f"{dir2}/lrs", lrs)
+    np.save(f"{dir2}/regs", regs2)
+    np.save(f"{dir2}/lrs", lrs2)
 
-    for m,lr in enumerate(lrs):
-        for n,reg in enumerate(regs):
+    for m,lr in enumerate(lrs1):
+        for n,reg in enumerate(regs1):
             execute(lr, reg, dir1, epochs, gpu, 'credit_card.py',m,n, "roc.png")
+
+    for m,lr in enumerate(lrs2):
+        for n,reg in enumerate(regs2):
             execute(lr, reg, dir2, epochs, gpu, 'franke.py',m,n, "franke.png")
 
-elif cmdlinearg == "read":
+if cmdlinearg in ["write", "read"]:
+
+    regs1 = np.load(f"{dir1}/regs.npy")
+    lrs1 = np.load(f"{dir1}/lrs.npy")
+    regs2 = np.load(f"{dir2}/regs.npy")
+    lrs2 = np.load(f"{dir2}/lrs.npy")
 
     print("Reading Credit Card Data...", end = "")
 
@@ -285,33 +358,73 @@ elif cmdlinearg == "plot":
     MSE_franke = np.load(f"{dir2}/MSE.npy")
     R2_franke = np.load(f"{dir2}/R2.npy")
 
-    X,Y = np.meshgrid(lrs, regs)
+    regs1 = np.load(f"{dir1}/regs.npy")
+    lrs1 = np.load(f"{dir1}/lrs.npy")
+    regs2 = np.load(f"{dir2}/regs.npy")
+    lrs2 = np.load(f"{dir2}/lrs.npy")
+
+    X1,Y1 = np.meshgrid(lrs1, regs1)
+    X2,Y2 = np.meshgrid(lrs2, regs2)
 
     cmap = cm.magma
 
-    labels = ["Accuracy-Score", "F1-Score", "AUC-Score", "Gains-Ratio", "MSE", "R²-Score"]
-    values = [acc_cc, F1_cc, AUC_cc, gains_cc, MSE_franke, R2_franke]
+    labels1 = ["Accuracy-Score", "F1-Score", "AUC-Score", "Gains-Ratio"]
+    values1 = [acc_cc, F1_cc, AUC_cc, gains_cc]
 
-    x_diffs = np.diff(X, axis = 1)
-    x_text = X.copy()[:,:-1]
-    x_text = x_text + x_diffs/9
+    labels2 = ["MSE", "R²-Score"]
+    values2 = [MSE_franke, R2_franke]
 
-    y_diffs = np.diff(Y, axis = 0)
-    y_text = Y.copy()[:-1]
-    y_text = y_text + y_diffs/4.25
+    x1_diffs = np.diff(X1, axis = 1)
+    x1_text = X1.copy()[:,:-1]
+    x1_text = x1_text + x1_diffs/9
 
-    for label, value in zip(labels, values):
-        heatmap = plt.pcolormesh(X, Y, value, cmap=cmap)
+    y1_diffs = np.diff(Y1, axis = 0)
+    y1_text = Y1.copy()[:-1]
+    y1_text = y1_text + y1_diffs/4.25
+
+    x2_diffs = np.diff(X2, axis = 1)
+    x2_text = X2.copy()[:,:-1]
+    x2_text = x2_text + x2_diffs/9
+
+    y2_diffs = np.diff(Y2, axis = 0)
+    y2_text = Y2.copy()[:-1]
+    y2_text = y2_text + y2_diffs/4.25
+
+    for label, value in zip(labels1, values1):
+        heatmap = plt.pcolormesh(X1, Y1, value, cmap=cmap)
         cbar = plt.colorbar(heatmap)
         cbar.ax.set_ylabel(label)
-        for i,j,k in zip(x_text, y_text, value):
+        for i,j,k in zip(x1_text, y1_text, value):
             for x,y,z in zip(i,j,k):
                 val = "." + f"{z:.3f}".split(".")[1]
                 txt = plt.text(x, y, val, weight = 'bold')
                 txt.set_path_effects([PathEffects.withStroke(linewidth=2, foreground='w')])
+        plt.xscale('log')
         plt.yscale('log')
         plt.xlabel("Learning Rate $\eta$")
         plt.ylabel("Regularization Parameter $\lambda$")
         plt.show()
+
+    for label, value in zip(labels2, values2):
+        heatmap = plt.pcolormesh(X2, Y2, value, cmap=cmap)
+        cbar = plt.colorbar(heatmap)
+        cbar.ax.set_ylabel(label)
+        for i,j,k in zip(x2_text, y2_text, value):
+            for x,y,z in zip(i,j,k):
+                val = "." + f"{z:.3f}".split(".")[1]
+                txt = plt.text(x, y, val, weight = 'bold')
+                txt.set_path_effects([PathEffects.withStroke(linewidth=2, foreground='w')])
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.xlabel("Learning Rate $\eta$")
+        plt.ylabel("Regularization Parameter $\lambda$")
+        plt.show()
+
 else:
     raise NotImplementedError("Must choose one of the following cmdline arguments:\n\twrite\n\tread\n\tplot")
+
+dt = time() - time_0
+hh = int(dt//3600)
+mm = int((dt//60)%60)
+ss = int(dt%60)
+print(f"\n\nTotal Time Elapsed {hh:02d}:{mm:02d}:{ss:02d}")

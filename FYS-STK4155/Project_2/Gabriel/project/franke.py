@@ -7,7 +7,7 @@ import sys
 import os
 
 sys.path.append("..")
-from backend.neuralnet import NeuralNet, preprocess, upsample_binary, split
+from backend.neuralnet import NeuralNet, split
 
 t0 = time()
 
@@ -102,15 +102,15 @@ test_percent = 25
 # Configuration of layers in the Neural Network
 NN_layers = [100,100]#[575,383,255,170,113,75,50]
 # Number of epochs, or total cycles over all batches
-NN_epochs = 300
+NN_epochs = 100
 # Learning rate
 learning_rate = 0.01
 # Ridge regularization parameter
 regularization_param = 1E-7
 # Activation function
-activation_fxn = "sigmoid"
+activation_fxn = "tanh"
 # Activation function for output layer (None defaults to "activation_fxn")
-output_activation_fxn = None
+output_activation_fxn = "x"
 # File in which to save the terminal output
 terminal_output_file = "log.txt"
 # Optimize for CUDA
@@ -149,11 +149,7 @@ if output_activation_fxn is None:
 X, Y, f_xy = generate_Franke_data(N = 150)
 # Splitting the data into training and testing sets
 X_train, Y_train, X_test, Y_test = split(X, Y, test_percent)
-# Implements normalization and one-hot encoding
-X_train, Y_train = preprocess(X_train, Y_train, {}, True, output_activation_fxn)
-X_test, Y_test = preprocess(X_test, Y_test, {}, True, output_activation_fxn)
-# Upsamples the training data
-X_train, Y_train = upsample_binary(X_train, Y_train)
+
 
 """ INFORMATION FOR THE USER """
 
@@ -179,23 +175,34 @@ NN = NeuralNet()
 """ TRAINING OR LOADING A MODEL, DEPENDING ON COMMAND-LINE ARGUMENTS """
 
 if loadname is None:
-    print("Training the Network:\n")
-
     # Inserting the training data into the network
     NN.set(X_train, Y_train)
+
+    # Implements normalization and one-hot encoding
+    NN.preprocess({}, False, output_activation_fxn)
+
+    # Upsamples the training data
+    NN.upsample_binary()
+
+    print("Training the Network:\n")
 
     # Training the neural network with the parameters given earlier
     W,B = NN.train(epochs = NN_epochs, layers = NN_layers, lr = learning_rate,
     reg = regularization_param, batchsize = batchsize, GPU = GPU,
     activation_fxn = activation_fxn,
     output_activation_fxn = output_activation_fxn)
+
+    scale_shift = NN._scale_shift
+    scale_shift_X = np.array(scale_shift[:2])
+    scale_shift_Y = np.array(scale_shift[2:])
+
 else:
     print(f"Loading from directory <{loadname}>\n")
     # Loading a previous neural network
     NN.load(loadname)
 
 # Predicting outputs for the testing data
-Y_predict = NN.predict(X_test)
+Y_predict, Y_test = NN.predict(X_test, Y_test)
 
 """ ERROR ANALYSIS """
 
@@ -212,6 +219,42 @@ print(msg2)
 """ Plotting the test output """
 
 """ SAVING DATA IF A NEW NETWORK IS CREATED"""
+
+# if loadname is None:
+#     if dirname[-1] == "_":
+#         ID = 0.0
+#         while True:
+#             ID_text = f"{ID:03.0f}"
+#             name_W = "W"
+#             name_B = "B"
+#             if os.path.isdir(dirname + ID_text):
+#                 ID += 1
+#             else:
+#                 dirname = dirname + ID_text
+#                 os.mkdir(dirname)
+#                 os.mkdir(dirname + "/W")
+#                 os.mkdir(dirname + "/B")
+#                 break
+#     elif not os.path.isdir(dirname):
+#         os.mkdir(dirname)
+#         os.mkdir(dirname + "/W")
+#         os.mkdir(dirname + "/B")
+#     else:
+#         if not os.path.isdir(dirname + "/W"):
+#             os.mkdir(dirname + "/W")
+#         if not os.path.isdir(dirname + "/B"):
+#             os.mkdir(dirname + "/B")
+#
+#     for layer in range(len(W)):
+#         np.save(f"{dirname}/W/layer_{layer:03.0f}", W[layer])
+#         np.save(f"{dirname}/B/layer_{layer:03.0f}", B[layer])
+#
+#     NN_layers = np.concatenate([[X_train.shape[1]], NN_layers, [Y_train.shape[1]]])
+#     np.save(f"{dirname}/layers", NN_layers)
+#
+#     with open(f"{dirname}/{terminal_output_file}", "w+") as outfile:
+#         outfile.write(msg1 + msg2)
+#
 
 if loadname is None:
     if dirname[-1] == "_":
@@ -244,9 +287,23 @@ if loadname is None:
 
     NN_layers = np.concatenate([[X_train.shape[1]], NN_layers, [Y_train.shape[1]]])
     np.save(f"{dirname}/layers", NN_layers)
+    np.save(f"{dirname}/scale_shift_X", scale_shift_X)
+    np.save(f"{dirname}/scale_shift_Y", scale_shift_Y)
 
     with open(f"{dirname}/{terminal_output_file}", "w+") as outfile:
         outfile.write(msg1 + msg2)
+
+    with open(f"{dirname}/activations.dat", "w+") as outfile:
+        outfile.write(f"{activation_fxn} {output_activation_fxn}")
+
+    with open(f"{dirname}/categorical_cols.dat", "w+") as outfile:
+        string = ""
+        for key,val in {}.items():
+            rhs = ""
+            for i in val:
+                rhs += f"{i} "
+            string += f"{key}:{rhs[:-1]}\n"
+        outfile.write(string[:-1])
 
     fig = plt.figure()
     ax = fig.gca(projection="3d")
