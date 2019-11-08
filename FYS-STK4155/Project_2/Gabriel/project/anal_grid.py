@@ -194,7 +194,7 @@ regs2 = np.logspace(-6, -5, grid_size)
 lrs2 = np.linspace(0.08, 0.2, grid_size)
 
 epochs = 200
-gpu = True
+gpu = False
 dir1 = "grid_cc"
 dir2 = "grid_franke"
 test_percent = 25
@@ -231,7 +231,7 @@ if cmdlinearg == "write":
             pass
         subprocess.call(['python3', filename,
                         f'save={loc}', f'lr={lr}', f'saveimg={savename}',
-                        f'epochs={epochs}', f"reg={reg}", f"GPU={gpu}"])
+                        f'epochs={epochs}', f"reg={reg}"])#, f"GPU={gpu}"])
     try:
         os.mkdir(dir1)
     except FileExistsError:
