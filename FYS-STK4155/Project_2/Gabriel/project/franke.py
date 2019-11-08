@@ -110,7 +110,7 @@ regularization_param = 0.000215443#1E-7
 # Activation function
 activation_fxn = "tanh"
 # Activation function for output layer (None defaults to "activation_fxn")
-output_activation_fxn = "x"
+output_activation_fxn = "tanh"
 # File in which to save the terminal output
 terminal_output_file = "log.txt"
 # Optimize for CUDA
