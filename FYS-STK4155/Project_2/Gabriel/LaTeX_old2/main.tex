@@ -1,0 +1,93 @@
+\documentclass[twoside,twocolumn,10pt]{revtex4-1}
+\usepackage[utf8]{inputenc}
+\usepackage[left=1.4cm, right=1.4cm, top=1.9cm, bottom=1.9cm]{geometry}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{physics}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{ dsfont }
+\usepackage{ amssymb }
+\usepackage{ wasysym }
+\usepackage{hyperref}
+\usepackage{lipsum}
+\usepackage{colortbl}
+\usepackage{forest}
+\usepackage{booktabs}
+\usepackage{lastpage}
+\usepackage{datetime}
+\usepackage{csquotes}
+\usepackage{outlines}
+\usepackage{multirow}
+
+% Table rules
+\newcolumntype{C}{>{$}c<{$}}
+\AtBeginDocument{
+	\heavyrulewidth=.08em
+	\lightrulewidth=.05em
+	\cmidrulewidth=.03em
+	\belowrulesep=.65ex
+	\belowbottomsep=0pt
+	\aboverulesep=.4ex
+	\abovetopsep=0pt
+	\cmidrulesep=\doublerulesep
+	\cmidrulekern=.5em
+	\defaultaddspace=.5em
+}
+
+\pagestyle{fancy}
+
+\begin{document}
+	
+	\title{Neural Networks}
+	\author{S. H. Magnússon, G. S. Cabrera, and B. S. Dalen}
+	\date{\today}
+	
+	% Define \rightmark (to state III. Method f.ex) for the Left header
+	
+	\renewcommand{\sectionmark}[1]{\markright{\MakeUppercase{\roman{section}}.\ #1}}
+	\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+	
+	% Define the date and year for Right header
+	\newdateformat{monthyeardate}{%
+		\monthname[\THEMONTH] \THEYEAR}
+	
+	% Headers
+	\fancyhf{} 
+	\fancyhead[L]{\rightmark}
+	\fancyhead[R]{University of Oslo, \monthyeardate\today}
+	\fancyfoot[C]{\thepage}
+	
+	\input{sections/abstract.tex}
+	
+	\maketitle
+	\twocolumngrid
+	
+	\def\doubleunderline#1{\underline{\underline{#1}}}
+	
+	\input{sections/introduction}
+	
+	\input{sections/theory}
+	
+	\input{sections/method}
+	
+	\input{sections/results}
+	
+	\input{sections/discussion}
+	
+	\input{sections/conclusion}
+	
+	\newpage
+	
+	\bibliographystyle{agsm}
+	\onecolumngrid
+	\section*{References}
+	\bibliography{ref.bib}
+	
+	\newpage 
+	\twocolumngrid
+	\fancyhead[L]{Appendices}
+	\input{sections/appendix-A}
+	\input{sections/appendix-B}
+	
+\end{document}

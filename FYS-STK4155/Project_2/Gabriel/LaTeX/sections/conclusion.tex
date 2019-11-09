@@ -1,6 +1,4 @@
 \section{Conclusion}
-    % Further improvements:
-        % Add a so-called dropout rate
-        % Implement cross validation for the search of optimal parameters $\lambda$ and $\eta$
-        % Should have maybe implemented MPI4PY (code parallelization), and
-        % Should have maybe performed some cross validation to find the optimal parameters. This would however have been very computationally inefficient.
+	The multilayered perceptron was found to outperform the stochastic gradient descent algorithm in predicting the credit card data. The optimal accuracy of the SGD algorithm was found to be $61.2\%$ using the l2 regularization parameter $\lambda=10^{-6}$ and a learning rate of at most $\eta=0.06$. This was contrasted by the performance of the neural network which accomplished an accuracy of $71.9\%$ using the l2 regularization parameter $\lambda=10^{-4}$ and learning rate $\eta=0.056$. The ANN was not found to outperform the Ridge scheme at reproducing Franke's function. The Ridge regression produced a minimum of $2\times 10^{-4}$, while the neural network produced a minimum of $0.2$ at best.\\\\
+  	Further improvements of the artificial neural network can be made by adding functionalities such as the \textit{dropout rate}, something which has been shown to decrease the variance of the prediction. An improvement can also be made in the grid search methods conducted. Cross validation methods can also be implemented for the search of the optimal parameters. A continuation of the project with improved functionality and greater depth of the research has great potential. This is due to the fact that there are so many factors of the study which can have entire research projects of their own.
+  	
