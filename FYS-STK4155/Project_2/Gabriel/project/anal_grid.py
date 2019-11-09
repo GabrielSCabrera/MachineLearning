@@ -248,13 +248,13 @@ if cmdlinearg == "write":
     np.save(f"{dir2}/regs", regs2)
     np.save(f"{dir2}/lrs", lrs2)
 
-    # for m,lr in enumerate(lrs1):
-    #     for n,reg in enumerate(regs1):
-    #         execute(lr, reg, dir1, epochs, gpu, 'credit_card.py',m,n, "roc.png")
+    for m,lr in enumerate(lrs1):
+        for n,reg in enumerate(regs1):
+            execute(lr, reg, dir1, epochs, gpu, 'credit_card.py',m,n, "roc.png")
 
-    for m,lr in enumerate(lrs2):
-        for n,reg in enumerate(regs2):
-            execute(lr, reg, dir2, epochs, gpu, 'franke.py',m,n, "franke.png")
+    # for m,lr in enumerate(lrs2):
+    #     for n,reg in enumerate(regs2):
+    #         execute(lr, reg, dir2, epochs, gpu, 'franke.py',m,n, "franke.png")
 
 if cmdlinearg in ["write", "read"]:
 

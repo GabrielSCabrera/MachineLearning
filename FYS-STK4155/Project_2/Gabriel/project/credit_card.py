@@ -68,13 +68,13 @@ batchsize = 100
 # Percentage of data to set aside for testing
 test_percent = 33
 # Configuration of layers in the Neural Network
-NN_layers = [100,100]
+NN_layers = []  # 100,100
 # Number of epochs, or total cycles over all batches
-NN_epochs = 3
+NN_epochs = 100
 # Learning Rate
-learning_rate = 0.01
+learning_rate = 0.1
 # Ridge Regularization Parameter
-regularization_param = 1E-7
+regularization_param = 0         # set lambda = 0, eta = 0.01
 # Activation function
 activation_fxn = "tanh"
 # Activation function for output layer (None defaults to "activation_fxn")

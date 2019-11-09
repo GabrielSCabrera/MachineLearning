@@ -1,0 +1,34 @@
+
+Processed Dataset Dimensions:
+
+	X_train: (N= 20100, p= 23)
+	Y_train: (M= 20100, q= 1)
+
+	X_test:  (N= 15390, p= 23)
+	Y_test:  (M= 15390, q= 1)
+
+Neural Network Parameters
+
+	Batch Size: 100
+	Layer Configuration: []
+	Epochs: 100
+	Learning Rate: 0.137778
+	Regularization Parameter: 4.64159e-08
+	Random Seed: 112358
+
+Activation Functions
+
+	Hidden Layers: tanh
+	Output Layer sigmoid
+	CUDA: False
+
+Test Results
+
+	Number of incorrect outputs: 3586/15194
+	Number of correct outputs: 11608/15194
+	Accuracy Score: 0.76
+
+Prediction information:
+
+	No. of ones:	3951
+	No. of zeros:	11243

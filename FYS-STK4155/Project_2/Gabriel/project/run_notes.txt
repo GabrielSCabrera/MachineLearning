@@ -1,0 +1,15 @@
+Nodes = [100, 100]
+act = sigmoid all
+
+find best eta lambda for cc
+run ff and cc four times 
+
+[100,50] [50,100] [50,50] []
+
+
+CC_nw:
+find best eta lambda for [100,100] for cc and franke
+use best eta lambda & epochs (~200) to do following:
+loop over 100 50, 50 100, 50 50, []
+
+
