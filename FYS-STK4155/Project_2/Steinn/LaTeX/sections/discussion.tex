@@ -1,7 +1,6 @@
 \section{Discussion}
     \subsection{Classification}
         % Logistic regression:
-             % Choice of cost-function
              % accuracy: bad/good?
              
         % Neural network
@@ -9,12 +8,23 @@
             % Optimal weights and biases
             % best reg. params, learning rates
             % accuracy: bad/good?
+        Figure \ref{fig:cc_acc} illustrates the success of the neural network algorithm developed for the study. The accuracy scores peak at an accuracy of nearly $72\%$ using the hyperparameter $\lambda = 10^{-4}$ and learning rate $\eta = 0.06$.
+        
+        Figure \ref{fig:cc_F1} illustrates the F1 scores for the grid search. These values are underwhelming as the F1 score is expected to be close to 1 for good model results. 
+        
+        It is also interesting that the hyperparameter and learning rate values which produce the best F1 scores do not match with the optimal $\lambda$ and $\eta$ values for the accuracy score.
+        
+        Figure \ref{fig:cc_auc}
+        
+        Figure \ref{fig:cc_gr}
+        
+        Figure \ref{fig:cc_F1}, \ref{fig:cc_auc} and \ref{fig:cc_gr} also shows that there's little  consistency between our evaluation methods, as each gives a different best value for $\eta$ and $\lambda$.
+        
             
         % COMPARE the two methods: 
             % Give a critical discussion of the results obtained with LR and NN. 
             % Make an analysis of the regularization parameters and learning rates employed to find the optimal accuracy score.
             % Compare choice of cost-functions for the two: did we choose different ones?
-        
         % Were the results from Yeh2009 reproduced? 
             % New remarks? 
             % Differences? 
