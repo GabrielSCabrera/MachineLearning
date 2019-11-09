@@ -31,22 +31,18 @@
 \BOOKMARK [3][-]{section*.31}{One-Hot Encoding classifiers}{section*.28}% 31
 \BOOKMARK [3][-]{section*.32}{History of past payment columns}{section*.28}% 32
 \BOOKMARK [2][-]{section*.33}{Neural Network Design}{section*.27}% 33
-\BOOKMARK [3][-]{section*.34}{Weight- and Bias Initialization}{section*.33}% 34
-\BOOKMARK [3][-]{section*.35}{Hyperparameter and Learning Rate analysis}{section*.33}% 35
-\BOOKMARK [2][-]{section*.36}{Classification}{section*.27}% 36
-\BOOKMARK [3][-]{section*.37}{Logistic Regression}{section*.36}% 37
-\BOOKMARK [3][-]{section*.38}{Neural Network: Classification}{section*.36}% 38
-\BOOKMARK [2][-]{section*.39}{Regression}{section*.27}% 39
-\BOOKMARK [3][-]{section*.40}{Linear Regression}{section*.39}% 40
-\BOOKMARK [3][-]{section*.41}{Neural Network: Regression}{section*.39}% 41
-\BOOKMARK [1][-]{section*.42}{Results}{section*.2}% 42
+\BOOKMARK [3][-]{section*.34}{Overview of Neural Network Class}{section*.33}% 34
+\BOOKMARK [3][-]{section*.35}{Logistic Regression/Stochastic Gradient Descent}{section*.33}% 35
+\BOOKMARK [2][-]{section*.36}{Hyperparameter and Learning Rate analysis}{section*.27}% 36
+\BOOKMARK [2][-]{section*.37}{Classification}{section*.27}% 37
+\BOOKMARK [2][-]{section*.38}{Regression}{section*.27}% 38
+\BOOKMARK [1][-]{section*.39}{Results}{section*.2}% 39
+\BOOKMARK [2][-]{section*.40}{Classification}{section*.39}% 40
+\BOOKMARK [2][-]{section*.41}{Regression}{section*.39}% 41
+\BOOKMARK [1][-]{section*.42}{Discussion}{section*.2}% 42
 \BOOKMARK [2][-]{section*.43}{Classification}{section*.42}% 43
 \BOOKMARK [2][-]{section*.44}{Regression}{section*.42}% 44
-\BOOKMARK [1][-]{section*.45}{Discussion}{section*.2}% 45
-\BOOKMARK [2][-]{section*.46}{Classification}{section*.45}% 46
-\BOOKMARK [2][-]{section*.47}{Regression}{section*.45}% 47
-\BOOKMARK [2][-]{section*.48}{Comparison of the Methods}{section*.45}% 48
-\BOOKMARK [1][-]{section*.49}{Conclusion}{section*.2}% 49
-\BOOKMARK [1][-]{section*.50}{References}{section*.2}% 50
-\BOOKMARK [1][-]{section*.51}{References}{section*.2}% 51
-\BOOKMARK [1][-]{section*.52}{Appendix A:OLS Predictor Derivation}{section*.2}% 52
+\BOOKMARK [2][-]{section*.45}{Comparison of the Methods}{section*.42}% 45
+\BOOKMARK [1][-]{section*.46}{Conclusion}{section*.2}% 46
+\BOOKMARK [1][-]{section*.47}{References}{section*.2}% 47
+\BOOKMARK [1][-]{section*.48}{Appendix A:OLS Predictor Derivation}{section*.2}% 48

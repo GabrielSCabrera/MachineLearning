@@ -114,7 +114,7 @@ output_activation_fxn = "sigmoid"
 # File in which to save the terminal output
 terminal_output_file = "log.txt"
 # Optimize for CUDA
-GPU = False
+GPU = True
 # Directory in which to save the terminal output; underscore allows for
 # automatic numbering
 dirname = "results_franke_"
