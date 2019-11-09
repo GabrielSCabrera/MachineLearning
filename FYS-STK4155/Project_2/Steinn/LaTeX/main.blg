@@ -8,15 +8,15 @@ Warning--entry type for "lecturenotes" isn't style-file defined
 --line 126 of file ref.bib.bib
 You've used 14 entries,
             2909 wiz_defined-function locations,
-            719 strings with 7991 characters,
-and the built_in function-call counts, 59445 in all, are:
-= -- 10042
+            719 strings with 7952 characters,
+and the built_in function-call counts, 59440 in all, are:
+= -- 10037
 > -- 511
 < -- 0
 + -- 4709
 - -- 154
-* -- 5152
-:= -- 11518
+* -- 5157
+:= -- 11513
 add.period$ -- 20
 call.type$ -- 14
 change.case$ -- 166
@@ -25,17 +25,17 @@ cite$ -- 14
 duplicate$ -- 217
 empty$ -- 434
 format.name$ -- 181
-if$ -- 10861
+if$ -- 10856
 int.to.chr$ -- 5
 int.to.str$ -- 0
 missing$ -- 6
-newline$ -- 59
+newline$ -- 64
 num.names$ -- 95
-pop$ -- 113
+pop$ -- 118
 preamble$ -- 1
 purify$ -- 185
 quote$ -- 0
-skip$ -- 166
+skip$ -- 161
 stack$ -- 0
 substring$ -- 14123
 swap$ -- 66
