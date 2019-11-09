@@ -89,11 +89,23 @@
             \1 Imbalanced-learn version 0.5.0
                 \2 Imbalanced-learn (imblearn) is a package mainly used to up- and down-sample the data sets presented. The functionality of imblearn's package is quite easy to implement and is very time-efficient.
         \end{outline}
-        Some packages implemented but left out of this list are Seaborn version 0.9.0 (used to produce the heatmaps illustrated in figures \ref{fig:pre_PCA} and \ref{fig:post_PCA}), Dill version 0.3.1.1 (used to save some trained neural network objects), and python utilities such as \textbf{os} (used for operating system functionality) and \textbf{time} (used to output the time taken to conduct calculations).
+        Some packages implemented but left out of this list are Seaborn version 0.9.0, Dill version 0.3.1.1 (used to save some trained neural network objects), and python utilities such as \textbf{os} (used for operating system functionality) and \textbf{time} (used to output the time taken to conduct calculations).
         
-        \subsubsection{Weight- and Bias Initialization}
-            Several different weight and bias initialization methods are implemented into the network class. The weights and bias initialization functions include the Xavier method introduced in equation \ref{eq:xavier}, a \textit{small} functionality, which initializes all weights and/or biases as $0.01$, and a \textit{random} functionality, initializing them using a random uniform distribution.
+        \subsubsection*{Overview of Neural Network Class}
+        
+The neural network code is implemented into an object oriented code in python, where several of the network attributes can be stored. There are also a large amount of functions implemented into the class which have various objectives, ranging from network training to network performance analysis. 
             
+            The class is designed to accept a set of input training matrices $\mathbf{X}$ and $\mathbf{Y}$; a preprocessing method is called that automatically implements \textit{one-hot encoding} on the categorical columns of the input datasets, then automatically scales $X$ based on the activation function selected for the hidden layers.  $Y$ is then scaled depending on the range of values of the output layer's activation function (for the \textit{sigmoid} function, this would be in the range $0$ and $1$, while $\tanh$ requires values in the range $-1$ and $1$.  These scaling factors are then stored as instance attributes, and can be saved and reloaded when performing a prediction.
+            
+            Once all the preprocessing has been completed, there is an upsampling method that can be used in cases where the ratio of $0$ to $1$ outputs is not close to $1$; this randomly selects inputs linked to the underrepresented outputs, and appends them to the end of the input array.
+            
+            Next, each datapoint is randomly shuffled and subsequently divided into a set of batches, the number of which depends on the selected \textit{batch-size}.  The shuffling is important, since the upsampled points were previously appended to the dataset rather than inserted into random locations.  At this point, it is simply a matter of implementing the \textit{feed-forward} and \textit{backpropagation} algorithms for each batch, then each epoch.  For the purpose of efficacy, there is a GPU processing option that will implement CUDA vectorization.
+            
+            Finally, the trained sets of weights and biases are stored in \texttt{.npy} files, where they can be loaded and used in a later prediction.  This is necessary, since training requires a lot of time and processing power.
+        
+%        \subsubsection{Weight- and Bias Initialization}
+%            Several different weight and bias initialization methods are implemented into the network class. The weights and bias initialization functions include the Xavier method introduced in equation \ref{eq:xavier}, a \textit{small} functionality, which initializes all weights and/or biases as $0.01$, and a \textit{random} functionality, initializing them using a random uniform distribution.
+%            
         \subsubsection{Hyperparameter and Learning Rate analysis}
             The simplest way of performing a search for the optimal parameters is initializing a grid search over multiple hyperparameter values $\lambda_i \in [\lambda_1, \lambda_2, \hdots, \lambda_{r1}]$ and learning rates $\eta_i \in [\eta_1, \eta_2, \hdots, \eta_{r2}]$, producing an array of $(r1 \times r2)$ trained neural networks. These networks must all have the same design to perform the analysis of $\lambda$ and $\eta$ properly.\\\\
             Several network designs are initialized with variations structures of hidden layers, node number per layer, activation function per layer, etc. The network structures researched were designed out of simple interest, where several of the networks are similar but have slight tweaks (such as increasing the number of nodes per layer by 10). This is done to research both the impact of the parameters $\lambda$ and $\eta$ simultaneously with the influence of other factors (such as the nodes per layer).
@@ -102,13 +114,15 @@
         The goal of the classification research presented is to use the accuracy metric to compare the two methods of stochastic gradient descent and artificial neural network. A supplementary research study is conducted on the neural network, where an extensive search of which network structure produces the best results. The additional accuracy metrics of the area under the cumulative gain curve and $F1$ score are included for this study.
         \subsubsection{Logistic Regression}
             A class is built in python to perform the stochastic gradient descent presented in the theory section. several different initializing guesses $\hat{\beta}_0$ functionalities are included in this case, allowing for a custom guess to be passed in, or a request for the class to generate a random uniform distribution from $\hat{\beta}_i \in [-0.7, 0.7]$.
+            
+			
             % How did we set up LR?
                 % Cost-function
                 % SGD with mini-batched
                 % Parameters used
                 
         \subsubsection{Neural Network: Classification}
-            The neural network code is implemented into an object oriented code in python, where several of the network attributes can be stored. There is also a large amount of functions implemented into the class which have various objectives, ranging from network training to network performance analysis. 
+            
         
             % How did we set up NN?
                 % appropriate COST-function: MSE or cross entropy
