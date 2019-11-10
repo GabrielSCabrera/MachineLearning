@@ -1,50 +1,7 @@
-This is BibTeX, Version 0.99d (TeX Live 2017/Debian)
-Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
-The top-level auxiliary file: main.aux
+This is BibTeX, Version 0.99dThe top-level auxiliary file: main.aux
 The style file: agsm.bst
 Database file #1: mainNotes.bib
-Database file #2: ref.bib.bib
+Database file #2: ref.bib
 Warning--entry type for "lecturenotes" isn't style-file defined
---line 126 of file ref.bib.bib
-You've used 14 entries,
-            2909 wiz_defined-function locations,
-            719 strings with 7952 characters,
-and the built_in function-call counts, 59440 in all, are:
-= -- 10037
-> -- 511
-< -- 0
-+ -- 4709
-- -- 154
-* -- 5157
-:= -- 11513
-add.period$ -- 20
-call.type$ -- 14
-change.case$ -- 166
-chr.to.int$ -- 14
-cite$ -- 14
-duplicate$ -- 217
-empty$ -- 434
-format.name$ -- 181
-if$ -- 10856
-int.to.chr$ -- 5
-int.to.str$ -- 0
-missing$ -- 6
-newline$ -- 64
-num.names$ -- 95
-pop$ -- 118
-preamble$ -- 1
-purify$ -- 185
-quote$ -- 0
-skip$ -- 161
-stack$ -- 0
-substring$ -- 14123
-swap$ -- 66
-text.length$ -- 146
-text.prefix$ -- 0
-top$ -- 0
-type$ -- 56
-warning$ -- 0
-while$ -- 219
-width$ -- 0
-write$ -- 198
+--line 126 of file ref.bib
 (There was 1 warning)
