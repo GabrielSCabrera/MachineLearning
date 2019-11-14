@@ -1,7 +1,14 @@
 from sklearn.preprocessing import StandardScaler, PolynomialFeatures
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split, cross_validate
+from sklearn.linear_model import LinearRegression, Lasso
+from sklearn.utils import resample
+from pygam import s as GAM_spline
+from multiprocessing import Pool
+import matplotlib.pyplot as plt
+from pygam import l as GAM_line
+from pygam import LinearGAM
 from scipy import stats
+import pandas as pd
 import numpy as np
 
 def read_data(path):
@@ -73,7 +80,14 @@ def get_stats(model, X_test, Y_test, labels):
 
     """SORTING FEATURES BASED ON P-VALUES (low --> high)"""
     idx = np.argsort(p_values)
-    return labels[idx], betas[idx], std_err[idx], p_values[idx], MSE, R2, idx
+
+    if len(idx) > 1:
+        labels = labels[idx]
+        betas = betas[idx]
+        std_err = std_err[idx]
+        p_values = p_values[idx]
+
+    return labels, betas, std_err, p_values, MSE, R2, idx
 
 def sort_data(model, X_train, Y_train, X_test, Y_test, labels):
 
@@ -103,7 +117,7 @@ def sort_data(model, X_train, Y_train, X_test, Y_test, labels):
 
     return info, labels, betas, std_err, p_values, MSE, R2, idx
 
-def backward(X, Y, labels, options):
+def backward_elimination(X, Y, labels, options):
     X_step = X.copy()
     labels_short = labels.copy()
     MSE_arr, R2_arr = np.zeros(p), np.zeros(p)
@@ -119,9 +133,116 @@ def backward(X, Y, labels, options):
         labels_short = labels_short[idx[:-1]]
     return MSE_arr, R2_arr, labels_importance
 
+def forward_substitution(X, Y, labels, options):
+    X = X.copy()
+    MSE_arr, R2_arr = np.zeros(p), np.zeros(p)
+    col_init = [i for i in range(p)]
+    cols = col_init.copy()
+    col_rank = []
+    for i in range(p):
+        p_values_step = []
+        X_step = X[:,col_init]
+        for j in range(p-i):
+            X_temp = np.hstack([X[:,col_rank], X_step[:,j,None]])
+            temp = get_model(X_temp, Y, options)
+            temp = get_stats(temp[0], temp[2], temp[4], labels)
+            p_values, MSE, R2, idx = temp[-4:]
+            p_values_step.append(p_values[idx][-1])
+        argmin = np.argmin(p_values_step)
+        col_rank.append(col_init[argmin])
+        del col_init[argmin]
+    col_rank = np.array(col_rank)
+    return MSE_arr, R2_arr, labels[col_rank]
+
+def k_fold(data):
+    X, Y, k, alpha = data
+    """CREATING A DESIGN MATRIX"""
+    poly = PolynomialFeatures(1)
+    X_design = poly.fit_transform(X)
+
+    """PERFORMING LASSO FIT"""
+    model = Lasso(alpha = alpha, max_iter = 1E5)
+    cv_results = cross_validate(model, X, Y, cv = k)
+    scores = cv_results["test_score"]
+    return np.mean(scores)
+
+def bootstrap(data):
+    X, Y, k, alpha, options = data
+
+    """SPLITTING THE DATASET"""
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, **options)
+
+    """PREPROCESSING"""
+    # NB: No need for one-hot encoding – categorical columns are already binary!
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    scaler = StandardScaler()
+    Y_train = scaler.fit_transform(Y_train)
+    Y_test = scaler.transform(Y_test)
+
+    """CREATING A DESIGN MATRIX"""
+    poly = PolynomialFeatures(1)
+    X_test = poly.fit_transform(X_test)
+    X_train = poly.fit_transform(X_train)
+
+    scores = []
+
+    """PERFORMING LASSO FIT"""
+    model = Lasso(alpha = alpha, max_iter = 1E5)
+    for i in range(k):
+        X_step, Y_step = resample(X_train, Y_train, random_state = rand_seed,
+                                  n_samples = X_train.shape[0], replace = True)
+        model.fit(X_step, Y_step)
+        scores.append(model.score(X_test, Y_test))
+    return np.mean(scores)
+
+    print(scores)
+
+def CV_compare(alphas):
+    k_fold_scores = []
+    bootstrap_scores = []
+
+    pool = Pool()
+    k_fold_args = [(X, Y, k, a) for a in alphas]
+    bootstrap_args = [(X, Y, k, a, options) for a in alphas]
+
+    k_fold_idx = []
+    bootstrap_idx = []
+
+    print(f"{0:4d}%", end = "")
+
+    count = 0
+    for n,i in enumerate(pool.imap(k_fold, k_fold_args)):
+        count += 1
+        k_fold_scores.append(i)
+        k_fold_idx.append(n)
+        print(f"\r{int(50*n/len(alphas)):4d}%", end = "")
+
+    count = 0
+    for n,i in enumerate(pool.imap(bootstrap, bootstrap_args)):
+        count += 1
+        bootstrap_scores.append(i)
+        bootstrap_idx.append(n)
+        print(f"\r{50+int(50*count/len(alphas)):4d}%", end = "")
+    print(f"\r", end = "")
+
+    bootstrap_scores = np.array(bootstrap_scores)[bootstrap_idx]
+    k_fold_scores = np.array(k_fold_scores)[k_fold_idx]
+
+    plt.semilogx(alphas, k_fold_scores, label = "Cross-Validation")
+    plt.semilogx(alphas, bootstrap_scores, label = "Bootstrap")
+    plt.xlabel("Complexity Parameter $\\alpha$")
+    plt.ylabel("R²-Score")
+    plt.xlim([np.min(alphas), np.max(alphas)])
+    plt.legend()
+    plt.show()
+
 """PARAMETERS"""
-test_percent = 0.5  # Float in range (0,1)
+test_percent = 0.5      # Float in range (0,1)
 rand_seed = 11235813
+k = 5                   # "k" in k-fold cross validation
 
 """DESCRIBING LABELS"""
 label_descr = { "ALTER": "Age", "ADHEU": "Allergic Coryza", "SEX": "Gender",
@@ -155,6 +276,49 @@ sort_data(model, X_train, Y_train, X_test, Y_test, labels)
 print(info)
 
 """BACKWARD ELIMINATION"""
-MSE_back, R2_back, labels = backward(X, Y, labels, options)
-for l in labels:
-    print(label_descr[l])
+MSE_back, R2_back, labels_back = backward_elimination(X, Y, labels, options)
+
+"""FORWARD ELIMINATION"""
+MSE_back, R2_back, labels_forward = forward_substitution(X, Y, labels, options)
+for i,j in zip(labels_back, labels_forward):
+    print(f"{label_descr[i]:20s} {label_descr[j]:20s}")
+
+"""K-FOLD CROSS VALIDATION AND BOOTSTRAP"""
+alphas = np.logspace(-5, -0.5, 100)
+CV_compare(alphas)
+
+linear = ['y', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'y', 'n', 'y', 'n', 'n', 'n',
+           'n', 'n', 'n', 'n', 'n', 'n', 'n', 'y', 'n', 'n']
+#
+# for feature in X.T:
+#     unique = np.unique(feature)
+#     if len(unique) < 10:
+#         linear.append("n")
+#     else:
+#         idx = np.argsort(feature)
+#         plt.plot(feature[idx], Y.squeeze()[idx])
+#         plt.show()
+#         linear.append(input("Linear?\t"))
+
+linear = np.array(linear)
+linear[linear == "n"] = 0
+linear[linear == "y"] = 1
+linear = linear.astype(bool)
+
+gam_input = None
+for n,is_linear in enumerate(linear):
+    if gam_input is not None:
+        if is_linear:
+            gam_input = gam_input + GAM_spline(n) + GAM_line(n)
+        else:
+            gam_input = gam_input + GAM_spline(n)
+    else:
+        if is_linear:
+            gam_input = GAM_spline(n) + GAM_line(n)
+        else:
+            gam_input = GAM_spline(n)
+
+gam = LinearGAM(gam_input)
+gam.fit(X_train, Y_train)
+
+# gam.summary()

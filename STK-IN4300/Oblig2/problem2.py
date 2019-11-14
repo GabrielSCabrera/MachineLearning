@@ -1,8 +1,8 @@
+from sklearn.model_selection import train_test_split, cross_validate, LeaveOneOut
 from sklearn.preprocessing import StandardScaler, PolynomialFeatures
 from sklearn.neighbors import KNeighborsClassifier as KNN
-from sklearn.model_selection import train_test_split
-import pandas as pd
-import numpy as np
+from multiprocessing import Pool
+import matplotlib.pyplot as plt
 
 def read_data(path):
     df = pd.read_csv(path)
@@ -29,26 +29,7 @@ def get_model(X, Y, n_neighbors, options):
 
     return model, X_train, X_test, Y_train, Y_test
 
-def get_stats(model, X_test, Y_test):
-
-    """PREDICTING OUTPUTS USING LINEAR REGRESSION MODEL"""
-    Y_predict = model.predict(X_test)
-    print(Y_predict)
-
-    """CALCULATING MSE"""
-    MSE = np.mean((Y_predict - Y_test)**2)
-
-    """CALCULATING R2-SCORE"""
-    SS_tot = np.sum((Y_test-np.mean(Y_test))**2)
-    SS_res = np.sum((Y_predict-Y_test)**2)
-    R2 = 1 - SS_res/SS_tot
-
-    return MSE, R2
-
-def sort_data(model, X_train, Y_train, X_test, Y_test):
-
-    """GETTING STATISTICAL DATA"""
-    MSE, R2 = get_stats(model, X_test, Y_test)
+def matrix_info(X_train, Y_train, X_test, Y_test):
 
     """COMPILING INFORMATION FOR PRINTING TO TERMINAL"""
 
@@ -58,15 +39,33 @@ def sort_data(model, X_train, Y_train, X_test, Y_test):
             f"Y_train: ({Y_train.shape[0]}, 1)\t"
             f"Y_test : ({Y_test.shape[0]}, 1)\n\t"
             f"Train Percentage: {100*(1-test_percent):0.0f}%\t"
-            f"Test Percentage: {100*test_percent:0.0f}%\n\n"
-            f"STATISTICS:\n\n\tMSE:\t{MSE:.4E}\n\tR²:\t{R2:.4E}")
+            f"Test Percentage: {100*test_percent:0.0f}%")
 
-    return info, MSE, R2
+    return info
+
+def k_fold(data):
+    X, Y, k, n_neighbors = data
+
+    """PERFORMING LASSO FIT"""
+    model = KNN(n_neighbors = n_neighbors)
+    cv_results = cross_validate(model, X, Y, cv = k)
+    scores = cv_results["test_score"]
+    return np.mean(scores)
+
+def loo_cv(data):
+    X, Y, n_neighbors = data
+
+    """PERFORMING LASSO FIT"""
+    model = KNN(n_neighbors = n_neighbors)
+    cv_gen = LeaveOneOut().split(X, Y)
+    cv_results = cross_validate(model, X, Y, cv = cv_gen)
+    scores = cv_results["test_score"]
+    return np.mean(scores)
 
 """PARAMETERS"""
 test_percent = 0.5  # Float in range (0,1)
 rand_seed = None#11235813
-n_neighbors = 12
+k_neighbors = 100
 
 """DESCRIBING LABELS"""
 label_descr = {"pregnant":"Number of Pregnancies",
@@ -86,8 +85,48 @@ data_path = "pima-indians-diabetes.csv"
 X, Y, labels = read_data(data_path)
 p = X.shape[1]
 
-"""CREATING MODEL"""
-model, X_train, X_test, Y_train, Y_test = get_model(X, Y, n_neighbors, options)
+"""CREATING BASIC MODEL"""
+model, X_train, X_test, Y_train, Y_test = get_model(X, Y, k_neighbors, options)
 # DISPLAYING INITIAL RESULTS
-info, MSE, R2 = sort_data(model, X_train, Y_train, X_test, Y_test)
+info = matrix_info(X_train, Y_train, X_test, Y_test)
 print(info)
+
+"""K-FOLD CROSS VALIDATION AND BOOTSTRAP"""
+k_neighbors = np.arange(1, 25, 1)
+k_fold_scores = []
+loo_scores = []
+
+pool = Pool()
+k_fold_args = [(X, Y, 5, n) for n in k_neighbors]
+loo_args = [(X, Y, n) for n in k_neighbors]
+
+k_fold_idx = []
+loo_idx = []
+
+print(f"{0:4d}%", end = "")
+
+count = 0
+for n,i in enumerate(pool.imap(k_fold, k_fold_args)):
+    count += 1
+    k_fold_scores.append(i)
+    k_fold_idx.append(n)
+    print(f"\r{int(50*n/len(k_neighbors)):4d}%", end = "")
+
+count = 0
+for n,i in enumerate(pool.imap(loo_cv, loo_args)):
+    count += 1
+    loo_scores.append(i)
+    loo_idx.append(n)
+    print(f"\r{50+int(50*count/len(k_neighbors)):4d}%", end = "")
+print(f"\r", end = "")
+
+loo_scores = np.array(loo_scores)[loo_idx]
+k_fold_scores = np.array(k_fold_scores)[k_fold_idx]
+
+plt.semilogx(k_neighbors, k_fold_scores, label = "Cross-Validation")
+plt.semilogx(k_neighbors, loo_scores, label = "LOO")
+plt.xlabel("Number of Neighbors $k$")
+plt.ylabel("Accuracy-Score")
+plt.xlim([np.min(k_neighbors), np.max(k_neighbors)])
+plt.legend()
+plt.show()
