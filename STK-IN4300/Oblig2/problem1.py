@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split, cross_validate
 from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.utils import resample
 from pygam import s as GAM_spline
+from pygam import f as GAM_factor
 from multiprocessing import Pool
 import matplotlib.pyplot as plt
 from pygam import l as GAM_line
@@ -40,9 +41,9 @@ def get_model(X, Y, options):
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
 
-    scaler = StandardScaler()
-    Y_train = scaler.fit_transform(Y_train)
-    Y_test = scaler.transform(Y_test)
+    # scaler = StandardScaler()
+    # Y_train = scaler.fit_transform(Y_train)
+    # Y_test = scaler.transform(Y_test)
 
     """CREATING A DESIGN MATRIX"""
     poly = PolynomialFeatures(1)
@@ -239,6 +240,63 @@ def CV_compare(alphas):
     plt.legend()
     plt.show()
 
+def GAM(X, Y, factor = False):
+
+    """SPLITTING THE DATASET"""
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, **options)
+
+    """PREPROCESSING"""
+    # NB: No need for one-hot encoding – categorical columns are already binary!
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    """CREATING A DESIGN MATRIX"""
+    poly = PolynomialFeatures(1)
+    X_test = poly.fit_transform(X_test)
+    X_train = poly.fit_transform(X_train)
+
+    linear = ['n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'y', 'n', 'y',
+    'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'n']
+
+    # for feature in X_train.T:
+    #     unique = np.unique(feature)
+    #     if len(unique) < 6:
+    #         linear.append("n")
+    #     else:
+    #         idx = np.argsort(feature)
+    #         plt.plot(feature[idx], Y.squeeze()[idx])
+    #         plt.show()
+    #         linear.append(input("Linear?\t"))
+
+    linear = np.array(linear)
+    linear[linear == "n"] = 0
+    linear[linear == "y"] = 1
+    linear = linear.astype(bool)
+
+    gam_input = None
+    for n,is_linear in enumerate(linear):
+        if gam_input is not None:
+            if is_linear:
+                gam_input += GAM_line(n)
+                if factor:
+                    gam_input += GAM_factor(n)
+            else:
+                gam_input += GAM_spline(n)
+        else:
+            if is_linear:
+                gam_input = GAM_line(n)
+                if factor:
+                    gam_input += GAM_factor(n)
+            else:
+                gam_input = GAM_spline(n)
+
+    gam = LinearGAM(gam_input, fit_intercept = False, max_iter = int(1E5))
+    gam.fit(X_train, Y_train)
+    Y_predict = gam.predict(X_test)
+    MSE = np.mean((Y_predict - Y_test)**2)
+    return MSE
+
 """PARAMETERS"""
 test_percent = 0.5      # Float in range (0,1)
 rand_seed = 11235813
@@ -278,47 +336,24 @@ print(info)
 """BACKWARD ELIMINATION"""
 MSE_back, R2_back, labels_back = backward_elimination(X, Y, labels, options)
 
-"""FORWARD ELIMINATION"""
+"""FORWARD SUBSTITUTION"""
 MSE_back, R2_back, labels_forward = forward_substitution(X, Y, labels, options)
-for i,j in zip(labels_back, labels_forward):
-    print(f"{label_descr[i]:20s} {label_descr[j]:20s}")
+
+"""COMPARING LAST TWO METHODS"""
+print("\nFEATURE IMPORTANCE COMPARISON:\n")
+msg1 = f"{'Rank':7s} {'Backward Elimination':30s} {'Forward Substitution':30s}"
+msg2 = "–"*len(msg1)
+print("\t" + msg1 + "\n\t" + msg2 + "\n")
+for n,(i,j) in enumerate(zip(labels_back, labels_forward)):
+    print(f"\t{n+1:<7d} {label_descr[i]:30s} {label_descr[j]:30s}")
 
 """K-FOLD CROSS VALIDATION AND BOOTSTRAP"""
 alphas = np.logspace(-5, -0.5, 100)
 CV_compare(alphas)
 
-linear = ['y', 'n', 'n', 'n', 'n', 'n', 'n', 'n', 'y', 'n', 'y', 'n', 'n', 'n',
-           'n', 'n', 'n', 'n', 'n', 'n', 'n', 'y', 'n', 'n']
-#
-# for feature in X.T:
-#     unique = np.unique(feature)
-#     if len(unique) < 10:
-#         linear.append("n")
-#     else:
-#         idx = np.argsort(feature)
-#         plt.plot(feature[idx], Y.squeeze()[idx])
-#         plt.show()
-#         linear.append(input("Linear?\t"))
-
-linear = np.array(linear)
-linear[linear == "n"] = 0
-linear[linear == "y"] = 1
-linear = linear.astype(bool)
-
-gam_input = None
-for n,is_linear in enumerate(linear):
-    if gam_input is not None:
-        if is_linear:
-            gam_input = gam_input + GAM_spline(n) + GAM_line(n)
-        else:
-            gam_input = gam_input + GAM_spline(n)
-    else:
-        if is_linear:
-            gam_input = GAM_spline(n) + GAM_line(n)
-        else:
-            gam_input = GAM_spline(n)
-
-gam = LinearGAM(gam_input)
-gam.fit(X_train, Y_train)
-
-# gam.summary()
+"""IMPLEMENTING GENERALIZED ADDITIVE MODEL"""
+MSE_GAM_lin = GAM(X, Y, factor = False)
+MSE_GAM_fac = GAM(X, Y, factor = True)
+msg = (f"        \nGENERALIZED ADDITIVE MODEL:\n\n\tLinear MSE:\t"
+       f"{MSE_GAM_lin:.4E}\n\tPolynomial MSE:\t{MSE_GAM_fac:.4E}")
+print(msg)
