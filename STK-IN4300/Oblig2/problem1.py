@@ -1,6 +1,8 @@
+from sklearn.ensemble import AdaBoostRegressor, GradientBoostingRegressor
 from sklearn.preprocessing import StandardScaler, PolynomialFeatures
 from sklearn.model_selection import train_test_split, cross_validate
 from sklearn.linear_model import LinearRegression, Lasso
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils import resample
 from pygam import s as GAM_spline
 from pygam import f as GAM_factor
@@ -8,7 +10,9 @@ from multiprocessing import Pool
 import matplotlib.pyplot as plt
 from pygam import l as GAM_line
 from pygam import LinearGAM
+from sklearn import tree
 from scipy import stats
+import xgboost as xgb
 import pandas as pd
 import numpy as np
 
@@ -232,13 +236,21 @@ def CV_compare(alphas):
     bootstrap_scores = np.array(bootstrap_scores)[bootstrap_idx]
     k_fold_scores = np.array(k_fold_scores)[k_fold_idx]
 
+    boot_idx = np.argmax(bootstrap_scores)
+    k_fold_idx = np.argmax(k_fold_scores)
+
     plt.semilogx(alphas, k_fold_scores, label = "Cross-Validation")
     plt.semilogx(alphas, bootstrap_scores, label = "Bootstrap")
+    plt.semilogx([alphas[k_fold_idx]], [k_fold_scores[k_fold_idx]], "bo",
+                  label = f"KNN best $\\alpha$ = {alphas[k_fold_idx]:.4E}")
+    plt.semilogx([alphas[boot_idx]], [bootstrap_scores[boot_idx]], "ro",
+                  label = f"Bootstrap best $\\alpha$ = {alphas[boot_idx]:.4E}")
     plt.xlabel("Complexity Parameter $\\alpha$")
     plt.ylabel("R²-Score")
     plt.xlim([np.min(alphas), np.max(alphas)])
     plt.legend()
-    plt.show()
+    plt.savefig("plot_1.pdf", dpi = 250)
+    plt.close()
 
 def GAM(X, Y, factor = False):
 
@@ -328,7 +340,7 @@ p, q = X.shape[1], Y.shape[1]
 """DETERMINING FEATURE IMPORTANCE"""
 model, X_train, X_test, Y_train, Y_test = get_model(X, Y, options)
 
-# DISPLAYING INITIAL RESULTS
+"""DISPLAYING INITIAL RESULTS"""
 info, labels_sort, betas_sort, std_err_sort, p_values_sort, MSE, R2, idx = \
 sort_data(model, X_train, Y_train, X_test, Y_test, labels)
 print(info)
@@ -348,7 +360,7 @@ for n,(i,j) in enumerate(zip(labels_back, labels_forward)):
     print(f"\t{n+1:<7d} {label_descr[i]:30s} {label_descr[j]:30s}")
 
 """K-FOLD CROSS VALIDATION AND BOOTSTRAP"""
-alphas = np.logspace(-5, -0.5, 100)
+alphas = np.logspace(-5, -0.5, 5000)
 CV_compare(alphas)
 
 """IMPLEMENTING GENERALIZED ADDITIVE MODEL"""
@@ -357,3 +369,111 @@ MSE_GAM_fac = GAM(X, Y, factor = True)
 msg = (f"        \nGENERALIZED ADDITIVE MODEL:\n\n\tLinear MSE:\t"
        f"{MSE_GAM_lin:.4E}\n\tPolynomial MSE:\t{MSE_GAM_fac:.4E}")
 print(msg)
+
+"""BOOSTING"""
+LR = AdaBoostRegressor(base_estimator = LinearRegression())
+LR.fit(X_train, Y_train.squeeze())
+score = LR.score(X_test, Y_test.squeeze())
+coefficients = LR.estimators_[-1].coef_
+coef = ""
+for c in coefficients:
+    coef += f"{c:5.2f} "
+coef = coef.strip()
+print(f"\nLINEAR REGRESSION BOOSTING COEFFICIENTS:\n\n{coef}")
+
+msg = (f"\nBOOSTING SCORES:\n\n\tLinear Regression:\t{score:.4E}\n\t")
+
+DTR = AdaBoostRegressor(base_estimator = DecisionTreeRegressor())
+DTR.fit(X_train, Y_train.squeeze())
+score = DTR.score(X_test, Y_test.squeeze())
+msg += (f"Decision Tree:\t\t{score:.4E}")
+print(msg)
+
+"""
+$ python3 problem1.py
+
+DATA DIMENSIONS:
+
+	X_train: (248, 25)	X_test : (248, 25)
+	Y_train: (248, 1)	Y_test : (248, 1)
+	Train Percentage: 50%	Test Percentage: 50%
+
+PREDICTION INFO SORTED BY IMPORTANCE:
+
+	  Label      Coeff     Std Err     P-Val        Description
+	––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+	   FLGROSS   1.83E-01   1.06E-01   8.53E-02               Height
+	       SEX  -1.04E-01   6.63E-02   1.18E-01               Gender
+	     FLGEW   7.47E-02   9.99E-02   4.55E-01               Weight
+	    FO3H24   5.85E-02   1.33E-01   6.62E-01  24h Max Ozone Value
+	    FTEH24  -5.23E-02   1.24E-01   6.73E-01  24h Max Temperature
+	     FPOLL  -4.53E-02   1.33E-01   7.34E-01   Pollen Sensitivity
+	  FLTOTMED  -1.53E-02   5.31E-02   7.74E-01    No. of Medis/Lufu
+	   FSNIGHT   1.89E-02   6.73E-02   7.79E-01  Night/Morning Cough
+	     FTIER  -1.97E-02   7.53E-02   7.94E-01      Fur Sensitivity
+	    FNOH24  -2.26E-02   9.55E-02   8.13E-01             Max. NO2
+	    FSPFEI   2.32E-02   9.88E-02   8.14E-01        Wheezy Breath
+	   FSHLAUF  -1.32E-02   6.13E-02   8.30E-01                Cough
+	   AGEBGEW   1.46E-02   6.84E-02   8.31E-01         Birth Weight
+	    ARAUCH   1.50E-02   7.08E-02   8.33E-01               Smoker
+	      FSPT   3.30E-02   1.58E-01   8.35E-01    Allergic Reaction
+	     ADEKZ   1.31E-02   6.52E-02   8.41E-01      Neurodermatitis
+	  HOCHOZON  -1.85E-02   9.46E-02   8.45E-01   High Ozone Village
+	     FMILB  -1.54E-02   8.92E-02   8.63E-01     Dust Sensitivity
+	    FSAUGE  -1.14E-02   7.33E-02   8.77E-01           Itchy Eyes
+	     ALTER   9.84E-03   8.08E-02   9.03E-01                  Age
+	    AMATOP   5.69E-03   7.20E-02   9.37E-01       Maternal Atopy
+	     ADHEU  -5.44E-03   6.96E-02   9.38E-01      Allergic Coryza
+	    FSATEM   3.70E-03   9.36E-02   9.69E-01  Shortness of Breath
+	    AVATOP  -3.57E-04   7.04E-02   9.96E-01       Paternal Atopy
+
+
+STATISTICS:
+
+	MSE:	4.5847E-02
+	R²:	6.1327E-01
+
+FEATURE IMPORTANCE COMPARISON:
+
+	Rank    Backward Elimination           Forward Substitution
+	–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+	1       Height                         Height
+	2       Gender                         Gender
+	3       Weight                         Weight
+	4       Fur Sensitivity                Fur Sensitivity
+	5       24h Max Temperature            Pollen Sensitivity
+	6       24h Max Ozone Value            Wheezy Breath
+	7       Pollen Sensitivity             Smoker
+	8       Night/Morning Cough            Birth Weight
+	9       Smoker                         Max. NO2
+	10      Birth Weight                   No. of Medis/Lufu
+	11      Max. NO2                       Age
+	12      High Ozone Village             Allergic Coryza
+	13      No. of Medis/Lufu              Neurodermatitis
+	14      Wheezy Breath                  Night/Morning Cough
+	15      Cough                          Cough
+	16      Neurodermatitis                Allergic Reaction
+	17      Itchy Eyes                     24h Max Temperature
+	18      Allergic Reaction              Dust Sensitivity
+	19      Dust Sensitivity               Itchy Eyes
+	20      Age                            24h Max Ozone Value
+	21      Allergic Coryza                High Ozone Village
+	22      Maternal Atopy                 Maternal Atopy
+	23      Shortness of Breath            Shortness of Breath
+	24      Paternal Atopy                 Paternal Atopy
+
+GENERALIZED ADDITIVE MODEL:
+
+	Linear MSE:	1.9198E-01
+	Polynomial MSE:	1.9103E-01
+
+LINEAR REGRESSION BOOSTING COEFFICIENTS:
+
+0.00  0.01 -0.01 -0.13 -0.03  0.01 -0.06 -0.03  0.01  0.04  0.04  0.19 -0.09 -0.05 -0.10 -0.12  0.01 -0.03  0.16  0.00 -0.00  0.03  0.07  0.06 -0.04
+
+BOOSTING SCORES:
+
+	Linear Regression:	6.2508E-01
+	Decision Tree:		5.5541E-01
+"""

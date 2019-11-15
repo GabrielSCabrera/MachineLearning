@@ -1,6 +1,9 @@
+from sklearn.ensemble import BaggingClassifier, RandomForestClassifier, AdaBoostClassifier
 from sklearn.model_selection import train_test_split, cross_validate, LeaveOneOut
 from sklearn.preprocessing import StandardScaler, PolynomialFeatures
 from sklearn.neighbors import KNeighborsClassifier as KNN
+from sklearn.neural_network import MLPClassifier
+from sklearn.tree import DecisionTreeClassifier
 from pygam import s as GAM_spline
 from multiprocessing import Pool
 import matplotlib.pyplot as plt
@@ -15,10 +18,10 @@ def read_data(path):
     Y = arr[:,-1]
     del df
     labels = ["pregnant", "glucose", "pressure", "triceps", "insulin", "mass",
-              "pedigree", "age"]
+    "pedigree", "age"]
     return X, Y, np.array(labels)
 
-def get_model(X, Y, n_neighbors, options):
+def preprocess(X, Y):
     """SPLITTING THE DATASET"""
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, **options)
 
@@ -27,6 +30,12 @@ def get_model(X, Y, n_neighbors, options):
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train, Y_train)
     X_test = scaler.transform(X_test)
+
+    return X_train, X_test, Y_train, Y_test
+
+def get_model(X, Y, n_neighbors, options):
+    """SPLITTING THE DATASET"""
+    X_train, X_test, Y_train, Y_test = preprocess(X, Y)
 
     """PERFORMING LINEAR REGRESSION FIT"""
     model = KNN(n_neighbors = n_neighbors).fit(X_train, Y_train)
@@ -67,7 +76,7 @@ def loo_cv(data):
     return np.mean(scores)
 
 def CV_compare(X_train, Y_train, X_test, Y_test):
-    k_neighbors = np.arange(1, 25, 1)
+    k_neighbors = np.arange(1, 250, 1)
     k_fold_scores = []
     loo_scores = []
 
@@ -93,18 +102,26 @@ def CV_compare(X_train, Y_train, X_test, Y_test):
         loo_scores.append(i)
         loo_idx.append(n)
         print(f"\r{50+int(50*count/len(k_neighbors)):4d}%", end = "")
-    print(f"\r", end = "")
+    print(f"\r       ", end = "")
 
     loo_scores = np.array(loo_scores)[loo_idx]
     k_fold_scores = np.array(k_fold_scores)[k_fold_idx]
 
+    loo_idx = np.argmax(loo_scores)
+    k_fold_idx = np.argmax(k_fold_scores)
+
     plt.semilogx(k_neighbors, k_fold_scores, label = "Cross-Validation")
     plt.semilogx(k_neighbors, loo_scores, label = "LOO")
+    plt.semilogx([k_neighbors[k_fold_idx]], [k_fold_scores[k_fold_idx]], "bo",
+                  label = f"KNN best $k$ = {k_neighbors[k_fold_idx]:d}")
+    plt.semilogx([k_neighbors[loo_idx]], [loo_scores[loo_idx]], "ro",
+                  label = f"LOO best $k$ = {k_neighbors[loo_idx]:d}")
     plt.xlabel("Number of Neighbors $k$")
     plt.ylabel("Accuracy-Score")
     plt.xlim([np.min(k_neighbors), np.max(k_neighbors)])
     plt.legend()
-    plt.show()
+    plt.savefig("plot_2.pdf", dpi = 250)
+    plt.close()
 
 def GAM(X, Y):
 
@@ -158,6 +175,18 @@ def forward_substitution(X, Y, labels, options):
     col_rank = np.array(col_rank)
     return accuracies, labels[col_rank], col_rank
 
+def classifiers(X, Y, cl_list, cl_params, cl_labels):
+    X_train, X_test, Y_train, Y_test = preprocess(X, Y)
+    scores = []
+    for i,j,k in zip(cl_list, cl_params, cl_labels):
+        model = i(**j)
+        model.fit(X_train, Y_train)
+        score = model.score(X_test, Y_test)
+        scores.append(score)
+    scores = np.array(scores)
+    idx = np.argsort(scores)[::-1]
+    return scores[idx], np.array(cl_labels)[idx]
+
 """PARAMETERS"""
 test_percent = 0.5  # Float in range (0,1)
 rand_seed = 12345
@@ -189,7 +218,7 @@ info = matrix_info(X_train, Y_train, X_test, Y_test)
 print(info)
 
 """K-FOLD CROSS VALIDATION AND BOOTSTRAP"""
-# CV_compare(X_train, Y_train, X_test, Y_test)
+CV_compare(X_train, Y_train, X_test, Y_test)
 
 """COMPARING GENERALIZED ADDITIVE MODELS WITH FORWARD SUBSTITUTION"""
 accuracies, labels_forward, idx = forward_substitution(X, Y, labels, options)
@@ -199,3 +228,61 @@ msg2 = "–"*len(msg1)
 print("\t" + msg1 + "\n\t" + msg2 + "\n")
 for n,(i,j) in enumerate(zip(labels_forward, accuracies)):
     print(f"\t{n+1:^7d} {label_descr[i]:<28s} {j:^28.4E}")
+
+
+"""COMPARING CLASSIFIERS BY SCORE"""
+classifier_list = [DecisionTreeClassifier, BaggingClassifier,
+                   RandomForestClassifier, MLPClassifier, AdaBoostClassifier]
+
+classifier_params = [{},{},{"n_estimators":100},
+{"hidden_layer_sizes":(100, 66, 44), "max_iter":int(1E4)}, {}]
+
+classifier_labels = ["Decision Tree", "Bagging", "Random Forest",
+                     "Neural Network", "ADABoost"]
+
+S,L = classifiers(X, Y, classifier_list, classifier_params, classifier_labels)
+
+msg1 = "\n\n\nCLASSIFIER COMPARISON:"
+msg2 = f"{'Rank':^7s} {'Classifier':20s} {'Accuracy':^15s}"
+msg3 = "–"*len(msg2)
+msg = msg1 + "\n\n\t" + msg2 + "\n\t" + msg3 + "\n"
+for n,(s,l) in enumerate(zip(S,L)):
+    msg += f"\t{n+1:^7d} {l:20s} {s:^15.4f}\n"
+print(msg)
+
+"""
+$ python3 problem2.py
+
+DATA DIMENSIONS:
+
+	X_train: (383, 8)	X_test : (384, 8)
+	Y_train: (383, 1)	Y_test : (384, 1)
+	Train Percentage: 50%	Test Percentage: 50%
+
+FEATURE IMPORTANCE (GENERALIZED ADDITIVE MODEL):
+
+	 Rank   Forward Substitution             Cumulative Accuracy
+	–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+	   1    Plasma Glucose Concentration          7.2656E-01
+	   2    Body Mass Index                       7.6302E-01
+	   3    Diastolic Blood Pressure              7.6562E-01
+	   4    2-H Serum Insulin                     7.5521E-01
+	   5    Triceps Skin Fold Thickness           7.6302E-01
+	   6    Diabetes Pedigree Function            7.5781E-01
+	   7    Number of Pregnancies                 7.5260E-01
+	   8    Age                                   7.2135E-01
+
+
+
+CLASSIFIER COMPARISON:
+
+	 Rank   Classifier              Accuracy
+	––––––––––––––––––––––––––––––––––––––––––––
+	   1    ADABoost                 0.7604
+	   2    Random Forest            0.7500
+	   3    Decision Tree            0.7292
+	   4    Bagging                  0.7188
+	   5    Neural Network           0.7031
+
+"""
