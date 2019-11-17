@@ -1,8 +1,8 @@
-from sklearn.ensemble import AdaBoostRegressor, GradientBoostingRegressor
-from sklearn.preprocessing import StandardScaler, PolynomialFeatures
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, PolynomialFeatures
 from sklearn.model_selection import train_test_split, cross_validate
 from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import AdaBoostRegressor
 from sklearn.utils import resample
 from pygam import s as GAM_spline
 from pygam import f as GAM_factor
@@ -10,9 +10,7 @@ from multiprocessing import Pool
 import matplotlib.pyplot as plt
 from pygam import l as GAM_line
 from pygam import LinearGAM
-from sklearn import tree
 from scipy import stats
-import xgboost as xgb
 import pandas as pd
 import numpy as np
 
@@ -45,9 +43,9 @@ def get_model(X, Y, options):
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
 
-    # scaler = StandardScaler()
-    # Y_train = scaler.fit_transform(Y_train)
-    # Y_test = scaler.transform(Y_test)
+    scaler = MinMaxScaler()
+    Y_train = scaler.fit_transform(Y_train)
+    Y_test = scaler.transform(Y_test)
 
     """CREATING A DESIGN MATRIX"""
     poly = PolynomialFeatures(1)
@@ -122,42 +120,107 @@ def sort_data(model, X_train, Y_train, X_test, Y_test, labels):
 
     return info, labels, betas, std_err, p_values, MSE, R2, idx
 
-def backward_elimination(X, Y, labels, options):
+def print_data(mode, stop, MSE, labels, betas, std_err, p_values):
+    stat_vals = f"\t{'Label':^10s} {'Coeff':^10s} {'Std Err':^10s} {'P-Val':^10s} "
+    longest_str = np.max(list(map(len, globals()["label_descr"].values())))+1
+    stat_vals += f"{'Description':^{longest_str}s}\n"
+    stat_vals += "\t" + "–"*len(stat_vals) + "\n"
+    for i,j,k,l in zip(labels, betas, std_err, p_values):
+        stat_vals += f"\t{i:>10s} {j:>10.2E} {k:>10.2E} {l:>10.2E}"
+        stat_vals += f" {label_descr[i]:>{longest_str}s}\n"
+
+    string = (f"\nPREDICTION INFO SORTED BY IMPORTANCE:\n\n{stat_vals}\n\n"
+              f"STATISTICS:\n\n\tMSE:\t\t\t{MSE:.4E}\n\tStopping Criterion:\t"
+              f"p > {stop}")
+    print(string)
+
+def print_data_tex(mode, stop, MSE, labels, betas, std_err, p_values):
+    stat_vals = f"\t{'Label':^10s} {'Coeff':^10s} {'Std Err':^10s} {'P-Val':^10s} "
+    longest_str = np.max(list(map(len, globals()["label_descr"].values())))+1
+    stat_vals += f"{'Description':^{longest_str}s}\n"
+    stat_vals += "\t" + "–"*len(stat_vals) + "\n"
+    for i,j,k,l in zip(labels, betas, std_err, p_values):
+        stat_vals += f"\t{i:>10s} {j:>10.2E} {k:>10.2E} {l:>10.2E}"
+        stat_vals += f" {label_descr[i]:>{longest_str}s}\n"
+
+    string = (f"\nPREDICTION INFO SORTED BY IMPORTANCE:\n\n{stat_vals}\n\n"
+              f"STATISTICS:\n\n\tMSE:\t\t\t{MSE:.4E}\n\tStopping Criterion:\t"
+              f"p > {stop}")
+
+    string = ("\\begin{table}[H]\n\\center\n\t\\begin{tabular}{l l l l}\n\t"
+              "\\textbf{Feature} & \\textbf{Coefficient}& \\textbf{Standard "
+              "Error} & \\textbf{P-Value} \\\\ \n\t"
+              "\\hline\n")
+    for n,(i,j,k,l) in enumerate(zip(labels,betas,std_err,p_values)):
+        string += f"\t{i} & {j:.2f} & {k:.2f} & {l:.2f}"
+        if n < len(labels) - 1:
+            string += "\\\\"
+        string += "\n"
+    string += ("\t\\end{tabular}\n\\caption{Remaining features after "
+               f"{mode} with stopping criterion $p \\geq {stop}$. "
+               f"$MSE = {MSE:.4E}$"
+               "\\label{table_N}}\n\\end{table}")
+
+    print(string)
+
+def backward_elimination(X, Y, labels, options, stop = 0.5):
     X_step = X.copy()
     labels_short = labels.copy()
-    MSE_arr, R2_arr = np.zeros(p), np.zeros(p)
     labels_importance = []
+    count = 0
     for i in range(p):
         model, X_train, X_test, Y_train, Y_test = get_model(X_step, Y, options)
         temp = get_stats(model, X_test, Y_test, labels)
-        p_values, MSE, R2, idx = temp[-4:]
-        MSE_arr[i] = MSE
-        R2_arr[i] = R2
-        X_step = X_step[:,idx[:-1]]
-        labels_importance.insert(0, labels_short[idx[-1]])
-        labels_short = labels_short[idx[:-1]]
-    return MSE_arr, R2_arr, labels_importance
+        if temp[-4][i] < stop:
+            betas, std_err, p_values, MSE, R2, idx = temp[1:]
+            X_step = X_step[:,idx[:-1]]
+            labels_importance.insert(0, labels_short[idx[-1]])
+            labels_short = labels_short[idx[:-1]]
+        else:
+            betas_arr = betas[:i]
+            std_err_arr = std_err[:i]
+            p_arr = np.array(p_values[:i])
+            labels_importance = labels_short[:i]
+            break
+        if i == p-1:
+            p_arr = np.array(p_values)
+            betas_arr = np.array(betas)
+            std_err_arr = np.array(std_err)
 
-def forward_substitution(X, Y, labels, options):
+    return MSE, betas_arr, std_err_arr, p_arr, labels_importance
+
+def forward_substitution(X, Y, labels, options, stop = 0.5):
     X = X.copy()
-    MSE_arr, R2_arr = np.zeros(p), np.zeros(p)
     col_init = [i for i in range(p)]
     cols = col_init.copy()
-    col_rank = []
+    p_arr, betas_arr, std_err_arr, col_rank = [],[],[],[]
     for i in range(p):
         p_values_step = []
+        betas_step = []
+        std_err_step = []
         X_step = X[:,col_init]
         for j in range(p-i):
             X_temp = np.hstack([X[:,col_rank], X_step[:,j,None]])
             temp = get_model(X_temp, Y, options)
             temp = get_stats(temp[0], temp[2], temp[4], labels)
-            p_values, MSE, R2, idx = temp[-4:]
+            betas, std_err, p_values, MSE, R2, idx = temp[1:]
             p_values_step.append(p_values[idx][-1])
+            betas_step.append(betas[idx][-1])
+            std_err_step.append(std_err[idx][-1])
         argmin = np.argmin(p_values_step)
-        col_rank.append(col_init[argmin])
-        del col_init[argmin]
+        if p_values_step[argmin] < stop:
+            p_arr.append(p_values_step[argmin])
+            betas_arr.append(betas_step[argmin])
+            std_err_arr.append(std_err_step[argmin])
+            col_rank.append(col_init[argmin])
+            del col_init[argmin]
+        else:
+            break
     col_rank = np.array(col_rank)
-    return MSE_arr, R2_arr, labels[col_rank]
+    p_arr = np.array(p_values)
+    betas_arr = np.array(betas)
+    std_err_arr = np.array(std_err)
+    return MSE, betas_arr, std_err_arr, p_arr, labels[col_rank]
 
 def k_fold(data):
     X, Y, k, alpha = data
@@ -242,9 +305,9 @@ def CV_compare(alphas):
     plt.semilogx(alphas, k_fold_scores, label = "Cross-Validation")
     plt.semilogx(alphas, bootstrap_scores, label = "Bootstrap")
     plt.semilogx([alphas[k_fold_idx]], [k_fold_scores[k_fold_idx]], "bo",
-                  label = f"KNN best $\\alpha$ = {alphas[k_fold_idx]:.4E}")
+    label = f"KNN best $\\alpha$ = {alphas[k_fold_idx]:.4E}, MSE = {k_fold_scores[k_fold_idx]:.4E}")
     plt.semilogx([alphas[boot_idx]], [bootstrap_scores[boot_idx]], "ro",
-                  label = f"Bootstrap best $\\alpha$ = {alphas[boot_idx]:.4E}")
+    label = f"Bootstrap best $\\alpha$ = {alphas[boot_idx]:.4E}, MSE = {bootstrap_scores[boot_idx]:.4E}")
     plt.xlabel("Complexity Parameter $\\alpha$")
     plt.ylabel("R²-Score")
     plt.xlim([np.min(alphas), np.max(alphas)])
@@ -346,10 +409,40 @@ sort_data(model, X_train, Y_train, X_test, Y_test, labels)
 print(info)
 
 """BACKWARD ELIMINATION"""
-MSE_back, R2_back, labels_back = backward_elimination(X, Y, labels, options)
+stop_b = 0.7
+mode_b = "backward elimination"
+MSE_b, betas_b, std_err_b, p_b, labels_back = \
+backward_elimination(X.copy(), Y.copy(), labels, options, stop_b)
+
+print("\nBACKWARD ELIMINATION")
+print_data(mode_b, stop_b, MSE_b, labels_back, betas_b, std_err_b, p_b)
 
 """FORWARD SUBSTITUTION"""
-MSE_back, R2_back, labels_forward = forward_substitution(X, Y, labels, options)
+stop_f = 0.7
+mode_f = "forward substitution"
+MSE_f, betas_f, std_err_f, p_f, labels_forward = \
+forward_substitution(X.copy(), Y.copy(), labels, options, stop_f)
+
+print("\nFORWARD SUBSTITUTION")
+print_data(mode_f, stop_f, MSE_f, labels_forward, betas_f, std_err_f, p_f)
+
+"""BACKWARD ELIMINATION"""
+stop_b = 0.8
+mode_b = "backward elimination"
+MSE_b, betas_b, std_err_b, p_b, labels_back = \
+backward_elimination(X.copy(), Y.copy(), labels, options, stop_b)
+
+print("\nBACKWARD ELIMINATION")
+print_data(mode_b, stop_b, MSE_b, labels_back, betas_b, std_err_b, p_b)
+
+"""FORWARD SUBSTITUTION"""
+stop_f = 0.8
+mode_f = "forward substitution"
+MSE_f, betas_f, std_err_f, p_f, labels_forward = \
+forward_substitution(X.copy(), Y.copy(), labels, options, stop_f)
+
+print("\nFORWARD SUBSTITUTION")
+print_data(mode_f, stop_f, MSE_f, labels_forward, betas_f, std_err_f, p_f)
 
 """COMPARING LAST TWO METHODS"""
 print("\nFEATURE IMPORTANCE COMPARISON:\n")
@@ -360,12 +453,12 @@ for n,(i,j) in enumerate(zip(labels_back, labels_forward)):
     print(f"\t{n+1:<7d} {label_descr[i]:30s} {label_descr[j]:30s}")
 
 """K-FOLD CROSS VALIDATION AND BOOTSTRAP"""
-alphas = np.logspace(-5, -0.5, 5000)
+alphas = np.logspace(-5, -0.5, 1000)
 CV_compare(alphas)
 
 """IMPLEMENTING GENERALIZED ADDITIVE MODEL"""
-MSE_GAM_lin = GAM(X, Y, factor = False)
-MSE_GAM_fac = GAM(X, Y, factor = True)
+MSE_GAM_lin = GAM(X.copy(), Y.copy(), factor = False)
+MSE_GAM_fac = GAM(X.copy(), Y.copy(), factor = True)
 msg = (f"        \nGENERALIZED ADDITIVE MODEL:\n\n\tLinear MSE:\t"
        f"{MSE_GAM_lin:.4E}\n\tPolynomial MSE:\t{MSE_GAM_fac:.4E}")
 print(msg)
@@ -373,19 +466,23 @@ print(msg)
 """BOOSTING"""
 LR = AdaBoostRegressor(base_estimator = LinearRegression())
 LR.fit(X_train, Y_train.squeeze())
-score = LR.score(X_test, Y_test.squeeze())
+Y_predict = LR.predict(X_test)
+score = np.mean((Y_predict-Y_test.squeeze())**2)
+# score = LR.score(X_test, Y_test.squeeze())
 coefficients = LR.estimators_[-1].coef_
 coef = ""
-for c in coefficients:
-    coef += f"{c:5.2f} "
+for c,l in zip(coefficients, labels):
+    coef += f"{c:16.4E}"
 coef = coef.strip()
 print(f"\nLINEAR REGRESSION BOOSTING COEFFICIENTS:\n\n{coef}")
 
 msg = (f"\nBOOSTING SCORES:\n\n\tLinear Regression:\t{score:.4E}\n\t")
 
-DTR = AdaBoostRegressor(base_estimator = DecisionTreeRegressor())
+DTR = AdaBoostRegressor(base_estimator = DecisionTreeRegressor(), n_estimators=500)
 DTR.fit(X_train, Y_train.squeeze())
-score = DTR.score(X_test, Y_test.squeeze())
+Y_predict = DTR.predict(X_test)
+score = np.mean((Y_predict-Y_test.squeeze())**2)
+# score = DTR.score(X_test, Y_test.squeeze())
 msg += (f"Decision Tree:\t\t{score:.4E}")
 print(msg)
 
@@ -402,36 +499,100 @@ PREDICTION INFO SORTED BY IMPORTANCE:
 
 	  Label      Coeff     Std Err     P-Val        Description
 	––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-	   FLGROSS   1.83E-01   1.06E-01   8.53E-02               Height
-	       SEX  -1.04E-01   6.63E-02   1.18E-01               Gender
-	     FLGEW   7.47E-02   9.99E-02   4.55E-01               Weight
-	    FO3H24   5.85E-02   1.33E-01   6.62E-01  24h Max Ozone Value
-	    FTEH24  -5.23E-02   1.24E-01   6.73E-01  24h Max Temperature
-	     FPOLL  -4.53E-02   1.33E-01   7.34E-01   Pollen Sensitivity
-	  FLTOTMED  -1.53E-02   5.31E-02   7.74E-01    No. of Medis/Lufu
-	   FSNIGHT   1.89E-02   6.73E-02   7.79E-01  Night/Morning Cough
-	     FTIER  -1.97E-02   7.53E-02   7.94E-01      Fur Sensitivity
-	    FNOH24  -2.26E-02   9.55E-02   8.13E-01             Max. NO2
-	    FSPFEI   2.32E-02   9.88E-02   8.14E-01        Wheezy Breath
-	   FSHLAUF  -1.32E-02   6.13E-02   8.30E-01                Cough
-	   AGEBGEW   1.46E-02   6.84E-02   8.31E-01         Birth Weight
-	    ARAUCH   1.50E-02   7.08E-02   8.33E-01               Smoker
-	      FSPT   3.30E-02   1.58E-01   8.35E-01    Allergic Reaction
-	     ADEKZ   1.31E-02   6.52E-02   8.41E-01      Neurodermatitis
-	  HOCHOZON  -1.85E-02   9.46E-02   8.45E-01   High Ozone Village
-	     FMILB  -1.54E-02   8.92E-02   8.63E-01     Dust Sensitivity
-	    FSAUGE  -1.14E-02   7.33E-02   8.77E-01           Itchy Eyes
-	     ALTER   9.84E-03   8.08E-02   9.03E-01                  Age
-	    AMATOP   5.69E-03   7.20E-02   9.37E-01       Maternal Atopy
-	     ADHEU  -5.44E-03   6.96E-02   9.38E-01      Allergic Coryza
-	    FSATEM   3.70E-03   9.36E-02   9.69E-01  Shortness of Breath
-	    AVATOP  -3.57E-04   7.04E-02   9.96E-01       Paternal Atopy
+	   FLGROSS   8.47E-02   1.06E-01   4.25E-01               Height
+	       SEX  -4.81E-02   6.63E-02   4.69E-01               Gender
+	     FLGEW   3.46E-02   9.99E-02   7.29E-01               Weight
+	    FO3H24   2.71E-02   1.33E-01   8.39E-01  24h Max Ozone Value
+	    FTEH24  -2.42E-02   1.24E-01   8.45E-01  24h Max Temperature
+	     FPOLL  -2.10E-02   1.33E-01   8.75E-01   Pollen Sensitivity
+	  FLTOTMED  -7.07E-03   5.31E-02   8.94E-01    No. of Medis/Lufu
+	   FSNIGHT   8.76E-03   6.73E-02   8.97E-01  Night/Morning Cough
+	     FTIER  -9.12E-03   7.53E-02   9.04E-01      Fur Sensitivity
+	    FNOH24  -1.05E-02   9.55E-02   9.13E-01             Max. NO2
+	    FSPFEI   1.08E-02   9.88E-02   9.13E-01        Wheezy Breath
+	   FSHLAUF  -6.11E-03   6.13E-02   9.21E-01                Cough
+	   AGEBGEW   6.75E-03   6.84E-02   9.22E-01         Birth Weight
+	    ARAUCH   6.94E-03   7.08E-02   9.22E-01               Smoker
+	      FSPT   1.53E-02   1.58E-01   9.23E-01    Allergic Reaction
+	     ADEKZ   6.07E-03   6.52E-02   9.26E-01      Neurodermatitis
+	  HOCHOZON  -8.56E-03   9.46E-02   9.28E-01   High Ozone Village
+	     FMILB  -7.13E-03   8.92E-02   9.36E-01     Dust Sensitivity
+	    FSAUGE  -5.27E-03   7.33E-02   9.43E-01           Itchy Eyes
+	     ALTER   4.56E-03   8.08E-02   9.55E-01                  Age
+	    AMATOP   2.64E-03   7.20E-02   9.71E-01       Maternal Atopy
+	     ADHEU  -2.52E-03   6.96E-02   9.71E-01      Allergic Coryza
+	    FSATEM   1.71E-03   9.36E-02   9.85E-01  Shortness of Breath
+	    AVATOP  -1.65E-04   7.04E-02   9.98E-01       Paternal Atopy
 
 
 STATISTICS:
 
-	MSE:	4.5847E-02
+	MSE:	9.8266E-03
 	R²:	6.1327E-01
+
+BACKWARD ELIMINATION
+
+PREDICTION INFO SORTED BY IMPORTANCE:
+
+	  Label      Coeff     Std Err     P-Val        Description
+	––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+	   FLGROSS   8.47E-02   1.06E-01   4.23E-01               Height
+	       SEX  -4.82E-02   6.61E-02   4.67E-01               Gender
+
+
+STATISTICS:
+
+	MSE:			9.8286E-03
+	Stopping Criterion:	p > 0.7
+
+FORWARD SUBSTITUTION
+
+PREDICTION INFO SORTED BY IMPORTANCE:
+
+	  Label      Coeff     Std Err     P-Val        Description
+	––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+	   FLGROSS   8.49E-02   9.23E-02   3.58E-01               Height
+	       SEX  -4.65E-02   6.35E-02   4.65E-01               Gender
+	     FLGEW   4.16E-02   9.13E-02   6.49E-01               Weight
+
+
+STATISTICS:
+
+	MSE:			9.7452E-03
+	Stopping Criterion:	p > 0.7
+
+BACKWARD ELIMINATION
+
+PREDICTION INFO SORTED BY IMPORTANCE:
+
+	  Label      Coeff     Std Err     P-Val        Description
+	––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+	   FLGROSS   8.48E-02   1.06E-01   4.23E-01               Height
+	       SEX  -4.81E-02   6.61E-02   4.68E-01               Gender
+	     FLGEW   3.46E-02   9.97E-02   7.29E-01               Weight
+
+
+STATISTICS:
+
+	MSE:			9.8754E-03
+	Stopping Criterion:	p > 0.8
+
+FORWARD SUBSTITUTION
+
+PREDICTION INFO SORTED BY IMPORTANCE:
+
+	  Label      Coeff     Std Err     P-Val        Description
+	––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+	   FLGROSS   8.50E-02   9.24E-02   3.59E-01               Height
+	       SEX  -4.84E-02   6.37E-02   4.48E-01               Gender
+	     FLGEW   4.15E-02   9.13E-02   6.50E-01               Weight
+	     FTIER  -1.61E-02   5.84E-02   7.83E-01      Fur Sensitivity
+
+
+STATISTICS:
+
+	MSE:			1.0055E-02
+	Stopping Criterion:	p > 0.8
 
 FEATURE IMPORTANCE COMPARISON:
 
@@ -441,27 +602,6 @@ FEATURE IMPORTANCE COMPARISON:
 	1       Height                         Height
 	2       Gender                         Gender
 	3       Weight                         Weight
-	4       Fur Sensitivity                Fur Sensitivity
-	5       24h Max Temperature            Pollen Sensitivity
-	6       24h Max Ozone Value            Wheezy Breath
-	7       Pollen Sensitivity             Smoker
-	8       Night/Morning Cough            Birth Weight
-	9       Smoker                         Max. NO2
-	10      Birth Weight                   No. of Medis/Lufu
-	11      Max. NO2                       Age
-	12      High Ozone Village             Allergic Coryza
-	13      No. of Medis/Lufu              Neurodermatitis
-	14      Wheezy Breath                  Night/Morning Cough
-	15      Cough                          Cough
-	16      Neurodermatitis                Allergic Reaction
-	17      Itchy Eyes                     24h Max Temperature
-	18      Allergic Reaction              Dust Sensitivity
-	19      Dust Sensitivity               Itchy Eyes
-	20      Age                            24h Max Ozone Value
-	21      Allergic Coryza                High Ozone Village
-	22      Maternal Atopy                 Maternal Atopy
-	23      Shortness of Breath            Shortness of Breath
-	24      Paternal Atopy                 Paternal Atopy
 
 GENERALIZED ADDITIVE MODEL:
 
@@ -470,10 +610,11 @@ GENERALIZED ADDITIVE MODEL:
 
 LINEAR REGRESSION BOOSTING COEFFICIENTS:
 
-0.00  0.01 -0.01 -0.13 -0.03  0.01 -0.06 -0.03  0.01  0.04  0.04  0.19 -0.09 -0.05 -0.10 -0.12  0.01 -0.03  0.16  0.00 -0.00  0.03  0.07  0.06 -0.04
+0.00  0.01 -0.00 -0.06 -0.01  0.01 -0.03 -0.01  0.01  0.02  0.02  0.09 -0.04 -0.02 -0.05 -0.05  0.01 -0.02  0.07  0.00 -0.00  0.02  0.03  0.03 -0.02
 
 BOOSTING SCORES:
 
 	Linear Regression:	6.2508E-01
-	Decision Tree:		5.5541E-01
+	Decision Tree:		5.4794E-01
+
 """

@@ -1,0 +1,47 @@
+This is BibTeX, Version 0.99d (TeX Live 2017/Debian)
+Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
+The top-level auxiliary file: oblig2.aux
+The style file: ieeetr.bst
+Database file #1: oblig2Notes.bib
+Database file #2: bib.bib
+You've used 6 entries,
+            1876 wiz_defined-function locations,
+            501 strings with 3779 characters,
+and the built_in function-call counts, 628 in all, are:
+= -- 54
+> -- 6
+< -- 0
++ -- 6
+- -- 0
+* -- 20
+:= -- 65
+add.period$ -- 6
+call.type$ -- 6
+change.case$ -- 6
+chr.to.int$ -- 0
+cite$ -- 6
+duplicate$ -- 24
+empty$ -- 109
+format.name$ -- 0
+if$ -- 175
+int.to.chr$ -- 0
+int.to.str$ -- 6
+missing$ -- 0
+newline$ -- 21
+num.names$ -- 0
+pop$ -- 36
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 36
+stack$ -- 0
+substring$ -- 0
+swap$ -- 0
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 0
+while$ -- 0
+width$ -- 7
+write$ -- 38
