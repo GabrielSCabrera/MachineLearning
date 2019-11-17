@@ -468,7 +468,6 @@ LR = AdaBoostRegressor(base_estimator = LinearRegression())
 LR.fit(X_train, Y_train.squeeze())
 Y_predict = LR.predict(X_test)
 score = np.mean((Y_predict-Y_test.squeeze())**2)
-# score = LR.score(X_test, Y_test.squeeze())
 coefficients = LR.estimators_[-1].coef_
 coef = ""
 for c,l in zip(coefficients, labels):
@@ -482,7 +481,6 @@ DTR = AdaBoostRegressor(base_estimator = DecisionTreeRegressor(), n_estimators=5
 DTR.fit(X_train, Y_train.squeeze())
 Y_predict = DTR.predict(X_test)
 score = np.mean((Y_predict-Y_test.squeeze())**2)
-# score = DTR.score(X_test, Y_test.squeeze())
 msg += (f"Decision Tree:\t\t{score:.4E}")
 print(msg)
 
@@ -610,11 +608,11 @@ GENERALIZED ADDITIVE MODEL:
 
 LINEAR REGRESSION BOOSTING COEFFICIENTS:
 
-0.00  0.01 -0.00 -0.06 -0.01  0.01 -0.03 -0.01  0.01  0.02  0.02  0.09 -0.04 -0.02 -0.05 -0.05  0.01 -0.02  0.07  0.00 -0.00  0.02  0.03  0.03 -0.02
+0.0000E+00      5.9147E-03     -4.9335E-03     -5.8675E-02     -1.2691E-02      6.2121E-03     -2.7185E-02     -1.3062E-02      5.7216E-03      1.9285E-02      1.9060E-02      8.8347E-02     -4.0337E-02     -2.3491E-02     -4.5723E-02     -5.3652E-02      6.2884E-03     -1.5265E-02      7.3114E-02      1.4786E-03     -6.4116E-04      1.6088E-02      3.0611E-02      2.8255E-02
 
 BOOSTING SCORES:
 
-	Linear Regression:	6.2508E-01
-	Decision Tree:		5.4794E-01
+	Linear Regression:	9.5266E-03
+	Decision Tree:		1.0904E-02
 
 """

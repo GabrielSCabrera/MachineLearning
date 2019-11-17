@@ -113,9 +113,9 @@ def CV_compare(X_train, Y_train, X_test, Y_test):
     plt.semilogx(k_neighbors, k_fold_scores, label = "Cross-Validation")
     plt.semilogx(k_neighbors, loo_scores, label = "LOO")
     plt.semilogx([k_neighbors[k_fold_idx]], [k_fold_scores[k_fold_idx]], "bo",
-                  label = f"KNN best $k$ = {k_neighbors[k_fold_idx]:d}")
+    label = f"KNN best $\\alpha$ = {k_neighbors[k_fold_idx]:.4E}, Accuracy = {k_fold_scores[k_fold_idx]:.4E}")
     plt.semilogx([k_neighbors[loo_idx]], [loo_scores[loo_idx]], "ro",
-                  label = f"LOO best $k$ = {k_neighbors[loo_idx]:d}")
+    label = f"LOO best $\\alpha$ = {k_neighbors[loo_idx]:.4E}, Accuracy = {loo_scores[loo_idx]:.4E}")
     plt.xlabel("Number of Neighbors $k$")
     plt.ylabel("Accuracy-Score")
     plt.xlim([np.min(k_neighbors), np.max(k_neighbors)])
@@ -247,7 +247,7 @@ msg2 = f"{'Rank':^7s} {'Classifier':20s} {'Accuracy':^15s}"
 msg3 = "–"*len(msg2)
 msg = msg1 + "\n\n\t" + msg2 + "\n\t" + msg3 + "\n"
 for n,(s,l) in enumerate(zip(S,L)):
-    msg += f"\t{n+1:^7d} {l:20s} {s:^15.4f}\n"
+    msg += f"\t{n+1:^7d} {l:20s} {s:^15.4E}\n"
 print(msg)
 
 """
@@ -279,10 +279,9 @@ CLASSIFIER COMPARISON:
 
 	 Rank   Classifier              Accuracy
 	––––––––––––––––––––––––––––––––––––––––––––
-	   1    ADABoost                 0.7604
-	   2    Random Forest            0.7500
-	   3    Decision Tree            0.7292
-	   4    Bagging                  0.7188
-	   5    Neural Network           0.7031
-
+	   1    ADABoost               7.6042E-01
+	   2    Random Forest          7.5000E-01
+	   3    Decision Tree          7.2917E-01
+	   4    Bagging                7.1875E-01
+	   5    Neural Network         7.0312E-01
 """

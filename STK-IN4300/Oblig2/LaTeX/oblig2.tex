@@ -182,9 +182,35 @@
 	
 	\subsection*{Task 1}
 	
+	The patients in the diabetes dataset were classified using k-nearest-neighbors classification with the \texttt{scikit-learn} object \texttt{neighbors.KNeighborsClassifier}, with 5-fold cross-validation using the \texttt{model\_selection.cross\_validate} and \textit{leave-one-out} cross-validation with \texttt{model\_selection.LeaveOneOut}.  
 	
+	This was performed for a number of parameters $k$, and the results are shown in FIG \ref{fig_2}; here, we see that the ideal number of neighbors $k$ seems to be in the range of $k \in [14,22]$, with a top accuracy of $7.6402 \times 10^{-1}$, given by LOO cross-validation.
 	
-	\newpage
+	\subsection*{Task 2}
+	
+	One again, \texttt{pyGAM} was used (exclusively with splines) to create a generalized additive model; using forward substitution, the cumulative accuracy given by each feature (and those preceding it) is shown in TABLE \ref{table_9}.  
+	
+	In this table, we see that only including the \textit{top three} features (\texttt{glucose}, \texttt{mass}, \texttt{pressure}) yields the best accuracy score ($7.6562 \times 10^{-1}$.) Once again, this is likely due to overfitting in the less important features.
+	
+	\subsection*{Task 3}
+	
+	To implement these five models (classification tree, bagging, random forest, neural network, and AdaBoost), \texttt{scikit-learn} has five useful objects that accomplish this:
+	
+	\begin{itemize}
+	\item \texttt{ensemble.BaggingClassifier}
+	\item \texttt{ensemble.RandomForestClassifier}
+	\item \texttt{ensemble.AdaBoostClassifier}
+	\item \texttt{neural\_network.MLPClassifier}
+	\item \texttt{tree.DecisionTreeClassifier}
+	\end{itemize}
+	
+	The resulting accuracy scores given by these five methods can be seen in TABLE \ref{table_10} – the selected neural network's \textit{hidden layer} configuration is (100, 66, 44). 
+	
+	Given these results, it appears that the best method to use when including all features is AdaBoost; it is likely that this is due to the algorithm's ability to reduce overfitting, which was shown to be an issue in Problem 2 Task 2.
+	
+	\subsection*{Task 4}
+	
+	Although AdaBoost performed well in Task 3, it is worth noting that KNN yielded better results than the classifiers in Task 4, and that omitting all but the three best performing features leads to better accuracy scores as well; overall, this implies that using KNN with 14-22 neighbors would be our best method, since this reduces overfitting and is also computationally effective.
 	
 	\section{Appendix}
 	
@@ -375,6 +401,37 @@
 		\end{tabular}
 		\caption{The MSE for each method applied in Problem 1, ordered from best to worst performance.\label{table_8}}
 	\end{table}	
+
+	\begin{table}[H]
+	\center
+		\begin{tabular}{l c}	
+		\textbf{Feature} & \textbf{Cumulative Accuracy} \\
+		\hline
+		glucose & $7.2656 \times 10^{-1}$ \\
+		mass & $7.6302 \times 10^{-1}$ \\
+		pressure & $7.6562 \times 10^{-1}$ \\
+		insulin & $7.5521 \times 10^{-1}$ \\
+		triceps & $7.6302 \times 10^{-1}$ \\
+		pedigree & $7.5781 \times 10^{-1}$ \\
+		pregnant & $7.5260 \times 10^{-1}$ \\
+		age & $7.2135 \times 10^{-1} $
+		\end{tabular}
+		\caption{The cumulative accuracies for each feature in the diabetes dataset (ordered from highest p-value to lowest).\label{table_9}}
+	\end{table}
+	
+	\begin{table}[H]
+	\center
+		\begin{tabular}{l c}
+		\textbf{Classifier} & \textbf{Accuracy Score} \\
+		\hline
+		ADABoost        &       7.6042E-01  \\ 
+	   	Random Forest   &       7.5000E-01   \\
+	   	Decision Tree   &       7.2917E-01   \\
+	   	Bagging         &       7.1875E-01   \\
+	   	Neural Network  &      7.0312E-01
+		\end{tabular}
+		\caption{The accuracy scores for a variety of classification methods, sorted from best to worst.  \label{table_10}}
+	\end{table}
 	
 	\subsection{Figures}
 	
