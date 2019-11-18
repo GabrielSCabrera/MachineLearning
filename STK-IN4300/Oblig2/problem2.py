@@ -21,6 +21,14 @@ def read_data(path):
     "pedigree", "age"]
     return X, Y, np.array(labels)
 
+def read_trimmed_data(path):
+    arr = np.load(path)
+    X = arr[:,:-1]
+    Y = arr[:,-1]
+    labels = ["pregnant", "glucose", "pressure", "triceps", "insulin", "mass",
+    "pedigree", "age"]
+    return X, Y, np.array(labels)
+
 def preprocess(X, Y):
     """SPLITTING THE DATASET"""
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, **options)
@@ -210,6 +218,11 @@ data_path = "pima-indians-diabetes.csv"
 X, Y, labels = read_data(data_path)
 p = X.shape[1]
 
+# """ALTERNATIVE DATASET (PimaIndiansDiabetes2)"""
+# data_path = "PimaIndiansDiabetes2.npy"
+# X, Y, labels = read_trimmed_data(data_path)
+# p = X.shape[1]
+
 """CREATING BASIC MODEL"""
 model, X_train, X_test, Y_train, Y_test = get_model(X, Y, k_neighbors, options)
 
@@ -218,7 +231,7 @@ info = matrix_info(X_train, Y_train, X_test, Y_test)
 print(info)
 
 """K-FOLD CROSS VALIDATION AND BOOTSTRAP"""
-CV_compare(X_train, Y_train, X_test, Y_test)
+# CV_compare(X_train, Y_train, X_test, Y_test)
 
 """COMPARING GENERALIZED ADDITIVE MODELS WITH FORWARD SUBSTITUTION"""
 accuracies, labels_forward, idx = forward_substitution(X, Y, labels, options)
@@ -284,4 +297,5 @@ CLASSIFIER COMPARISON:
 	   3    Decision Tree          7.2917E-01
 	   4    Bagging                7.1875E-01
 	   5    Neural Network         7.0312E-01
+
 """

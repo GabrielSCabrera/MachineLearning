@@ -128,6 +128,8 @@
 		
 	Further information on these datasets is available at \url{https://www.uio.no/studier/emner/matnat/math/STK-IN4300/h19/obligforside\_2.pdf}
 	
+	Additionally, a variant of this dataset is used in Problem 2, Part 5.  Here, the datapoints with invalid values (for example, zeros for BMI) are removed, leaving us with 196 datapoints, rather than 383.
+	
 	\section{Problem 1}
 	
 	\subsection*{Task 1}
@@ -211,6 +213,10 @@
 	\subsection*{Task 4}
 	
 	Although AdaBoost performed well in Task 3, it is worth noting that KNN yielded better results than the classifiers in Task 4, and that omitting all but the three best performing features leads to better accuracy scores as well; overall, this implies that using KNN with 14-22 neighbors would be our best method, since this reduces overfitting and is also computationally effective.
+	
+	\subsection*{Task 5}
+	
+	Using the trimmed version of the dataset with 196 datapoints, the code can be rerun to gauge the effects of removing invalid datapoints.  We see that the performance of our classifiers is significantly improved – this time, we see that implementing
 	
 	\section{Appendix}
 	
@@ -433,6 +439,37 @@
 		\caption{The accuracy scores for a variety of classification methods, sorted from best to worst.  \label{table_10}}
 	\end{table}
 	
+	\begin{table}[H]
+	\center
+		\begin{tabular}{l c}	
+		\textbf{Feature} & \textbf{Cumulative Accuracy} \\
+		\hline
+		pregnant & $7.0408 \times 10^{-1}$ \\
+		glucose & $7.0408 \times 10^{-1}$ \\
+		pressure & $7.0408 \times 10^{-1}$ \\
+		triceps & $7.0408 \times 10^{-1}$ \\
+		insulin & $7.0408 \times 10^{-1}$ \\
+		mass & $7.0408 \times 10^{-1}$ \\
+		age & $7.0408 \times 10^{-1}$ \\
+		pedigree & $6.9388 \times 10^{-1} $
+		\end{tabular}
+		\caption{The cumulative accuracies for each feature in the diabetes dataset (ordered from highest p-value to lowest). For the filtered dataset.\label{table_11}}
+	\end{table}
+	
+	\begin{table}[H]
+	\center
+		\begin{tabular}{l c}
+		\textbf{Classifier} & \textbf{Accuracy Score} \\
+		\hline
+		ADABoost        &       $7.9082 \times 10^{-1}$   \\ 
+	   	Random Forest   &       $7.8061 \times 10^{-1}$  \\
+	   	Bagging   		&       $7.6531 \times 10^{-1}$   \\
+	   	Decision Tree   &       $7.3980 \times 10^{-1}$   \\
+	   	Neural Network  &       $7.1939 \times 10^{-1}$ 
+		\end{tabular}
+		\caption{The accuracy scores for a variety of classification methods, sorted from best to worst. For the filtered dataset.\label{table_12}}
+	\end{table}	
+	
 	\subsection{Figures}
 	
 	\begin{figure}[H]
@@ -445,6 +482,12 @@
 	\centering  
 	\includegraphics[width = 0.5\textwidth]{plot_2.pdf}
 	\caption{A performance comparison between k-nearest-neighbors cross-validation and leave-one-out cross-validation, as a function of the number of neighbors $k$.\label{fig_2}}
+	\end{figure}
+	
+	\begin{figure}[H]
+	\centering  
+	\includegraphics[width = 0.5\textwidth]{plot_3.pdf}
+	\caption{A performance comparison between k-nearest-neighbors cross-validation and leave-one-out cross-validation, as a function of the number of neighbors $k$. For the filtered dataset.\label{fig_3}}
 	\end{figure}
 	
 	\subsection{Source Code}
