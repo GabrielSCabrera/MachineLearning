@@ -158,7 +158,7 @@
 	
 	With the help of the \texttt{scikit-learn} function \texttt{utils.resample}, as well as \texttt{model\_selection.cross\_validate}, a \textit{bootstrap} procedure and \textit{k-nearest-neighbors} cross-validation procedure was used to evaluate the effectiveness of a LASSO regression for one-thousand logarithmically spaced hyperparameters $\alpha \in [10^{-5}, 10^{-0.5}]$.  
 	
-	The results in FIG \ref{fig_1} show that the ideal hyperparameter is in the range of $3.45 \times 10^{-2}$ and $1.25 \times 10^{-2}$, though the latter appears to yield higher results overall when using the bootstrap procedure.
+	The results in FIG \ref{fig_1} show that the ideal hyperparameter is in the range of $5.4795 \times 10^{-3}$ and $1.0865 \times 10^{-1}$, though the latter appears to yield higher results overall when using the bootstrap procedure.
 	
 	\subsection*{Task 5}
 	
@@ -176,9 +176,9 @@
 	 
 	\subsection*{Task 7}
 	
-	For an overview of the results, all MSE values are shown in TABLE \ref{table_8}.  It is apparent that linear regression is the superior model for the given dataset, as the best MSE values are all variants of this method.  Ultimately, implementing linear regression with boosting yielded the best fit.  
+	For an overview of the results, all MSE values are shown in TABLE \ref{table_8}.  It is apparent that linear regression is the superior model for the given dataset, as the best MSE values are all variants of this method.  Ultimately, implementing linear regression with boosting yielded the best fit.  It is worth mentioning that LASSO for KNN performed well too, at the cost of potential performance reduction due to the convergence requirement.
 	
-	Decision trees were the next best method, with a comparable MSE; this may be a good choice when considering training performance.  The remaining methods (GAM and LASSO) performed poorly in comparison to the others, with their scores an order of magnitude larger than linear regression and decision trees.
+	Decision trees were the next best method, with a comparable MSE; this may be a good choice when considering training performance.  The remaining methods (bootstrap/KNN GAM and bootstrap LASSO) performed poorly in comparison to the others, with their scores an order of magnitude larger than linear regression and decision trees.
 
 	\section{Problem 2}
 	
@@ -388,22 +388,22 @@
 	
 	\begin{table}[H]
 	\center
-		\begin{tabular}{l r}
-		\textbf{Method} & \textbf{MSE} \\ 
+		\begin{tabular}{l r r}
+		\textbf{Method} & \textbf{Train MSE} & \textbf{Test MSE}\\ 
 		\hline
-		Linear Regression (Boosting) & $9.5266 \times 10^{-3}$\\
-		Forward Selection ($p < 0.7$) & $9.7452 \times 10^{-3}$\\
-		Linear Regression & $9.8266 \times 10^{-3}$\\
-		Backward Elimination ($p < 0.7$) & $9.8286 \times 10^{-3}$\\
-		Backward Elimination ($p < 0.8$) & $9.8754 \times 10^{-3}$\\
-		Forward Selection ($p < 0.8$) & $1.0055 \times 10^{-2}$\\
-		Decision Tree (Boosting) & $1.0904 \times 10^{-2}$ \\
-		GAM (Polynomial) & $1.9103 \times 10^{-1}$\\
-		GAM (Linear) & $1.9198 \times 10^{-1}$\\
-		LASSO (K-Nearest-Neighbors) & $5.7547 \times 10^{-1}$\\
-		LASSO (Bootstrap) & $6.0815 \times 10^{-1}$
+		Linear Regression (Boosting) & $9.0342 \times 10^{-3}$ & $9.5266 \times 10^{-3}$\\
+		Forward Selection ($p < 0.7$) & $9.6398 \times 10^{-3}$ & $9.7452 \times 10^{-3}$\\
+		Linear Regression & $8.7466 \times 10^{-3}$ & $9.8266 \times 10^{-3}$\\
+		Backward Elimination ($p < 0.7$) & $8.7466 \times 10^{-3}$ & $9.8286 \times 10^{-3}$\\
+		Backward Elimination ($p < 0.8$) & $8.7486 \times 10^{-3}$ & $9.8754 \times 10^{-3}$\\
+		LASSO (K-Nearest-Neighbors) & $9.1411 \times 10^{-3}$ & $1.0023 \times 10^{-2}$\\
+		Forward Selection ($p < 0.8$) & $9.3872 \times 10^{-3}$ & $1.0055 \times 10^{-2}$\\
+		Decision Tree (Boosting) & $1.6680 \times 10^{-5}$ & $1.0904 \times 10^{-2}$ \\
+		LASSO (Bootstrap) & $2.7797 \times 10^{-2}$ & $2.5745 \times 10^{-2}$ \\
+		GAM (Polynomial) & $2.1417 \times 10^{-1}$ & $1.9103 \times 10^{-1}$\\
+		GAM (Linear) & $2.1404 \times 10^{-1}$ & $1.9198 \times 10^{-1}$
 		\end{tabular}
-		\caption{The MSE for each method applied in Problem 1, ordered from best to worst performance.\label{table_8}}
+		\caption{The training and testing MSE for each method applied in Problem 1, ordered from best to worst test performance.\label{table_8}}
 	\end{table}	
 
 	\begin{table}[H]

@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split, cross_validate
 from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import AdaBoostRegressor
+from sklearn.metrics import mean_squared_error
 from sklearn.utils import resample
 from pygam import s as GAM_spline
 from pygam import f as GAM_factor
@@ -57,10 +58,11 @@ def get_model(X, Y, options):
 
     return model, X_train, X_test, Y_train, Y_test
 
-def get_stats(model, X_test, Y_test, labels):
+def get_stats(model, X_train, Y_train, X_test, Y_test, labels):
 
     """PREDICTING OUTPUTS USING LINEAR REGRESSION MODEL"""
-    Y_predict = model.predict(X_test)
+    Y_predict_train = model.predict(X_train)
+    Y_predict_test = model.predict(X_test)
 
     """EXTRACTING COEFFICIENTS"""
     betas = model.coef_.squeeze()[1:]
@@ -74,11 +76,12 @@ def get_stats(model, X_test, Y_test, labels):
     p_values = 2*(1-stats.t.cdf(np.abs(t_values), X_test.shape[0]-X_test.shape[1]))
 
     """CALCULATING MSE"""
-    MSE = np.mean((Y_predict - Y_test)**2)
+    MSE_train = np.mean((Y_predict_train - Y_train)**2)
+    MSE_test = np.mean((Y_predict_test - Y_test)**2)
 
     """CALCULATING R2-SCORE"""
     SS_tot = np.sum((Y_test-np.mean(Y_test))**2)
-    SS_res = np.sum((Y_predict-Y_test)**2)
+    SS_res = np.sum((Y_predict_test-Y_test)**2)
     R2 = 1 - SS_res/SS_tot
 
     """SORTING FEATURES BASED ON P-VALUES (low --> high)"""
@@ -90,13 +93,13 @@ def get_stats(model, X_test, Y_test, labels):
         std_err = std_err[idx]
         p_values = p_values[idx]
 
-    return labels, betas, std_err, p_values, MSE, R2, idx
+    return labels, betas, std_err, p_values, MSE_train, MSE_test, R2, idx
 
 def sort_data(model, X_train, Y_train, X_test, Y_test, labels):
 
     """GETTING STATISTICAL DATA"""
-    labels, betas, std_err, p_values, MSE, R2, idx = \
-    get_stats(model, X_test, Y_test, labels)
+    labels, betas, std_err, p_values, MSE_train, MSE_test, R2, idx = \
+    get_stats(model, X_train, Y_train, X_test, Y_test, labels)
 
     """COMPILING INFORMATION FOR PRINTING TO TERMINAL"""
 
@@ -116,11 +119,12 @@ def sort_data(model, X_train, Y_train, X_test, Y_test, labels):
             f"Train Percentage: {100*(1-test_percent):0.0f}%\t"
             f"Test Percentage: {100*test_percent:0.0f}%\n\n"
             f"PREDICTION INFO SORTED BY IMPORTANCE:\n\n{stat_vals}\n\n"
-            f"STATISTICS:\n\n\tMSE:\t{MSE:.4E}\n\tR²:\t{R2:.4E}")
+            f"STATISTICS:\n\n\tMSE train:\t{MSE_train:.4E}\n\tMSE test:\t"
+            f"{MSE_test:.4E}\n\tR²:\t{R2:.4E}")
 
-    return info, labels, betas, std_err, p_values, MSE, R2, idx
+    return info, labels, betas, std_err, p_values, MSE_train, MSE_test, R2, idx
 
-def print_data(mode, stop, MSE, labels, betas, std_err, p_values):
+def print_data(mode, stop, MSE_train, MSE_test, labels, betas, std_err, p_values):
     stat_vals = f"\t{'Label':^10s} {'Coeff':^10s} {'Std Err':^10s} {'P-Val':^10s} "
     longest_str = np.max(list(map(len, globals()["label_descr"].values())))+1
     stat_vals += f"{'Description':^{longest_str}s}\n"
@@ -130,8 +134,8 @@ def print_data(mode, stop, MSE, labels, betas, std_err, p_values):
         stat_vals += f" {label_descr[i]:>{longest_str}s}\n"
 
     string = (f"\nPREDICTION INFO SORTED BY IMPORTANCE:\n\n{stat_vals}\n\n"
-              f"STATISTICS:\n\n\tMSE:\t\t\t{MSE:.4E}\n\tStopping Criterion:\t"
-              f"p > {stop}")
+              f"STATISTICS:\n\n\tMSE train:\t{MSE_train:.4E}\n\tMSE test:\t"
+              f"{MSE_test:.4E}\n\tR²:\t{R2:.4E}")
     print(string)
 
 def print_data_tex(mode, stop, MSE, labels, betas, std_err, p_values):
@@ -170,9 +174,9 @@ def backward_elimination(X, Y, labels, options, stop = 0.5):
     count = 0
     for i in range(p):
         model, X_train, X_test, Y_train, Y_test = get_model(X_step, Y, options)
-        temp = get_stats(model, X_test, Y_test, labels)
-        if temp[-4][i] < stop:
-            betas, std_err, p_values, MSE, R2, idx = temp[1:]
+        temp = get_stats(model, X_train, Y_train, X_test, Y_test, labels)
+        if temp[3][i] < stop:
+            betas, std_err, p_values, MSE_train, MSE_test, R2, idx = temp[1:]
             X_step = X_step[:,idx[:-1]]
             labels_importance.insert(0, labels_short[idx[-1]])
             labels_short = labels_short[idx[:-1]]
@@ -187,7 +191,7 @@ def backward_elimination(X, Y, labels, options, stop = 0.5):
             betas_arr = np.array(betas)
             std_err_arr = np.array(std_err)
 
-    return MSE, betas_arr, std_err_arr, p_arr, labels_importance
+    return MSE_train, MSE_test, betas_arr, std_err_arr, p_arr, labels_importance
 
 def forward_substitution(X, Y, labels, options, stop = 0.5):
     X = X.copy()
@@ -201,9 +205,9 @@ def forward_substitution(X, Y, labels, options, stop = 0.5):
         X_step = X[:,col_init]
         for j in range(p-i):
             X_temp = np.hstack([X[:,col_rank], X_step[:,j,None]])
-            temp = get_model(X_temp, Y, options)
-            temp = get_stats(temp[0], temp[2], temp[4], labels)
-            betas, std_err, p_values, MSE, R2, idx = temp[1:]
+            model, X_train, X_test, Y_train, Y_test = get_model(X_temp, Y, options)
+            temp = get_stats(model, X_train, Y_train, X_test, Y_test, labels)
+            betas, std_err, p_values, MSE_train, MSE_test, R2, idx = temp[1:]
             p_values_step.append(p_values[idx][-1])
             betas_step.append(betas[idx][-1])
             std_err_step.append(std_err[idx][-1])
@@ -220,19 +224,37 @@ def forward_substitution(X, Y, labels, options, stop = 0.5):
     p_arr = np.array(p_values)
     betas_arr = np.array(betas)
     std_err_arr = np.array(std_err)
-    return MSE, betas_arr, std_err_arr, p_arr, labels[col_rank]
+    return MSE_train, MSE_test, betas_arr, std_err_arr, p_arr, labels[col_rank]
 
 def k_fold(data):
-    X, Y, k, alpha = data
+    X, Y, k, alpha, options = data
+
+    """SPLITTING THE DATASET"""
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, **options)
+
+    """PREPROCESSING"""
+    # NB: No need for one-hot encoding – categorical columns are already binary!
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    scaler = MinMaxScaler()
+    Y_train = scaler.fit_transform(Y_train)
+    Y_test = scaler.transform(Y_test)
+
     """CREATING A DESIGN MATRIX"""
     poly = PolynomialFeatures(1)
-    X_design = poly.fit_transform(X)
+    X_test = poly.fit_transform(X_test)
+    X_train = poly.fit_transform(X_train)
 
     """PERFORMING LASSO FIT"""
     model = Lasso(alpha = alpha, max_iter = 1E5)
-    cv_results = cross_validate(model, X, Y, cv = k)
-    scores = cv_results["test_score"]
-    return np.mean(scores)
+    cv_results = cross_validate(model, X_train, Y_train, cv = k,
+                                scoring = "neg_mean_squared_error",
+                                return_train_score = True)
+    scores_train = -cv_results["train_score"]
+    scores_test = -cv_results["test_score"]
+    return np.mean(scores_train), np.mean(scores_test)
 
 def bootstrap(data):
     X, Y, k, alpha, options = data
@@ -246,7 +268,7 @@ def bootstrap(data):
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
 
-    scaler = StandardScaler()
+    scaler = MinMaxScaler()
     Y_train = scaler.fit_transform(Y_train)
     Y_test = scaler.transform(Y_test)
 
@@ -255,26 +277,32 @@ def bootstrap(data):
     X_test = poly.fit_transform(X_test)
     X_train = poly.fit_transform(X_train)
 
-    scores = []
+    scores_train = []
+    scores_test = []
 
     """PERFORMING LASSO FIT"""
     model = Lasso(alpha = alpha, max_iter = 1E5)
     for i in range(k):
         X_step, Y_step = resample(X_train, Y_train, random_state = rand_seed,
                                   n_samples = X_train.shape[0], replace = True)
-        model.fit(X_step, Y_step)
-        scores.append(model.score(X_test, Y_test))
-    return np.mean(scores)
 
-    print(scores)
+        model.fit(X_step, Y_step)
+        Y_predict_train = model.predict(X_train)
+        Y_predict_test = model.predict(X_test)
+        scores_train.append(np.mean((Y_predict_train - Y_train)**2))
+        scores_test.append(np.mean((Y_predict_test - Y_test)**2))
+
+    return np.mean(scores_train), np.mean(scores_test)
 
 def CV_compare(alphas):
-    k_fold_scores = []
-    bootstrap_scores = []
+    k_fold_train_scores = []
+    k_fold_test_scores = []
+
+    bootstrap_train_scores = []
+    bootstrap_test_scores = []
 
     pool = Pool()
-    k_fold_args = [(X, Y, k, a) for a in alphas]
-    bootstrap_args = [(X, Y, k, a, options) for a in alphas]
+    all_args = [(X, Y, k, a, options) for a in alphas]
 
     k_fold_idx = []
     bootstrap_idx = []
@@ -282,38 +310,53 @@ def CV_compare(alphas):
     print(f"{0:4d}%", end = "")
 
     count = 0
-    for n,i in enumerate(pool.imap(k_fold, k_fold_args)):
+    for n,i in enumerate(pool.imap(k_fold, all_args)):
         count += 1
-        k_fold_scores.append(i)
+        k_fold_train_scores.append(i[0])
+        k_fold_test_scores.append(i[1])
         k_fold_idx.append(n)
         print(f"\r{int(50*n/len(alphas)):4d}%", end = "")
 
     count = 0
-    for n,i in enumerate(pool.imap(bootstrap, bootstrap_args)):
+    for n,i in enumerate(pool.imap(bootstrap, all_args)):
         count += 1
-        bootstrap_scores.append(i)
+        bootstrap_train_scores.append(i[0])
+        bootstrap_test_scores.append(i[1])
         bootstrap_idx.append(n)
         print(f"\r{50+int(50*count/len(alphas)):4d}%", end = "")
     print(f"\r", end = "")
 
-    bootstrap_scores = np.array(bootstrap_scores)[bootstrap_idx]
-    k_fold_scores = np.array(k_fold_scores)[k_fold_idx]
+    bootstrap_train_scores = np.array(bootstrap_train_scores)[bootstrap_idx]
+    bootstrap_test_scores = np.array(bootstrap_test_scores)[bootstrap_idx]
+    k_fold_train_scores = np.array(k_fold_train_scores)[k_fold_idx]
+    k_fold_test_scores = np.array(k_fold_test_scores)[k_fold_idx]
 
-    boot_idx = np.argmax(bootstrap_scores)
-    k_fold_idx = np.argmax(k_fold_scores)
+    boot_idx = np.argmin(bootstrap_test_scores)
+    k_fold_idx = np.argmin(k_fold_test_scores)
 
-    plt.semilogx(alphas, k_fold_scores, label = "Cross-Validation")
-    plt.semilogx(alphas, bootstrap_scores, label = "Bootstrap")
-    plt.semilogx([alphas[k_fold_idx]], [k_fold_scores[k_fold_idx]], "bo",
-    label = f"KNN best $\\alpha$ = {alphas[k_fold_idx]:.4E}, MSE = {k_fold_scores[k_fold_idx]:.4E}")
-    plt.semilogx([alphas[boot_idx]], [bootstrap_scores[boot_idx]], "ro",
-    label = f"Bootstrap best $\\alpha$ = {alphas[boot_idx]:.4E}, MSE = {bootstrap_scores[boot_idx]:.4E}")
+    plt.semilogx(alphas, k_fold_train_scores, label = "Cross-Validation (Train)")
+    plt.semilogx(alphas, bootstrap_train_scores, label = "Bootstrap (Train)")
+    plt.semilogx(alphas, k_fold_test_scores, label = "Cross-Validation (Test)")
+    plt.semilogx(alphas, bootstrap_test_scores, label = "Bootstrap (Test)")
+
+    plt.semilogx([alphas[k_fold_idx]], [k_fold_train_scores[k_fold_idx]], "bo",
+    label = f"KNN best $\\alpha$ = {alphas[k_fold_idx]:.4E}, MSE train = {k_fold_train_scores[k_fold_idx]:.4E}")
+    plt.semilogx([alphas[boot_idx]], [bootstrap_train_scores[boot_idx]], "ro",
+    label = f"Bootstrap best $\\alpha$ = {alphas[boot_idx]:.4E}, MSE train = {bootstrap_train_scores[boot_idx]:.4E}")
+
+    plt.semilogx([alphas[k_fold_idx]], [k_fold_test_scores[k_fold_idx]], "go",
+    label = f"MSE test = {k_fold_test_scores[k_fold_idx]:.4E}")
+    plt.semilogx([alphas[boot_idx]], [bootstrap_test_scores[boot_idx]], "co",
+    label = f"MSE test = {bootstrap_test_scores[boot_idx]:.4E}")
+
     plt.xlabel("Complexity Parameter $\\alpha$")
-    plt.ylabel("R²-Score")
+    plt.ylabel("MSE")
     plt.xlim([np.min(alphas), np.max(alphas)])
     plt.legend()
     plt.savefig("plot_1.pdf", dpi = 250)
     plt.close()
+
+    # print(f"\nLASSO:\n\tMSE train:\t{}")
 
 def GAM(X, Y, factor = False):
 
@@ -368,9 +411,11 @@ def GAM(X, Y, factor = False):
 
     gam = LinearGAM(gam_input, fit_intercept = False, max_iter = int(1E5))
     gam.fit(X_train, Y_train)
-    Y_predict = gam.predict(X_test)
-    MSE = np.mean((Y_predict - Y_test)**2)
-    return MSE
+    Y_predict_train = gam.predict(X_train)
+    Y_predict_test = gam.predict(X_test)
+    MSE_train = np.mean((Y_predict_train - Y_train)**2)
+    MSE_test = np.mean((Y_predict_test - Y_test)**2)
+    return MSE_train, MSE_test
 
 """PARAMETERS"""
 test_percent = 0.5      # Float in range (0,1)
@@ -404,45 +449,45 @@ p, q = X.shape[1], Y.shape[1]
 model, X_train, X_test, Y_train, Y_test = get_model(X, Y, options)
 
 """DISPLAYING INITIAL RESULTS"""
-info, labels_sort, betas_sort, std_err_sort, p_values_sort, MSE, R2, idx = \
+info, labels_sort, betas_sort, std_err_sort, p_values_sort, MSE_train, MSE_test, R2, idx = \
 sort_data(model, X_train, Y_train, X_test, Y_test, labels)
 print(info)
 
 """BACKWARD ELIMINATION"""
 stop_b = 0.7
 mode_b = "backward elimination"
-MSE_b, betas_b, std_err_b, p_b, labels_back = \
+MSE_train_b, MSE_test_b, betas_b, std_err_b, p_b, labels_back = \
 backward_elimination(X.copy(), Y.copy(), labels, options, stop_b)
 
 print("\nBACKWARD ELIMINATION")
-print_data(mode_b, stop_b, MSE_b, labels_back, betas_b, std_err_b, p_b)
+print_data(mode_b, stop_b, MSE_train_b, MSE_test_b, labels_back, betas_b, std_err_b, p_b)
 
 """FORWARD SUBSTITUTION"""
 stop_f = 0.7
 mode_f = "forward substitution"
-MSE_f, betas_f, std_err_f, p_f, labels_forward = \
+MSE_train_f, MSE_test_f, betas_f, std_err_f, p_f, labels_forward = \
 forward_substitution(X.copy(), Y.copy(), labels, options, stop_f)
 
 print("\nFORWARD SUBSTITUTION")
-print_data(mode_f, stop_f, MSE_f, labels_forward, betas_f, std_err_f, p_f)
+print_data(mode_f, stop_f, MSE_train_f, MSE_test_f, labels_forward, betas_f, std_err_f, p_f)
 
 """BACKWARD ELIMINATION"""
 stop_b = 0.8
 mode_b = "backward elimination"
-MSE_b, betas_b, std_err_b, p_b, labels_back = \
+MSE_train_b, MSE_test_b, betas_b, std_err_b, p_b, labels_back = \
 backward_elimination(X.copy(), Y.copy(), labels, options, stop_b)
 
 print("\nBACKWARD ELIMINATION")
-print_data(mode_b, stop_b, MSE_b, labels_back, betas_b, std_err_b, p_b)
+print_data(mode_b, stop_b, MSE_train_b, MSE_test_b, labels_back, betas_b, std_err_b, p_b)
 
 """FORWARD SUBSTITUTION"""
 stop_f = 0.8
 mode_f = "forward substitution"
-MSE_f, betas_f, std_err_f, p_f, labels_forward = \
+MSE_train_f, MSE_test_f, betas_f, std_err_f, p_f, labels_forward = \
 forward_substitution(X.copy(), Y.copy(), labels, options, stop_f)
 
 print("\nFORWARD SUBSTITUTION")
-print_data(mode_f, stop_f, MSE_f, labels_forward, betas_f, std_err_f, p_f)
+print_data(mode_f, stop_f, MSE_train_f, MSE_test_f, labels_forward, betas_f, std_err_f, p_f)
 
 """COMPARING LAST TWO METHODS"""
 print("\nFEATURE IMPORTANCE COMPARISON:\n")
@@ -453,21 +498,26 @@ for n,(i,j) in enumerate(zip(labels_back, labels_forward)):
     print(f"\t{n+1:<7d} {label_descr[i]:30s} {label_descr[j]:30s}")
 
 """K-FOLD CROSS VALIDATION AND BOOTSTRAP"""
-alphas = np.logspace(-5, -0.5, 1000)
+alphas = np.logspace(-8, 1, 1000)
 CV_compare(alphas)
 
 """IMPLEMENTING GENERALIZED ADDITIVE MODEL"""
 MSE_GAM_lin = GAM(X.copy(), Y.copy(), factor = False)
 MSE_GAM_fac = GAM(X.copy(), Y.copy(), factor = True)
 msg = (f"        \nGENERALIZED ADDITIVE MODEL:\n\n\tLinear MSE:\t"
-       f"{MSE_GAM_lin:.4E}\n\tPolynomial MSE:\t{MSE_GAM_fac:.4E}")
+       f"{MSE_GAM_lin[0]:.4E}\t{MSE_GAM_lin[1]:.4E}\n\tPolynomial MSE:\t"
+       f"{MSE_GAM_fac[0]:.4E}\t{MSE_GAM_fac[1]:.4E}")
 print(msg)
 
 """BOOSTING"""
 LR = AdaBoostRegressor(base_estimator = LinearRegression())
 LR.fit(X_train, Y_train.squeeze())
-Y_predict = LR.predict(X_test)
-score = np.mean((Y_predict-Y_test.squeeze())**2)
+
+Y_predict_train = LR.predict(X_train)
+Y_predict_test = LR.predict(X_test)
+score_train = np.mean((Y_predict_train-Y_train.squeeze())**2)
+score_test = np.mean((Y_predict_test-Y_test.squeeze())**2)
+
 coefficients = LR.estimators_[-1].coef_
 coef = ""
 for c,l in zip(coefficients, labels):
@@ -475,144 +525,13 @@ for c,l in zip(coefficients, labels):
 coef = coef.strip()
 print(f"\nLINEAR REGRESSION BOOSTING COEFFICIENTS:\n\n{coef}")
 
-msg = (f"\nBOOSTING SCORES:\n\n\tLinear Regression:\t{score:.4E}\n\t")
+msg = (f"\nBOOSTING SCORES:\n\n\tLinear Regression:\t{score_train:.4E}\t{score_test:.4E}\n\t")
 
 DTR = AdaBoostRegressor(base_estimator = DecisionTreeRegressor(), n_estimators=500)
 DTR.fit(X_train, Y_train.squeeze())
-Y_predict = DTR.predict(X_test)
-score = np.mean((Y_predict-Y_test.squeeze())**2)
-msg += (f"Decision Tree:\t\t{score:.4E}")
+Y_predict_train = DTR.predict(X_train)
+Y_predict_test = DTR.predict(X_test)
+score_train = np.mean((Y_predict_train-Y_train.squeeze())**2)
+score_test = np.mean((Y_predict_test-Y_test.squeeze())**2)
+msg += (f"Decision Tree:\t\t{score_train:.4E}\t{score_test:.4E}")
 print(msg)
-
-"""
-$ python3 problem1.py
-
-DATA DIMENSIONS:
-
-	X_train: (248, 25)	X_test : (248, 25)
-	Y_train: (248, 1)	Y_test : (248, 1)
-	Train Percentage: 50%	Test Percentage: 50%
-
-PREDICTION INFO SORTED BY IMPORTANCE:
-
-	  Label      Coeff     Std Err     P-Val        Description
-	––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-	   FLGROSS   8.47E-02   1.06E-01   4.25E-01               Height
-	       SEX  -4.81E-02   6.63E-02   4.69E-01               Gender
-	     FLGEW   3.46E-02   9.99E-02   7.29E-01               Weight
-	    FO3H24   2.71E-02   1.33E-01   8.39E-01  24h Max Ozone Value
-	    FTEH24  -2.42E-02   1.24E-01   8.45E-01  24h Max Temperature
-	     FPOLL  -2.10E-02   1.33E-01   8.75E-01   Pollen Sensitivity
-	  FLTOTMED  -7.07E-03   5.31E-02   8.94E-01    No. of Medis/Lufu
-	   FSNIGHT   8.76E-03   6.73E-02   8.97E-01  Night/Morning Cough
-	     FTIER  -9.12E-03   7.53E-02   9.04E-01      Fur Sensitivity
-	    FNOH24  -1.05E-02   9.55E-02   9.13E-01             Max. NO2
-	    FSPFEI   1.08E-02   9.88E-02   9.13E-01        Wheezy Breath
-	   FSHLAUF  -6.11E-03   6.13E-02   9.21E-01                Cough
-	   AGEBGEW   6.75E-03   6.84E-02   9.22E-01         Birth Weight
-	    ARAUCH   6.94E-03   7.08E-02   9.22E-01               Smoker
-	      FSPT   1.53E-02   1.58E-01   9.23E-01    Allergic Reaction
-	     ADEKZ   6.07E-03   6.52E-02   9.26E-01      Neurodermatitis
-	  HOCHOZON  -8.56E-03   9.46E-02   9.28E-01   High Ozone Village
-	     FMILB  -7.13E-03   8.92E-02   9.36E-01     Dust Sensitivity
-	    FSAUGE  -5.27E-03   7.33E-02   9.43E-01           Itchy Eyes
-	     ALTER   4.56E-03   8.08E-02   9.55E-01                  Age
-	    AMATOP   2.64E-03   7.20E-02   9.71E-01       Maternal Atopy
-	     ADHEU  -2.52E-03   6.96E-02   9.71E-01      Allergic Coryza
-	    FSATEM   1.71E-03   9.36E-02   9.85E-01  Shortness of Breath
-	    AVATOP  -1.65E-04   7.04E-02   9.98E-01       Paternal Atopy
-
-
-STATISTICS:
-
-	MSE:	9.8266E-03
-	R²:	6.1327E-01
-
-BACKWARD ELIMINATION
-
-PREDICTION INFO SORTED BY IMPORTANCE:
-
-	  Label      Coeff     Std Err     P-Val        Description
-	––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-	   FLGROSS   8.47E-02   1.06E-01   4.23E-01               Height
-	       SEX  -4.82E-02   6.61E-02   4.67E-01               Gender
-
-
-STATISTICS:
-
-	MSE:			9.8286E-03
-	Stopping Criterion:	p > 0.7
-
-FORWARD SUBSTITUTION
-
-PREDICTION INFO SORTED BY IMPORTANCE:
-
-	  Label      Coeff     Std Err     P-Val        Description
-	––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-	   FLGROSS   8.49E-02   9.23E-02   3.58E-01               Height
-	       SEX  -4.65E-02   6.35E-02   4.65E-01               Gender
-	     FLGEW   4.16E-02   9.13E-02   6.49E-01               Weight
-
-
-STATISTICS:
-
-	MSE:			9.7452E-03
-	Stopping Criterion:	p > 0.7
-
-BACKWARD ELIMINATION
-
-PREDICTION INFO SORTED BY IMPORTANCE:
-
-	  Label      Coeff     Std Err     P-Val        Description
-	––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-	   FLGROSS   8.48E-02   1.06E-01   4.23E-01               Height
-	       SEX  -4.81E-02   6.61E-02   4.68E-01               Gender
-	     FLGEW   3.46E-02   9.97E-02   7.29E-01               Weight
-
-
-STATISTICS:
-
-	MSE:			9.8754E-03
-	Stopping Criterion:	p > 0.8
-
-FORWARD SUBSTITUTION
-
-PREDICTION INFO SORTED BY IMPORTANCE:
-
-	  Label      Coeff     Std Err     P-Val        Description
-	––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-	   FLGROSS   8.50E-02   9.24E-02   3.59E-01               Height
-	       SEX  -4.84E-02   6.37E-02   4.48E-01               Gender
-	     FLGEW   4.15E-02   9.13E-02   6.50E-01               Weight
-	     FTIER  -1.61E-02   5.84E-02   7.83E-01      Fur Sensitivity
-
-
-STATISTICS:
-
-	MSE:			1.0055E-02
-	Stopping Criterion:	p > 0.8
-
-FEATURE IMPORTANCE COMPARISON:
-
-	Rank    Backward Elimination           Forward Substitution
-	–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-
-	1       Height                         Height
-	2       Gender                         Gender
-	3       Weight                         Weight
-
-GENERALIZED ADDITIVE MODEL:
-
-	Linear MSE:	1.9198E-01
-	Polynomial MSE:	1.9103E-01
-
-LINEAR REGRESSION BOOSTING COEFFICIENTS:
-
-0.0000E+00      5.9147E-03     -4.9335E-03     -5.8675E-02     -1.2691E-02      6.2121E-03     -2.7185E-02     -1.3062E-02      5.7216E-03      1.9285E-02      1.9060E-02      8.8347E-02     -4.0337E-02     -2.3491E-02     -4.5723E-02     -5.3652E-02      6.2884E-03     -1.5265E-02      7.3114E-02      1.4786E-03     -6.4116E-04      1.6088E-02      3.0611E-02      2.8255E-02
-
-BOOSTING SCORES:
-
-	Linear Regression:	9.5266E-03
-	Decision Tree:		1.0904E-02
-
-"""
