@@ -190,9 +190,7 @@
 	
 	\subsection*{Task 2}
 	
-	One again, \texttt{pyGAM} was used (exclusively with splines) to create a generalized additive model; using forward substitution, the cumulative accuracy given by each feature (and those preceding it) is shown in TABLE \ref{table_9}.  
-	
-	In this table, we see that only including the \textit{top three} features (\texttt{glucose}, \texttt{mass}, \texttt{pressure}) yields the best accuracy score ($7.6562 \times 10^{-1}$.) Once again, this is likely due to overfitting in the less important features.
+	One again, \texttt{pyGAM} was used (exclusively with splines) to create a generalized additive model; using forward selection, the cumulative accuracy given by each feature (and those preceding it) is shown in TABLE \ref{table_9}.  In this table, we see that only including the \textit{top three} features (\texttt{glucose}, \texttt{mass}, \texttt{pressure}) yields the best accuracy score ($7.6562 \times 10^{-1}$.) Once again, this is likely due to overfitting in the less important features.
 	
 	\subsection*{Task 3}
 	
@@ -206,9 +204,7 @@
 	\item \texttt{tree.DecisionTreeClassifier}
 	\end{itemize}
 	
-	The resulting accuracy scores given by these five methods can be seen in TABLE \ref{table_10} – the selected neural network's \textit{hidden layer} configuration is (100, 66, 44). 
-	
-	Given these results, it appears that the best method to use when including all features is AdaBoost; it is likely that this is due to the algorithm's ability to reduce overfitting, which was shown to be an issue in Problem 2 Task 2.
+	The resulting accuracy scores given by these five methods can be seen in TABLE \ref{table_10} – the selected neural network's \textit{hidden layer} configuration is (100, 66, 44). Given these results, it appears that the best method to use when including all features is AdaBoost; it is likely that this is due to the algorithm's ability to reduce overfitting, which was shown to be an issue in Problem 2 Task 2.
 	
 	\subsection*{Task 4}
 	
@@ -216,7 +212,9 @@
 	
 	\subsection*{Task 5}
 	
-	Using the trimmed version of the dataset with 196 datapoints, the code can be rerun to gauge the effects of removing invalid datapoints.  We see that the performance of our classifiers is significantly improved – this time, we see that implementing
+	Using the trimmed version of the dataset with 196 datapoints, the code can be rerun to gauge the effects of removing invalid datapoints.  We see that the performance of our classifiers is significantly improved – this time, we see that implementing AdaBoost yields the absolute best results, with an accuracy score of $7.9082 \times 10^{-1}$, seem in TABLE \ref{table_12}.  
+	
+	Another interesting thing to note is that implementing the forward selection algorithm (results in TABLE \ref{table_11}) shows that only using the most important feature (\texttt{pregnant}) is sufficient to predict our outputs, as all subsequent features lead to equal or worse accuracy scores.
 	
 	\section{Appendix}
 	
