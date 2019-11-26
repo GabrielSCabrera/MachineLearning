@@ -1,0 +1,273 @@
+\documentclass[twoside,twocolumn,10pt]{revtex4-1}
+\usepackage[utf8]{inputenc}
+\usepackage[left=1.4cm, right=1.4cm, top=1.9cm, bottom=1.9cm]{geometry}
+\usepackage{float}
+\setlength{\parindent}{0mm}
+\setlength{\parskip}{1.5mm}
+\usepackage{amsmath}
+\usepackage{physics}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{ dsfont }
+\usepackage{ amssymb }
+\usepackage{ wasysym }
+\usepackage{hyperref}
+\usepackage{lipsum}
+\usepackage{colortbl}
+\usepackage{forest}
+\usepackage{booktabs}
+\usepackage{lastpage}
+\usepackage{datetime}
+\usepackage{csquotes}
+\usepackage{outlines}
+\usepackage{multirow}
+\usepackage{color}
+
+\usepackage{textcomp}
+\definecolor{listinggray}{gray}{0.9}
+\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
+
+\usepackage{listings}
+\lstset{
+	backgroundcolor=\color{lbcolor},
+	tabsize=4,
+	rulecolor=,
+	language=python,
+        basicstyle=\scriptsize,
+        upquote=true,
+        aboveskip={1.5\baselineskip},
+        columns=fixed,
+	numbers=left,
+        showstringspaces=false,
+        extendedchars=true,
+        breaklines=true,
+        prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+        frame=single,
+        showtabs=false,
+        showspaces=false,
+        showstringspaces=false,
+        identifierstyle=\ttfamily,
+        keywordstyle=\color[rgb]{0,0,1},
+        commentstyle=\color[rgb]{0.133,0.545,0.133},
+        stringstyle=\color[rgb]{0.627,0.126,0.941}
+        }
+
+% Table rules
+\newcolumntype{C}{>{$}c<{$}}
+\AtBeginDocument{
+	\heavyrulewidth=.08em
+	\lightrulewidth=.05em
+	\cmidrulewidth=.03em
+	\belowrulesep=.65ex
+	\belowbottomsep=0pt
+	\aboverulesep=.4ex
+	\abovetopsep=0pt
+	\cmidrulesep=\doublerulesep
+	\cmidrulekern=.5em
+	\defaultaddspace=.5em
+}
+
+\pagestyle{fancy}
+
+% Allows the user to create sub-bullet points
+\newcommand{\SubItem}[1]{
+    {\setlength\itemindent{15pt} \item[-] #1}
+}
+
+\begin{document}
+	
+	\title{STK-IN4300 Compendium}
+	\author{Gabriel Sigurd Cabrera}
+	\date{\today}
+	
+	% Define \rightmark (to state III. Method f.ex) for the Left header
+	
+%	\renewcommand{\sectionmark}[1]{\markright{\MakeUppercase{\roman{section}}.\ #1}}
+%	\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+	
+	% Define the date and year for Right header
+	\newdateformat{monthyeardate}{%
+		\monthname[\THEMONTH] \THEYEAR}
+	
+	% Headers
+	\fancyhf{} 
+	\fancyhead[L]{\rightmark}
+	\fancyhead[R]{University of Oslo, \monthyeardate\today}
+	\fancyfoot[C]{\thepage}
+	
+	\maketitle
+	\twocolumngrid
+	
+	\section{Overview of Topics}
+	
+	\subsection{Lecture 1}	
+	
+	\subsubsection{Basics}
+	
+	Typical Scenario:
+	
+	An \textit{outcome} $Y$ (\textit{dependent variable}, \textit{response}) can be \textit{categorical} or \textit{qualitative}.
+	
+	We want to predict this outcome based on a set of \textit{features} $X_1, X_2, ..., X_p$ (\textit{independent variables}, \textit{predictors}).
+	
+	In practice, we have a \textit{training set} that is used to create a \textit{learner} (or model/rule $f(X_i) \approx Y_i$.)
+	
+	A \textit{supervised learning problem} is when the outcome is measured in the training data, and can be used to construct a learner $Y$.
+	
+	\subsection{Least Squares Estimate}	
+	
+	Given a training set $\lbrace (x_ {i1}, x_{i2}, ..., x_{ip}, y_i \rbrace$ a \textit{least-squares} model is given by:
+	
+	\begin{equation*}
+	y_i = \beta_0 + \sum_{j=1}^p \beta_j x_{ij} + \epsilon_i
+	\end{equation*}
+	
+	With a least-square estimate:
+	
+	\begin{equation*}
+	\hat{\beta} = (X^\textsc{t} X)^{-1} X^\textsc{t} y
+	\end{equation*}	
+	
+	Where $X^\textsc{t}X$ is known as the \textit{Gramian}.
+	
+	\subsection{Invertability}
+	
+	If $X^\textsc{t} X$ is \textit{not invertible}, then we can use \textit{dimension reduction} or \textit{shrinkage methods}.
+	
+	Some dimension reduction methods are to:
+	
+	\begin{itemize}
+	\item Remove variables with \textit{low correlation} (forward selection/back substitution)
+	\item More formal subset selection
+	\item Selecting optimal linear combinations of variables (\textit{principal component analysis}.)
+	\end{itemize}
+
+	Some shrinkage methods are:
+	
+	\begin{itemize}
+	\item \textit{Ridge regression}
+	\item \textit{LASSO}
+	\item \textit{Elastic net}
+	\end{itemize}
+	
+	\subsection{Conventions}
+	
+	\textit{Quantitative response}: \textit{Regression}
+	
+	\textit{Qualitative response}: \textit{Classification}
+	
+	\subsection{Least-Squares}
+	
+	For \textit{ordinary least-squares} (OLS), we estimate $\beta$ by minimizing the \textit{residual sum of squares} (RSS):
+	
+	\begin{equation*}
+	\text{RSS} (\beta) = \sum_{i=1}^N (y_i - x_i^\textsc{t} \beta)^2 = (y - X \beta)^\textsc{t} (y - X \beta)
+	\end{equation*}
+	
+	Where $X \in \mathbb{R}^{N \times p}$, $X \in \mathbb{R}^N$.
+	
+	\subsection{K-Nearest-Neighbors}
+	
+	The \textit{k-nearest-neighbors} (KNN) of $x$ is the mean:
+	
+	\begin{equation*}
+	\hat{Y}(x) = \frac{1}{k} \sum_{i:x_i \in N_k(x)} y_i
+	\end{equation*}
+	
+	\subsection{Other Methods}
+	
+	OLS and KNN are the basis of most modern techniques; some of these are:
+	
+	\begin{itemize}
+	\item \textit{Kernel methods} that weigh data according to distance
+	\item In higher dimensions, weighing variables based on correlation
+	\item Local regression models
+	\item Linear models of functions of $X$
+	\item \textit{Projection pursuit} and \textit{neural network}
+	\end{itemize}
+	
+	\subsection{Statistical Decision Theory}
+	
+	\textit{Statistical decision theory} gives a \textit{mathematical framework} for finding the optimal learner.
+	
+	Given $X \in \mathbb{R}^p$, $Y \in \mathbb{R}$ and a \textit{joint distribution} $p(X,Y)$, our goal is to find a function $f(X)$ for predicting $Y$ given $X$.
+	
+	This requires a \textit{loss function} $L(Y,f(X))$ for penalizing errors in $f(X)$ when the truth is $Y$.
+	
+	An example is \textit{squared error loss}:
+	
+	\begin{equation*}
+	L(Y,f(X) = (Y - f(X))^2
+	\end{equation*}	 
+	
+	The \textit{expected prediction error} of $f(X)$ is given by:
+	
+	\begin{equation*}
+	\text{EPE}(f) = E_{X,Y} [L(Y,f(X)] = \int_{x,y} L(y,f(x)) p(x,y) \ \text{d}x \ \text{d}y
+	\end{equation*}
+	
+	Next, we must find the $f$ that minimizes $\text{EPE}(f)$.
+	
+	For the \textit{squared error loss} $L(Y,f(X) = (Y - f(X))^2$, we have:
+	
+	\begin{equation*}
+	\text{EPE}(f) = E_{X,Y} [(Y - f(X))^2] = E_X E_{Y|X} [(Y - f(X))^2 | X] 
+	\end{equation*}
+	
+	It is sufficient to minimize $E_{Y|X} [(Y - f(X))^2 | X]$:
+	
+	\begin{equation*}
+	f(x) = \text{argmin}_c E_{Y|X} [(Y - c)^2 | X = x] = E[Y|X=x]
+	\end{equation*}
+	
+	This is known as the \textit{conditional expectation}, or the \textit{regression function}.  This implies that the best prediction of $Y$ at any point $X = x$ is the \textit{conditional mean}.
+	
+	\subsection{Assumptions for OLS}
+	
+	\begin{itemize}
+	\item A function is linear in its arguments; $f(x) \approx x^\textsc{t} \beta$.
+	\item $\text{argmin}_\beta E [(Y - X^\textsc{t}\beta)^2 | X = x] \to \beta = E[XX^\textsc{t}]^{-1} E[XY]$.
+	\item Replacing the expectations by averages over the training data leads to $\hat{\beta}$.
+	\end{itemize}
+	
+	\subsection{Assumptions for KNN}
+	
+	\begin{itemize}
+	\item Uses $f(x) = E[Y|X = x]$ directly.
+	\item $\hat{f}(x_i) = \text{mean}(y_i)$ for observed $x_i$.
+	\item Normally, there is at most one observation for each point $x_i$.
+	\item Uses points in the neighborhood:
+	
+		\begin{equation*}
+		\hat{f}(x) = \text{mean}(y_i | x_i \in N_k(x))
+		\end{equation*}
+
+	\item There are two approximations:
+	\SubItem{\textit{Expectation} is approximated by averaging over sample data.}
+	\SubItem{\textit{Conditioning} on a point is related to conditioning on a neighborhood.}
+	\item $f(x)$ can be approximated by a \textit{locally constant function}.
+	\item For $N \to \infty$, all $x_i \in N_k(x) \approx x$.
+	\item For $k \to \infty$, $\hat{f}(x)$ is getting more stable.
+	\item Under mild regularity conditions on $p(X,Y)$:
+		\begin{equation*}
+		\hat{f}(x) \to E[Y|X = x] \ \text{for} \ N, k \to \infty \ \text{s.t.} \ k/N \to 0
+		\end{equation*}		
+	\item It is unnecessary to implement the \textit{squared loss error} function ($L_2$ loss function.)
+	\item A valid alternative is the $L_1$ loss function, whose solution is the conditional median:
+		\begin{equation}
+		\hat{f}(x) = \text{median}(Y|X=x)
+		\end{equation}
+	\item More robust estimates than those obtained with conditional mean.
+	\item The $L_1$ loss function has discontinuities in its derivatives which leads to numerical difficulties.
+	\end{itemize}
+		
+	
+	\subsection*{References}
+	
+	\bibliographystyle{ieeetr}
+	\bibliography{bib}
+	
+
+
+	
+\end{document}
