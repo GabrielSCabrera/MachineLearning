@@ -9,6 +9,11 @@
 \BOOKMARK [2][-]{section*.9}{K-Nearest-Neighbors}{section*.2}% 9
 \BOOKMARK [2][-]{section*.10}{Other Methods}{section*.2}% 10
 \BOOKMARK [2][-]{section*.11}{Statistical Decision Theory}{section*.2}% 11
-\BOOKMARK [2][-]{section*.12}{Assumptions for OLS}{section*.2}% 12
-\BOOKMARK [2][-]{section*.13}{Assumptions for KNN}{section*.2}% 13
-\BOOKMARK [2][-]{section*.14}{References}{section*.2}% 14
+\BOOKMARK [2][-]{section*.12}{Error Decomposition}{section*.2}% 12
+\BOOKMARK [2][-]{section*.13}{Assumptions for OLS}{section*.2}% 13
+\BOOKMARK [2][-]{section*.14}{Assumptions for KNN}{section*.2}% 14
+\BOOKMARK [2][-]{section*.15}{Conclusion}{section*.2}% 15
+\BOOKMARK [1][-]{section*.16}{Lecture 2}{section*.1}% 16
+\BOOKMARK [2][-]{section*.17}{Gauss-Markov Theorem}{section*.16}% 17
+\BOOKMARK [2][-]{section*.18}{Hypothesis Testing}{section*.16}% 18
+\BOOKMARK [2][-]{section*.19}{References}{section*.16}% 19

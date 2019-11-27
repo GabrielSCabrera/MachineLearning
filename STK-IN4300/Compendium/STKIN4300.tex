@@ -222,6 +222,11 @@
 	
 	This is known as the \textit{conditional expectation}, or the \textit{regression function}.  This implies that the best prediction of $Y$ at any point $X = x$ is the \textit{conditional mean}.
 	
+	\subsection{Error Decomposition}
+	
+	$E[(Y - \hat{f}(X))^2] = \underbrace{\sigma^2}_{\text{irreducible error}} + \underbrace{\underbrace{\text{Var}(\hat{f}(X))}_{\text{variance}} + \underbrace{E[\hat{f}(X) - f(X)]^2}_{\text{bias}^2}}_{MSE}$
+	
+	
 	\subsection{Assumptions for OLS}
 	
 	\begin{itemize}
@@ -260,7 +265,58 @@
 	\item More robust estimates than those obtained with conditional mean.
 	\item The $L_1$ loss function has discontinuities in its derivatives which leads to numerical difficulties.
 	\end{itemize}
-		
+	
+	\subsection{Conclusion}
+	
+	OLS: stable but biased
+	
+	KNN: less biased and less stable
+	
+	For higher dimensions, KNN suffers from the \textit{curse of dimensionality}
+	
+	\section{Lecture 2}
+	
+	\subsection{Gauss-Markov Theorem}
+	
+	The least square estimator $\hat{\theta} = a^\textsc{t}(X^\textsc{t}X)^{-1}X^\textsc{t}y$ is the:
+	
+	\begin{tabular}{l l c}
+	\textbf{B} & est & smallest error (MSE) \\
+	\textbf{L} & inear & $\hat{\theta} = a^\textsc{t} \beta$ \\
+	\textbf{U} & nbiased & $E[\hat{\theta}] = \theta$ \\
+	\textbf{E} & stimator &
+	\end{tabular}
+	
+	Given the \textit{error decomposition}, then any estimator $\tilde{\theta} = c^\textsc{t}Y$ s.t. $E[c^\textsc{t}Y] = a^\textsc{t} \hat{\beta}$ has $\text{Var}(c^\textsc{t}Y) \geq \text{Var}(a^\textsc{t}\hat{\beta})$.
+	
+	\subsection{Hypothesis Testing}
+	
+	To test $H_0 : \beta_j = 0$ we use the \textit{Z-score statistic}:
+	
+	\begin{equation}
+	z_j = \frac{\hat{\beta}_j - 0}{sd(\beta_j)} = \frac{\hat{\beta}_j}{\hat{\sigma} \sqrt{(X^\textsc{t}X)_{[j,j]}^{-1}}}
+	\end{equation}
+	
+	When $\sigma^2$ is unknown, under $H_0$:
+	
+	\begin{equation}
+	z_j \sim t_{\textsc{n}-p-1}
+	\end{equation}
+	
+	where $t_k$ is a Student $t$ distribution with $k$ degrees of freedom
+	
+	When $\sigma^2$ is known, under $H_0$:
+	
+	\begin{equation}
+	z_j \sim N(0;1)
+	\end{equation}
+	
+	To test $H_0 : \beta_j, \beta_k = 0$:
+	
+	\begin{equation}
+	F = \frac{(RSS_0 - RSS_1}{•}
+	\end{equation}
+	
 	
 	\subsection*{References}
 	
