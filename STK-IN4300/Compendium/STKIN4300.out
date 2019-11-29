@@ -15,5 +15,32 @@
 \BOOKMARK [2][-]{section*.15}{Conclusion}{section*.2}% 15
 \BOOKMARK [1][-]{section*.16}{Lecture 2}{section*.1}% 16
 \BOOKMARK [2][-]{section*.17}{Gauss-Markov Theorem}{section*.16}% 17
-\BOOKMARK [2][-]{section*.18}{Hypothesis Testing}{section*.16}% 18
-\BOOKMARK [2][-]{section*.19}{References}{section*.16}% 19
+\BOOKMARK [2][-]{section*.18}{Hypothesis Testing/F-Score}{section*.16}% 18
+\BOOKMARK [2][-]{section*.19}{Variable Selection}{section*.16}% 19
+\BOOKMARK [3][-]{section*.20}{Forward Selection}{section*.19}% 20
+\BOOKMARK [3][-]{section*.21}{Backward Elimination}{section*.19}% 21
+\BOOKMARK [3][-]{section*.22}{Stepwise/Stepback Selection}{section*.19}% 22
+\BOOKMARK [3][-]{section*.23}{Best Subset}{section*.19}% 23
+\BOOKMARK [3][-]{section*.24}{Stagewise Selection}{section*.19}% 24
+\BOOKMARK [2][-]{section*.25}{Model Assessment and Selection}{section*.16}% 25
+\BOOKMARK [3][-]{section*.26}{Continuous Outcomes}{section*.25}% 26
+\BOOKMARK [3][-]{section*.27}{Categorical Variables}{section*.25}% 27
+\BOOKMARK [2][-]{section*.28}{Test Error}{section*.16}% 28
+\BOOKMARK [2][-]{section*.29}{Data Splitting}{section*.16}% 29
+\BOOKMARK [2][-]{section*.30}{Bias-Variance}{section*.16}% 30
+\BOOKMARK [3][-]{section*.31}{KNN}{section*.30}% 31
+\BOOKMARK [2][-]{section*.32}{OLS}{section*.16}% 32
+\BOOKMARK [2][-]{section*.33}{Optimism of Training Error Rate}{section*.16}% 33
+\BOOKMARK [2][-]{section*.34}{Model Selection}{section*.16}% 34
+\BOOKMARK [1][-]{section*.35}{Lecture 3}{section*.1}% 35
+\BOOKMARK [2][-]{section*.36}{Cross-Validation}{section*.35}% 36
+\BOOKMARK [2][-]{section*.37}{Bootstrap Methods}{section*.35}% 37
+\BOOKMARK [2][-]{section*.38}{Principal Component Analysis}{section*.35}% 38
+\BOOKMARK [2][-]{section*.39}{Partial Least Squares}{section*.35}% 39
+\BOOKMARK [2][-]{section*.40}{Ridge Regression}{section*.35}% 40
+\BOOKMARK [1][-]{section*.41}{Lecture 4}{section*.1}% 41
+\BOOKMARK [2][-]{section*.42}{LASSO}{section*.41}% 42
+\BOOKMARK [2][-]{section*.43}{Generalized Linear Models}{section*.41}% 43
+\BOOKMARK [2][-]{section*.44}{Elastic Net}{section*.41}% 44
+\BOOKMARK [2][-]{section*.45}{Least Angle Regression}{section*.41}% 45
+\BOOKMARK [2][-]{section*.46}{Group LASSO}{section*.41}% 46

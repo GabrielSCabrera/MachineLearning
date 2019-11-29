@@ -259,9 +259,9 @@
 		\end{equation*}		
 	\item It is unnecessary to implement the \textit{squared loss error} function ($L_2$ loss function.)
 	\item A valid alternative is the $L_1$ loss function, whose solution is the conditional median:
-		\begin{equation}
+		\begin{equation*}
 		\hat{f}(x) = \text{median}(Y|X=x)
-		\end{equation}
+		\end{equation*}
 	\item More robust estimates than those obtained with conditional mean.
 	\item The $L_1$ loss function has discontinuities in its derivatives which leads to numerical difficulties.
 	\end{itemize}
@@ -289,41 +289,416 @@
 	
 	Given the \textit{error decomposition}, then any estimator $\tilde{\theta} = c^\textsc{t}Y$ s.t. $E[c^\textsc{t}Y] = a^\textsc{t} \hat{\beta}$ has $\text{Var}(c^\textsc{t}Y) \geq \text{Var}(a^\textsc{t}\hat{\beta})$.
 	
-	\subsection{Hypothesis Testing}
+	\subsection{Hypothesis Testing/F-Score}
 	
 	To test $H_0 : \beta_j = 0$ we use the \textit{Z-score statistic}:
 	
-	\begin{equation}
+	\begin{equation*}
 	z_j = \frac{\hat{\beta}_j - 0}{sd(\beta_j)} = \frac{\hat{\beta}_j}{\hat{\sigma} \sqrt{(X^\textsc{t}X)_{[j,j]}^{-1}}}
-	\end{equation}
+	\end{equation*}
 	
 	When $\sigma^2$ is unknown, under $H_0$:
 	
-	\begin{equation}
+	\begin{equation*}
 	z_j \sim t_{\textsc{n}-p-1}
-	\end{equation}
+	\end{equation*}
 	
 	where $t_k$ is a Student $t$ distribution with $k$ degrees of freedom
 	
 	When $\sigma^2$ is known, under $H_0$:
 	
-	\begin{equation}
+	\begin{equation*}
 	z_j \sim N(0;1)
-	\end{equation}
+	\end{equation*}
 	
 	To test $H_0 : \beta_j, \beta_k = 0$:
 	
-	\begin{equation}
-	F = \frac{(RSS_0 - RSS_1}{•}
-	\end{equation}
+	\begin{equation*}
+	F = \frac{(RSS_0 - RSS_1)/(p1-p0)}{RSS_1/(N-p-1)}
+	\end{equation*}
+	
+	Where $1$ refers to a larger model, and $0$ to a smaller one.
+	
+	\subsection{Variable Selection}
+	
+	Sparser models (with fewer variables) have a smaller variance, are easier to intuitively grasp, and are more portable, or easier to use in practice.
+	
+	Some approaches are:
+	
+	\begin{itemize}
+	\item \textit{Forward Selection}
+	\item \textit{Backward Elimination}
+	\item \textit{Stepwise} and \textit{Stepback} elimination
+	\item \textit{Best subset}
+	\item \textit{Stagewise selection}
+	\end{itemize}
+	
+	\subsubsection{Forward Selection}
+	
+	Start with null model $Y = \beta_0 + \epsilon$
+	
+	Among a set of possible variables, add that which reduces the unexplained variability the most.
+	
+	Repeat until a stopping criterion (like a particular \textit{p-value}) is met.
+	
+	\subsubsection{Backward Elimination}
+	
+	Start with full model $Y = \beta_0 + \beta_1 X + \cdots \beta_p X_p + \epsilon$
+	
+	Remove the variable that contributes the least in explaining the outcome variability
+	
+	Repeat until stopping criterion is reached.
+	
+	\subsubsection{Stepwise/Stepback Selection}
+	
+	Mixture of forward selection/backward elimination
+	
+	Allows both adding and removing variables at each step.
+	
+	Starting from the null model is \textit{stepwise selection}, which starting from the full model is \textit{stepback selection}.
+	
+	\subsubsection{Best Subset}
+	
+	Compute all the $2^p$ possible models (each variable in/out)
+	
+	Choose the model which minimizes a loss function (e.g. AIC)
+	
+	\subsubsection{Stagewise Selection}
+	
+	Similar to forward selection
+	
+	At each step, the specific regression coefficient is updates only using the information related to the corresponding variable.
+	
+	Good for higher dimensions, bad for lower ones!
+	
+	\subsection{Model Assessment and Selection}	
+	
+	\textbf{Model Assessment}:
+	
+	Evaluate the performance (in terms of a prediction) of a selected model
+	
+	\textbf{Model Selection}:
+	
+	Select the best model for the task
+	
+	\textbf{Generalization}:
+	
+	A prediction model must be valid in broad generality, not specific for a specific dataset
+	
+	Define $Y$ as target variable, $X$ as input matrix, and $\hat{f}(X)$ as prediction rule, trained on a training set $\mathcal{T}$.
+	
+	The error is measured through a \textit{loss function} $L(Y, \hat{f}(X))$ which penalizes the differences between $Y$ and $\hat{f}(X)$.
+	
+	\subsubsection{Continuous Outcomes}
 	
 	
-	\subsection*{References}
+	Typical choices are the \textit{quadratic loss}:
 	
-	\bibliographystyle{ieeetr}
-	\bibliography{bib}
+	\begin{equation*}
+	L(Y,\hat{f}(X)) = (Y - \hat{f}(X))^2
+	\end{equation*}		
 	
-
+	And the \textit{absolute loss}
+	
+	\begin{equation*}
+	L(Y,\hat{f}(X)) = |Y - \hat{f}(X)|
+	\end{equation*}
+	
+	\subsubsection{Categorical Variables}
+	
+	Let $G$ be the target variable, which takes $K$ values in $\mathcal{G}$
+	
+	Typical choices are the \textit{0-1 loss}:
+	
+	\begin{equation*}
+	L(Y,\hat{f}(X)) = \mathbb{1}(G \neq \hat{G}(X))
+	\end{equation*}
+	
+	And the \textit{deviance}:
+	
+	\begin{equation*}
+	L(Y,\hat{f}(X)) = -2 \log(\hat{p}_\textsc{g}) (X)
+	\end{equation*}
+	
+	\subsection{Test Error}
+	
+	The \textit{test error} or \textit{generalization error} is the prediction error over an independent test sample
+	
+	\begin{equation*}
+	\text{Err}_\mathcal{T} = E[L(Y,\hat{f}(X))| \mathcal{T} ]
+	\end{equation*}
+	
+	Where both $X$ and $Y$ are drawn randomly from their joint distribution.
+	
+	The \textit{specific training set} $\mathcal{T}$ used to derive the prediction rule is fixes – the test error refers to the error for this specific $\mathcal{T}$.
+	
+	Generally, we want to minimize the \textit{expected prediction error}
+	
+	\begin{equation*}
+	\text{Err} = E[ L(Y,\hat{f}(X)) ] = E[\text{Err}_\mathcal{T}]
+	\end{equation*}
+	
+	We would like to calculate $\text{Err}$, but we only have information on the single training set, so our goal is to estimate $\text{Err}_\mathcal{T}$
+	
+	The training error
+	
+	\begin{equation*}
+	\bar{\text{Err}} = \frac{1}{N} \sum_{i=1}^N L(y_i, \hat{f}(X))
+	\end{equation*}
+	
+	is not a good estimator of $\text{Err}_\mathcal{T}$.
+	
+	We do not want to minimize the training error becaue of overfitting issues (i.e. the model is very specifically constructed for the training data)
+	
+	\subsection{Data Splitting}
+	
+	Ideally, the best option is to split the data randomly into three independent sets:
+	
+	\begin{tabular}{l c c}
+	\textbf{Set} & \textbf{Purpose} & \textbf{Suggestion}\\
+	\hline
+	\textit{Training} & Fit the model(s) & 50\%\\
+	\textit{Validation} & Identify best model & 25 \% \\
+	\textit{Test} & Assess best model performance & 25 \%
+	\end{tabular}
+	
+	\subsection{Bias-Variance}
+	
+	\subsubsection{KNN}
+	
+	For \textit{k-nearest-neighbors}, the number of neighbors is inversely related to the complexity
+	
+	A smaller $k$ implies a smaller bias, larger variance, and vice-versa
+	
+	\subsection{OLS}
+	
+	The complexity is directly related to $p$
+	
+	\subsection{Optimism of Training Error Rate}
+	
+	For many loss functions, the optimism is:
+	
+	\begin{equation*}
+	\omega = \frac{2}{N} \sum_{i=1}^N \text{Cov} (\hat{y}_i, y_i)
+	\end{equation*}
+	
+	Optimism depends on how much $y_i$ affects its own prediction
+	
+	The harder we fit the data, the larger the optimism
+	
+	\subsection{Model Selection}
+	
+	What to choose between AIC:
+	
+	\begin{equation*}
+	-2E[\log(p_{\hat{\theta}})(Y)]
+	\end{equation*}
+	
+	and BIC:
+	
+	\begin{equation*}
+	BIC = -2 \ell (\hat{\theta}) + d\log (N) 
+	\end{equation*}
+	
+	There is no clear winner, but BIC leads to a sparser model, and AIC tends to be best for prediction.  BIC is consistent, but for finite sample sizes, BIC tends to select models that are too sparse.
+	
+	\section{Lecture 3}
+	
+	\subsection{Cross-Validation}'
+	
+	Aims to estimate the \textit{estimated test error} $\text{Err} = E[L(Y,\hat{f}(X))]$.
+	
+	With enough data, can be split into training/test sets
+	
+	Since this is often impossible, the data is split into $k$-folds $\mathcal{F}_1, ..., \mathcal{F}_k$ of approximately equal size.
+	
+	Then, use $k-1$ folds to train the model sequentially with the last fold used to test the data.
+	
+	No clear solution on choosing $k$, but:
+	
+	\begin{itemize}
+	\item Smaller $k$ reduces variance, increases bias
+	\item Larger $k$ increases variance, reduces bias
+	\item When $k=N$, we call this \textit{leave-one-out} cross validation (LOOCV).
+	\end{itemize}
+	
+	LOOCV estimates the expected test error approximately unbiased
+	
+	LOOCV has a large variance
+	
+	Often, $k = 5$ or $k = 10$ is selected.
+	
+	
+	The \textit{generalized cross-validation} or GCV:
+	
+	\begin{equation*}
+	GCV(\hat{f}) = \frac{1}{N} \sum_{i=1}^N \left[ \frac{y_i - \hat{f}(x_i)}{1 - \text{trace}(S)/N} \right]^2
+	\end{equation*}		
+	
+	is a convenient approximation of LOOCV for linear fitting under square loss, and is computationally advantageous.
+	
+	\subsection{Bootstrap Methods}
+	
+	Like $k$-fold, but uses sampling with replacement from the original dataset; mimics new experiments.
+	
+	\subsection{Principal Component Analysis}
+	
+	Given an input matrix $X$, the SVD is given by:
+	
+	\begin{equation*}
+	X = UDV^\textsc{t}
+	\end{equation*}
+	
+	The \textit{eigendecomposition} of $X^\textsc{t}X$ 
+	
+	\begin{equation*}
+	X^\textsc{t}X = VD^2V^\textsc{t}
+	\end{equation*}
+	
+	The eigenvectors $v_j$ (columns of $V$) are used to define the principal components of $X$, $z_j = X v_j$.
+	
+	The first principal component $z_1$ has the largest sample variance.
+	
+	Notes:
+	
+	\begin{itemize}
+	\item PCR can be used in high dimensions for $M < n$
+	\item If $M = N$, $\hat{\beta}_\textsc{pcr} (M) = \hat{\beta}_\textsc{ols}$
+	\item $M$ is a \textit{tuning parameter} and can be found through cross-validation
+	\item \textit{Shrinkage effect}
+	\item Principal components are scale dependent, so remember to standardize $X$
+	\end{itemize}
+	
+	\subsection{Partial Least Squares}
+	
+	Similar to PCR:
+	
+	\begin{itemize}
+	\item Construct a set of linear combinations of $X$
+	\item PCR only uses $X$, ignoring $y$
+	\item In PLS, we also consider $y$
+	\item As for PCR, $X$ must be standardized
+	\end{itemize}
+	
+	\subsection{Ridge Regression}
+	
+	When two predictors are strongly correlated – collinear
+	
+	In the case of linear dependency – super-collinearity
+	
+	In the case of super-collinearity, $X^\textsc{t}X$ is not invertible
+	
+	So use $X^\textsc{t}X + \lambda I_p$ for $\lambda > 0$, which is invertible.
+	
+	\textbf{Ridge Estimator}:
+	
+	\begin{equation*}
+	\hat{\beta}_\text{ridge} (\lambda) = (X^\textsc{t}X + \lambda I_p)^{-1} X^\textsc{t}y
+	\end{equation*}
+	
+	This is minizing:
+	
+	\begin{equation*}
+	\sum_{i=1}^N (y_i - \beta_0 - \sum_{j=1}^p \beta_j x_{ij})^2
+	\end{equation*}
+	
+	Subject to $\sum_{j=1}^p \beta_j^2 \leq t$, implying:
+	
+	\begin{align*}
+	\hat{\beta}_\text{ridge}(\lambda) &= \\ &\text{argmin}_\beta \left\lbrace \sum_{i=1}^N (y_i - \beta_0 - \sum_{j=1}^p \beta_j x_{ij})^2 + \lambda \sum_{j=1}^p \beta_j^2 \right\rbrace
+	\end{align*}
+	
+	\textbf{Notes}:
+	
+	\begin{itemize}
+	\item Ridge solution is not equivariant under scaling, so $X$ must be standardized before applying the minimizer
+	
+	\item The intercept is not involved in the penalization
+	\end{itemize}
+	
+	\section{Lecture 4}
+	
+	\subsection{LASSO}
+	
+	LASSO, or \textit{least absolute shrinkage and selection operator} is similar to ridge regression, but uses an $L_1$ penalty instead of $L_2$:
+	
+	\begin{align*}
+	\hat{\beta}_\textsc{lasso} (\lambda) &= \\ &\text{argmin}_\beta \left\lbrace \sum_{i=1}^N (y_i - \beta_0 - \sum_{j=1}^p \beta_j x_{ij})^2 + \lambda \sum_{j=1}^p |\beta_j| \right\rbrace
+	\end{align*}
+	
+	$X$ must be standardized, and $\beta_0$ is not considered in the penalty term.
+	
+	\textbf{Notes}:
+	
+	\begin{itemize}
+	\item Some estimates are forced to be zero (variable selection) due to the $L_1$ norm
+	\item There exists no closed form for the estimator due to the $L_1$ norm
+	\item $\lambda \to 0 \implies \hat{\beta} (\lambda) \to \hat{\beta}_\textsc{ols}$
+	\item $\lambda \to \infty \implies \hat{\beta} (\lambda) \to 0$
+	\end{itemize}
+	
+	\subsection{Generalized Linear Models}
+	
+	LASSO and ridge can be used with any linear regression model, e.g. logistic regression; the generalized model can be written as:
+	
+	\begin{align*}
+	\tilde{\beta} (\lambda) &= \\ &\text{argmin}_\beta \left\lbrace \sum_{i=1}^N (y_i - \beta_0 - \sum_{j=1}^p \beta_j x_{ij})^2 + \lambda \sum_{j=1}^p |\beta_j|^q \right\rbrace
+	\end{align*}
+	
+	For $q \geq 0$.  Notes
+	
+	\begin{itemize}
+	\item $q = 0$ is \textit{best subset selection}
+	\item $q = 1$ is LASSO
+	\item $q = 2$ is ridge
+	\item $0 < q \leq 1$ is non-differentiable
+	\item $1 < q < 2$ is a differentiable compromise between LASSO and ridge
+	\end{itemize}	
+	
+	\subsection{Elastic Net}
+	
+	Another LASSO/ridge compromise:
+	
+	\begin{align*}
+	\tilde{\beta} (\lambda) &= \text{argmin}_\beta \left\lbrace \sum_{i=1}^N (y_i - \beta_0 - \sum_{j=1}^p \beta_j x_{ij})^2 \right. \\ & \left.+ \lambda \sum_{j=1}^p (\alpha|\beta_j| + (1 - \alpha) \beta_j^2) \right\rbrace
+	\end{align*}
+	
+	\textbf{Notes}:
+	
+	\begin{itemize}
+	\item $L_1$ penalty takes care of variable selection
+	\item $L_2$ penalty helps in correctly handling correlation
+	\item $\alpha$ defines how much $L_1$ and $L_2$ should be used.
+	\subitem{$\alpha$ is a tuning parameter that must be found independently of $\lambda$}
+	\subitem{A grid search is discouraged}
+	\subitem{Often close to zero or one in practice}
+	\end{itemize}
+		
+	\subsection{Least Angle Regression}
+	
+	\textit{Least angle regression} or LAR is a ``democratic" version of \textit{forward selection} which sequentially adds new predictors into the model.
+	
+	Eventually, it reaches the least square estimator and is strongly connected with LASSO.
+	
+	LASSO can be seen as a special case of LAR, and LAR is often used to fit LASSO models.
+	
+	\textbf{Procedure}:
+	
+	\begin{enumerate}
+	\item Standardize the predictors (mean zero, unit norm) and initialize:
+	\subitem{Residuals $r = y - \tilde{y}$}
+	\subitem{Regression coefficent estimates $\beta_1 = \cdots =\beta_p = 0$}
+	\item Find the predictor $x_j$ that is most correlated with $r$
+	\item Move $\hat{\beta}_j$ towards its least-squares coefficient $\left\langle x_j, r \right\rangle$ until for $k \neq j$, $\text{corr}(x_k,r) = \text{corr}(x_j, r)$
+	
+	\item Add $x_k$ in the active list and update both $\hat{\beta}_j$ and $\hat{\beta}_k$ towards their joint least-squares coefficent until $x_l$ has as much correlation with the current residual
+	
+	\item Continue until all $p$ predictors have been entered
+	\end{enumerate}
+	 
+	\subsection{Group LASSO}
+	
+	Sometimes predictors belong to the same group
 
 	
 \end{document}
