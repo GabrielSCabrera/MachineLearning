@@ -40,7 +40,7 @@ def grid_search(X_train, y_train, X_test, y_test, params):
     return out, CNN
 
 if __name__ == "__main__":
-    data = preprocess.read_data(10000)
+    data = preprocess.read_data()
     data = preprocess.one_hot(data)
     data = preprocess.combine(data)
     data = preprocess.reshape_4D(data, labels = [config.gs_label])
