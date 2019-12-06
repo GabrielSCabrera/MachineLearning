@@ -1,0 +1,23 @@
+Plots:
+  Categorical Accuracies
+  F1-Scores
+  AUC-Scores
+  Gains Ratio
+  Confusion Matrix
+
+Methods:
+  CNN
+  Cross Validation (k-fold)
+  Boosting?
+
+Hyperparameters:
+  
+
+Report:
+  Abstract
+  Introduction
+  Data
+  Methodology
+  Results
+  Discussion
+  Conclusion

@@ -36,7 +36,7 @@ def train_CNN(data, CNN):
     y_test = data["test"]["y"]
 
     optimizer = SGD(learning_rate = config.learning_rate)
-    CNN.compile(optimizer = optimizer, loss = "categorical_crossentropy",
+    CNN.compile(optimizer = optimizer, loss = config.loss,
                 metrics = config.metrics)
     CNN.fit(X_train, y_train, epochs = config.epochs,
             batch_size = config.batch_size)

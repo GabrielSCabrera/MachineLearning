@@ -31,9 +31,9 @@ def one_hot(data):
     data["layers_out"] = layers_out
     return data
 
-def reshape_4D(data):
+def reshape_4D(data, labels = config.files_labels):
     # Reshapes the data for compatibility with Keras' 4D datastructures
-    for key in config.files_labels:
+    for key in labels:
         step = data[key]["X"]
         shape = config.input_shape
         data[key]["X"] = step.reshape((step.shape[0], shape[0], shape[1], shape[2]))
@@ -52,6 +52,20 @@ def scale(data):
             data[key]["X"] = (step - shift)/scale
         else:
             data[key]["X"] = (data[key]["X"] - shift)/scale
+    return data
+
+def combine(data):
+    """
+        Combines the training and testing sets for X and y, respectively
+        Intended to be used for grid search
+    """
+    X_train = data["train"]["X"]
+    y_train = data["train"]["y"]
+    X_test = data["test"]["X"]
+    y_test = data["test"]["y"]
+    X = np.concatenate([X_train, X_test], axis = 0)
+    y = np.concatenate([y_train, y_test], axis = 0)
+    data = {config.gs_label:{"X":X, "y":y}, "layers_out":data["layers_out"]}
     return data
 
 if __name__ == "__main__":
