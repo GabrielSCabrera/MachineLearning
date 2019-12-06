@@ -1,4 +1,5 @@
 import numpy as np
+import metrics
 
 data_dir = "./emnist/"
 
@@ -29,14 +30,15 @@ batch_size = 50                     # Size of Batches
 loss = "categorical_crossentropy"   # Loss Function
 
 CNN_save_name = "CNN_model.h5"      # Name to save CNN with
-metrics = ["categorical_accuracy"]  # Accuracy metrics to evaluate model
+metrics = ["categorical_accuracy",  # Accuracy metrics to evaluate model
+           metrics.f1_m]
 
 # Grid Search CNN Settings
 gs_label            =   "dataset"
-gs_kernel_size      =   [3,5]
-gs_activation_hid   =   ["relu"]
+gs_kernel_size      =   [3, 5]
+gs_activation_hid   =   ["relu", "tanh"]
 gs_activation_out   =   ["sigmoid", "softmax"]
 gs_layers           =   [[100,50], [50,25]]
-gs_learning_rate    =   list(np.logspace(-4, 0, 3, dtype = float))
-gs_epochs           =   list(np.linspace(10, 50, 3, dtype = int)[::-1])
-gs_batch_size       =   list(np.linspace(50, 500, 3, dtype = int))
+gs_learning_rate    =   list(np.logspace(-2, 0, 4, dtype = float))
+gs_epochs           =   [50]
+gs_batch_size       =   list(np.linspace(50, 500, 4, dtype = int))

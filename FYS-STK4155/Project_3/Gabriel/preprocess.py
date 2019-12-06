@@ -12,8 +12,8 @@ def read_data(N_max = None):
     data = {}
     for filename, label in zip(config.npy_names, config.files_labels):
         data[label] = {}
-        data[label]["X"] = np.load(filename)[:N_max,1:]
-        data[label]["y"] = np.load(filename)[:N_max,0,np.newaxis]
+        data[label]["X"] = np.load(filename)[:N_max,1:].astype(float)
+        data[label]["y"] = np.load(filename)[:N_max,0,np.newaxis].astype(float)
     return data
 
 def one_hot(data):
@@ -48,11 +48,22 @@ def scale(data):
         if scale is None:
             step = data[key]["X"]
             shift = np.mean(step)
-            scale = np.var(step)
+            scale = np.std(step)
             data[key]["X"] = (step - shift)/scale
         else:
             data[key]["X"] = (data[key]["X"] - shift)/scale
+
     return data
+
+def scale_direct(a1, a2):
+    # Scales the input arrays depending on the activation function
+    shift = np.mean(a1, axis = 0)
+    scale = np.std(a1, axis = 0)
+    scale[scale == 0] = 1
+    out1 = (a1 - shift)/scale
+    out2 = (a2 - shift)/scale
+
+    return out1, out2
 
 def combine(data):
     """
