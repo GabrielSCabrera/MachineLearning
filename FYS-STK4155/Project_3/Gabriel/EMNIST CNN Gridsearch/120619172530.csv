@@ -1,0 +1,4 @@
+round_epochs,loss,categorical_accuracy,activation_hid,activation_out,batch_size,epochs,kernel_size,layers,layers_out,learning_rate
+1,3.850152403967721,0.017785715,relu,sigmoid,80,1,3,[50, 25],47,0.0001
+1,3.849930726460048,0.0265,relu,sigmoid,80,1,3,[50, 25],47,0.01
+1,3.85092415537153,0.020428572,relu,sigmoid,80,1,3,[50, 25],47,1.0

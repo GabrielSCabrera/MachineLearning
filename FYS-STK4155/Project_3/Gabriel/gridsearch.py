@@ -1,8 +1,15 @@
 import numpy as np
 import preprocess
 import config
-import talos
 
+import logging, os
+
+# Disable tensorflow warnings
+logging.disable(logging.WARNING)
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+import tensorflow as tf
+
+import talos
 from keras.layers import Dense, Conv2D, Flatten
 from keras.models import Sequential, load_model
 from keras.optimizers import SGD
@@ -31,7 +38,7 @@ def grid_search(X_train, y_train, X_test, y_test, params):
     return out, CNN
 
 if __name__ == "__main__":
-    data = preprocess.read_data()
+    data = preprocess.read_data(10000)
     data = preprocess.one_hot(data)
     data = preprocess.scale(data)
     data = preprocess.combine(data)

@@ -33,10 +33,10 @@ metrics = ["categorical_accuracy"]  # Accuracy metrics to evaluate model
 
 # Grid Search CNN Settings
 gs_label            =   "dataset"
-gs_kernel_size      =   [3,4,5]
-gs_activation_hid   =   ["relu", "tanh"]
+gs_kernel_size      =   [3,5]
+gs_activation_hid   =   ["relu"]
 gs_activation_out   =   ["sigmoid", "softmax"]
-gs_layers           =   [[10,5], [50,2], [100,50]]
+gs_layers           =   [[100,50], [50,25]]
 gs_learning_rate    =   list(np.logspace(-4, 0, 3, dtype = float))
-gs_epochs           =   list(np.linspace(1, 26, 3, dtype = int))
-gs_batch_size       =   list(np.linspace(80, 500, 3, dtype = int))
+gs_epochs           =   list(np.linspace(10, 50, 3, dtype = int)[::-1])
+gs_batch_size       =   list(np.linspace(50, 500, 3, dtype = int))
