@@ -35,7 +35,7 @@ def grid_search(X_train, y_train, X_test, y_test, params):
 
     out = CNN.fit(X_train, y_train, epochs = params["epochs"],
                   batch_size = params["batch_size"],
-                  validation_data=[X_test, y_test])
+                  validation_data=[X_test, y_test], verbose = 0)
 
     return out, CNN
 
