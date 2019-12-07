@@ -35,10 +35,12 @@ metrics = ["categorical_accuracy",  # Accuracy metrics to evaluate model
 
 # Grid Search CNN Settings
 gs_label            =   "dataset"
-gs_kernel_size      =   [3, 5]
+gs_kernel_size      =   [3]
 gs_activation_hid   =   ["relu", "tanh"]
-gs_activation_out   =   ["sigmoid", "softmax"]
-gs_layers           =   [[100,50], [50,25]]
-gs_learning_rate    =   list(np.logspace(-2, 0, 4, dtype = float))
-gs_epochs           =   [50]
-gs_batch_size       =   list(np.linspace(50, 500, 4, dtype = int))
+gs_activation_out   =   ["softmax"]
+gs_layers           =   [[100,50]]
+gs_learning_rate    =   [1E-3, 5E-3, 1E-2, 5E-2]
+gs_epochs           =   [10]
+gs_batch_size       =   [32, 64, 128]
+gs_filename         =   "EMNIST CNN Gridsearch"
+gs_deploy_name      =   "EMNIST_CNN_Gridsearch_Deploy"

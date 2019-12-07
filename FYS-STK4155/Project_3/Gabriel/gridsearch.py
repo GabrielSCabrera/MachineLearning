@@ -1,3 +1,4 @@
+from time import time
 import numpy as np
 import preprocess
 import config
@@ -35,11 +36,14 @@ def grid_search(X_train, y_train, X_test, y_test, params):
 
     out = CNN.fit(X_train, y_train, epochs = params["epochs"],
                   batch_size = params["batch_size"],
-                  validation_data=[X_test, y_test], verbose = 0)
+                  validation_data=[X_test, y_test], verbose = 2)
 
     return out, CNN
 
 if __name__ == "__main__":
+
+    t0 = time()
+
     data = preprocess.read_data()
     data = preprocess.one_hot(data)
     data = preprocess.combine(data)
@@ -54,6 +58,15 @@ if __name__ == "__main__":
               "epochs"          :   config.gs_epochs,
               "batch_size"      :   config.gs_batch_size}
 
-    talos.Scan(data[config.gs_label]["X"], data[config.gs_label]["y"],
-               model = grid_search, params = params,
-               experiment_name = "EMNIST CNN Gridsearch")
+    scan = talos.Scan(data[config.gs_label]["X"], data[config.gs_label]["y"],
+                      model = grid_search, params = params,
+                      experiment_name = config.gs_filename)
+
+    scan.x = scan.x.reshape(scan.x.shape[0], scan.x.shape[1]*scan.x.shape[2])
+    scan.y = scan.y.squeeze()
+
+    talos.Deploy(scan, config.gs_deploy_name, metric = "categorical_accuracy")
+
+    restored = talos.Restore(f"{config.gs_deploy_name}.zip")
+
+    print(f"Time Elapsed: {time() - t0} seconds")

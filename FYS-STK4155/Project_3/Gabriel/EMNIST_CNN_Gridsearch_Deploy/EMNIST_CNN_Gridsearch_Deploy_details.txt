@@ -1,0 +1,10 @@
+experiment_name,EMNIST CNN Gridsearch
+random_method,uniform_mersenne
+reduction_method,
+reduction_interval,50
+reduction_window,20
+reduction_threshold,0.2
+reduction_metric,val_acc
+complete_time,12/07/19/18:11
+x_shape,"(131600, 28, 28, 1)"
+y_shape,"(131600, 47)"
