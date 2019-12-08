@@ -7,11 +7,15 @@ Plots:
 
 Methods:
   CNN
+  ANN?
+  Stochastic gradient descent?
   Cross Validation (k-fold)
   Boosting?
+  Bootstrap?
 
 Hyperparameters:
-  
+  l2 regularization
+  Learning rate  
 
 Report:
   Abstract
