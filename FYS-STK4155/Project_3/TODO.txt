@@ -8,6 +8,7 @@ Plots:
 Methods:
   CNN
   ANN?
+  RNN?
   Stochastic gradient descent?
   Cross Validation (k-fold)
   Boosting?
