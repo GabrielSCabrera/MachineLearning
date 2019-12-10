@@ -1,101 +1,48 @@
-from time import time
-import numpy as np
-import logging, os
-import preprocess
 import config
-import sys
 
-# Disable tensorflow warnings
-logging.disable(logging.WARNING)
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+vals = []
+vals.append(0.8590425531914894)
+vals.append(0.8413297872340425)
+vals.append(0.8576063829787234)
+vals.append(0.8531382978723404)
+vals.append(0.02127659574468085)
+vals.append(0.7869148936170213)
+vals.append(0.02127659574468085)
+vals.append(0.02127659574468085)
+vals.append(0.02127659574468085)
+vals.append(0.02127659574468085)
+vals.append(0.8356914893617021)
+vals.append(0.8102659574468085)
+vals.append(0.8646276595744681)
+vals.append(0.852872340425532)
+vals.append(0.866968085106383)
+vals.append(0.8633510638297872)
+vals.append(0.8503723404255319)
+vals.append(0.8612765957446809)
+vals.append(0.8115425531914894)
+vals.append(0.8271276595744681)
+vals.append(0.858563829787234)
+vals.append(0.8484574468085107)
+vals.append(0.8537234042553191)
+vals.append(0.8504255319148936)
+vals.append(0.7404787234042554)
+vals.append(0.7600531914893617)
+vals.append(0.02127659574468085)
+vals.append(0.02143617021276596)
+vals.append(0.02127659574468085)
+vals.append(0.02127659574468085)
+vals.append(0.843936170212766)
+vals.append(0.8257978723404256)
+vals.append(0.8673404255319149)
+vals.append(0.8629787234042553)
+vals.append(0.8690425531914894)
+vals.append(0.8689893617021277)
+vals.append(0.8521276595744681)
+vals.append(0.8567553191489362)
+vals.append(0.824468085106383)
+vals.append(0.8419148936170213)
 
-from keras.layers import Dense, Conv2D, Flatten, MaxPooling2D, Dropout
-from keras.models import Sequential, load_model
-from keras.optimizers import SGD
-import tensorflow as tf
-import keras
-
-gs_label            =   "dataset"
-gs_kernel_size      =   (3,3)
-gs_activation_hid   =   "relu"
-gs_activation_out   =   "softmax"
-gs_layers           =   [100,66]
-gs_learning_rate    =   1E-3
-gs_epochs           =   20
-gs_batch_size       =   32
-gs_filename         =   "EMNIST CNN Gridsearch"
-gs_deploy_name      =   "EMNIST_CNN_Gridsearch_Deploy"
-
-data = preprocess.read_data()
-data = preprocess.one_hot(data)
-# data = preprocess.combine(data)
-data = preprocess.reshape_4D(data)
-
-params = {"kernel_size"     :   gs_kernel_size,
-          "activation_hid"  :   gs_activation_hid,
-          "activation_out"  :   gs_activation_out,
-          "layers"          :   gs_layers,
-          "layers_out"      :   data["layers_out"],
-          "learning_rate"   :   gs_learning_rate,
-          "epochs"          :   gs_epochs,
-          "batch_size"      :   gs_batch_size}
-
-test_config = "config.json"
-test_weights = "weights.h5"
-
-X_train, y_train, X_test, y_test = \
-data["train"]["X"], data["train"]["y"], data["test"]["X"], data["test"]["y"]
-
-X_train, X_test = preprocess.scale_direct(X_train, X_test)
-
-msg = "Requires cmdline arg 'load' or 'save'"
-if len(sys.argv) == 2:
-    if sys.argv[1].lower() == "load":
-
-        with open(test_config) as json_file:
-            json_config = json_file.read()
-        CNN = keras.models.model_from_json(json_config)
-        CNN.load_weights(test_weights)
-        weights = CNN.get_weights()
-        tot = 0
-        for w in weights:
-            tot += w.size
-        print(tot)
-
-        new_predictions = CNN.predict(X_test)
-        maxima = np.argmax(new_predictions, axis = 1)
-        expected = np.argmax(y_test, axis = 1)
-        correct = (maxima == expected).astype(np.int64)
-        correct = np.mean(correct)
-        print(correct)
-
-    elif sys.argv[1].lower() == "save":
-        CNN = Sequential()
-        for layer in params["layers"]:
-            CNN.add(Conv2D(layer, kernel_size = params["kernel_size"],
-                           activation = params["activation_hid"],
-                           input_shape = config.input_shape))
-            CNN.add(MaxPooling2D(pool_size = (2,2)))
-
-        CNN.add(Flatten())
-        CNN.add(Dense(params["layers_out"], activation = params["activation_out"]))
-
-        optimizer = SGD(learning_rate = params["learning_rate"])
-        CNN.compile(optimizer = optimizer, loss = config.loss,
-                    metrics = config.metrics)
-
-        out = CNN.fit(X_train, y_train, epochs = params["epochs"],
-                      batch_size = params["batch_size"],
-                      validation_data=[X_test, y_test], verbose = 1)
-
-        json_config = CNN.to_json()
-        with open(test_config, 'w') as json_file:
-            json_file.write(json_config)
-
-        CNN.save_weights(test_weights)
-        CNN.summary()
-
-    else:
-        raise KeyError(msg)
-else:
-    raise KeyError(msg)
+for n,val in enumerate(vals):
+    results_savename = f"{config.gs_results_name}{n:04d}"
+    with open(config.gs_directory + results_savename, "w+") as outfile:
+        outfile.write(str(val))

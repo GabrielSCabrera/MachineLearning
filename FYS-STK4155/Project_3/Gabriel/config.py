@@ -1,5 +1,4 @@
 import numpy as np
-import metrics
 
 data_dir = "./emnist/"
 
@@ -44,3 +43,4 @@ gs_directory        =   "./gridsearch_results/"
 gs_weights_name     =   "weights_"
 gs_config_name      =   "config_"
 gs_metadata_name    =   "metadata_"
+gs_results_name     =   "result_"

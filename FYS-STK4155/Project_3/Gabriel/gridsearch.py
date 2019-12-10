@@ -91,10 +91,13 @@ def grid_search(data, params):
     for c in combinations:
         grid_element(c)
 
-def load_grid(directory):
+def load_grid(directory, results_saved = True):
     files = os.listdir(directory)
 
-    N = int(len(files)/3)
+    if not results_saved:
+        N = int(len(files)/3)
+    else:
+        N = int(len(files)/4)
 
     data = []
     for i in range(N):
@@ -102,13 +105,19 @@ def load_grid(directory):
         weights_savename = f"{config.gs_weights_name}{i:04d}.h5"
         config_savename = f"{config.gs_config_name}{i:04d}.json"
         metadata_savename = f"{config.gs_metadata_name}{i:04d}"
+        results_savename = f"{config.gs_results_name}{i:04d}"
         with open(directory + config_savename) as infile:
             model_config = infile.read()
         with open(directory + metadata_savename) as infile:
             metadata = infile.read()
+        if results_saved:
+            with open(directory + results_savename) as infile:
+                result = infile.read()
         CNN = model_from_json(model_config)
         CNN.load_weights(directory + weights_savename)
-        data.append({"model":CNN, "metadata":metadata})
+        data.append({"model":CNN, "metadata":metadata, "ID":i+1})
+        if results_saved:
+            data[-1]["result"] = float(result)
     return data
 
 def grid_accuracies(models, data):
@@ -118,24 +127,22 @@ def grid_accuracies(models, data):
     X_test = data["test"]["X"]
     y_test = data["test"]["y"]
 
-    results = []
-    for model in models:
-        t0 = time()
+    for n,model in enumerate(models):
         CNN = model["model"]
         new_predictions = CNN.predict(X_test)
         maxima = np.argmax(new_predictions, axis = 1)
         expected = np.argmax(y_test, axis = 1)
         correct = (maxima == expected).astype(np.int64)
-        results.append(np.mean(correct))
-        print(time() - t0)
+        model["result"] = np.mean(correct)
+        print(f"Accuracy {n+1}/{len(models)}:\t{model['result']}")
 
-    return results
+    return models
 
-def latex_accuracies(models, results):
-    print(results)
-    for n,(model, result) in enumerate(zip(models, results)):
-        pass
-
+def save_accuracies(models):
+    for model in models:
+        results_savename = f"{config.gs_results_name}{model['ID']:04d}"
+        with open(directory + results_savename, "w+") as outfile:
+            outfile.write(str(model["result"]))
 
 if __name__ == "__main__":
 
@@ -158,9 +165,11 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         if sys.argv[1].lower() == "load":
             models = load_grid(config.gs_directory)
-            grid_accuracies(models, data)
         elif sys.argv[1].lower() == "save":
             grid_search(data, params)
+            models = load_grid(config.gs_directory, False)
+            models = grid_accuracies(models, data)
+            save_accuracies(models)
         else:
             raise KeyError(msg)
     else:
