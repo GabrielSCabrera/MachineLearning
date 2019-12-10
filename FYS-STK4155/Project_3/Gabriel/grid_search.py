@@ -1,4 +1,3 @@
-from multiprocessing import Pool
 from time import time
 import numpy as np
 import preprocess
@@ -6,7 +5,6 @@ import logging
 import config
 import sys
 import os
-import re
 
 # Disable tensorflow warnings
 logging.disable(logging.WARNING)
@@ -91,7 +89,9 @@ def grid_search(data, params):
     for c in combinations:
         grid_element(c)
 
-def load_grid(directory, results_saved = True):
+def load_grid(results_saved = True, subset = None):
+
+    directory = config.gs_directory
     files = os.listdir(directory)
 
     if not results_saved:
@@ -99,9 +99,13 @@ def load_grid(directory, results_saved = True):
     else:
         N = int(len(files)/4)
 
+    if subset is not None:
+        N = subset
+
     data = []
+    print(f"\rLOADING {0:>3d}%", end = "")
     for i in range(N):
-        print(i)
+        print(f"\rLOADING {int(100*i/N):>3d}%", end = "")
         weights_savename = f"{config.gs_weights_name}{i:04d}.h5"
         config_savename = f"{config.gs_config_name}{i:04d}.json"
         metadata_savename = f"{config.gs_metadata_name}{i:04d}"
@@ -109,7 +113,11 @@ def load_grid(directory, results_saved = True):
         with open(directory + config_savename) as infile:
             model_config = infile.read()
         with open(directory + metadata_savename) as infile:
-            metadata = infile.read()
+            metadata_list = infile.read().strip().split("\n")
+            metadata = {}
+            for m in metadata_list:
+                dict_data = m.split("\t")
+                metadata[dict_data[0].strip()] = dict_data[1].strip()
         if results_saved:
             with open(directory + results_savename) as infile:
                 result = infile.read()
@@ -118,6 +126,7 @@ def load_grid(directory, results_saved = True):
         data.append({"model":CNN, "metadata":metadata, "ID":i+1})
         if results_saved:
             data[-1]["result"] = float(result)
+    print(f"\rLOADED  {100:>3d}%")
     return data
 
 def grid_accuracies(models, data):
@@ -164,10 +173,10 @@ if __name__ == "__main__":
     msg = "Requires cmdline arg 'load' or 'save'"
     if len(sys.argv) == 2:
         if sys.argv[1].lower() == "load":
-            models = load_grid(config.gs_directory)
+            models = load_grid()
         elif sys.argv[1].lower() == "save":
             grid_search(data, params)
-            models = load_grid(config.gs_directory, False)
+            models = load_grid(False)
             models = grid_accuracies(models, data)
             save_accuracies(models)
         else:

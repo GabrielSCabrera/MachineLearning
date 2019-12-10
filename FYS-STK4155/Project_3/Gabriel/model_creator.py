@@ -42,6 +42,29 @@ def train_CNN(data, CNN):
             batch_size = config.batch_size)
     return CNN
 
+def train_CNN_continue(data, model, epochs):
+    """
+        Trains a CNN for a given training set of points, continuing from where
+        it left off.
+    """
+    X_train = data["train"]["X"]
+    y_train = data["train"]["y"]
+    X_test = data["test"]["X"]
+    y_test = data["test"]["y"]
+
+    CNN = model["model"]
+    metadata = model["metadata"]
+    epochs_prev = int(metadata["epochs"])
+
+    optimizer = SGD(learning_rate = float(metadata["learning_rate"]))
+    CNN.compile(optimizer = optimizer, loss = config.loss,
+                metrics = config.metrics)
+    CNN.fit(X_train, y_train, epochs = epochs_prev + epochs,
+            batch_size = int(metadata["batch_size"]),
+            initial_epoch = epochs_prev)
+
+    return CNN
+
 def test_CNN(data, CNN):
     """
         Trains a CNN for a given training set of points.

@@ -1,4 +1,4 @@
-import numpy as np
+from keras.optimizers import SGD
 
 data_dir = "./emnist/"
 
