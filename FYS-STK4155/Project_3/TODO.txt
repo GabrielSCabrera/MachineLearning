@@ -1,6 +1,6 @@
 Plots:
   Categorical Accuracies
-  F1-Scores
+  F1-Scores NO! Jaccard Index
   AUC-Scores
   Gains Ratio
   Confusion Matrix
@@ -16,7 +16,7 @@ Methods:
 
 Hyperparameters:
   l2 regularization
-  Learning rate  
+  Learning rate
 
 Report:
   Abstract

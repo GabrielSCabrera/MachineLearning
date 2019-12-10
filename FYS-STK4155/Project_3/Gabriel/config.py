@@ -30,17 +30,17 @@ batch_size = 50                     # Size of Batches
 loss = "categorical_crossentropy"   # Loss Function
 
 CNN_save_name = "CNN_model.h5"      # Name to save CNN with
-metrics = ["categorical_accuracy",  # Accuracy metrics to evaluate model
-           metrics.f1_m]
+metrics = ["categorical_accuracy"]  # Accuracy metrics to evaluate model
 
 # Grid Search CNN Settings
-gs_label            =   "dataset"
-gs_kernel_size      =   [3]
+gs_kernel_size      =   [3,5]
 gs_activation_hid   =   ["relu", "tanh"]
 gs_activation_out   =   ["softmax"]
-gs_layers           =   [[100,50]]
-gs_learning_rate    =   [1E-3, 5E-3, 1E-2, 5E-2]
-gs_epochs           =   [10]
-gs_batch_size       =   [32, 64, 128]
-gs_filename         =   "EMNIST CNN Gridsearch"
-gs_deploy_name      =   "EMNIST_CNN_Gridsearch_Deploy"
+gs_layers           =   [[100, 66]]
+gs_learning_rate    =   [1E-3, 5E-3, 1E-2, 5E-2, 1E-1]
+gs_epochs           =   [15]
+gs_batch_size       =   [32, 64]
+gs_directory        =   "./gridsearch_results/"
+gs_weights_name     =   "weights_"
+gs_config_name      =   "config_"
+gs_metadata_name    =   "metadata_"

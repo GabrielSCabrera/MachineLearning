@@ -1,30 +1,52 @@
+from multiprocessing import Pool
 from time import time
 import numpy as np
 import preprocess
+import logging
 import config
-
-import logging, os
+import sys
+import os
+import re
 
 # Disable tensorflow warnings
 logging.disable(logging.WARNING)
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import tensorflow as tf
 
-import talos
-from keras.layers import Dense, Conv2D, Flatten
-from keras.models import Sequential, load_model
+from keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
+from keras.models import Sequential, model_from_json
 from keras.optimizers import SGD
 
-def grid_search(X_train, y_train, X_test, y_test, params):
+def grid_element(data):
     """
         Creates a Convolutional Neural Network using the parameters given in
         argument 'params'
     """
+
+    params = data["params"]
+
+    metadata_filename = f"{config.gs_metadata_name}{data['counter']:04d}"
+    with open(config.gs_directory + metadata_filename, "w+") as out:
+        string = ""
+        for key,val in data["params"].items():
+            string += f"{key}\t{val}\n"
+        out.write(string)
+
+    X_train = data["data"]["train"]["X"]
+    y_train = data["data"]["train"]["y"]
+    X_test = data["data"]["test"]["X"]
+    y_test = data["data"]["test"]["y"]
+
+    weights_savename = f"{config.gs_weights_name}{data['counter']:04d}.h5"
+    config_savename = f"{config.gs_config_name}{data['counter']:04d}.json"
+
     CNN = Sequential()
     for layer in params["layers"]:
         CNN.add(Conv2D(layer, kernel_size = params["kernel_size"],
                        activation = params["activation_hid"],
                        input_shape = config.input_shape))
+        CNN.add(MaxPooling2D(pool_size = (2,2)))
+
     CNN.add(Flatten())
     CNN.add(Dense(params["layers_out"], activation = params["activation_out"]))
 
@@ -32,13 +54,88 @@ def grid_search(X_train, y_train, X_test, y_test, params):
     CNN.compile(optimizer = optimizer, loss = config.loss,
                 metrics = config.metrics)
 
-    X_train, X_test = preprocess.scale_direct(X_train, X_test)
-
     out = CNN.fit(X_train, y_train, epochs = params["epochs"],
                   batch_size = params["batch_size"],
-                  validation_data=[X_test, y_test], verbose = 2)
+                  validation_data=[X_test, y_test], verbose = 1)
 
-    return out, CNN
+    json_config = CNN.to_json()
+    with open(config.gs_directory + config_savename, 'w') as json_file:
+        json_file.write(json_config)
+
+    CNN.save_weights(config.gs_directory + weights_savename)
+
+def grid_search(data, params):
+    combinations = []
+
+    if not os.path.isdir(config.gs_directory):
+        os.mkdir(config.gs_directory)
+
+    keys = ["kernel_size", "activation_hid", "activation_out", "layers",
+            "layers_out", "learning_rate", "epochs", "batch_size"]
+
+    counter = -1
+    for i1 in params["kernel_size"]:
+        for i2 in params["activation_hid"]:
+            for i3 in params["activation_out"]:
+                for i4 in params["layers"]:
+                    for i5 in params["layers_out"]:
+                        for i6 in params["learning_rate"]:
+                            for i7 in params["epochs"]:
+                                for i8 in params["batch_size"]:
+                                    counter += 1
+                                    vals = [i1, i2, i3, i4, i5, i6, i7, i8]
+                                    step = {"params":dict(zip(keys, vals))}
+                                    step["data"] = data
+                                    step["counter"] = counter
+                                    combinations.append(step)
+    for c in combinations:
+        grid_element(c)
+
+def load_grid(directory):
+    files = os.listdir(directory)
+
+    N = int(len(files)/3)
+
+    data = []
+    for i in range(N):
+        print(i)
+        weights_savename = f"{config.gs_weights_name}{i:04d}.h5"
+        config_savename = f"{config.gs_config_name}{i:04d}.json"
+        metadata_savename = f"{config.gs_metadata_name}{i:04d}"
+        with open(directory + config_savename) as infile:
+            model_config = infile.read()
+        with open(directory + metadata_savename) as infile:
+            metadata = infile.read()
+        CNN = model_from_json(model_config)
+        CNN.load_weights(directory + weights_savename)
+        data.append({"model":CNN, "metadata":metadata})
+    return data
+
+def grid_accuracies(models, data):
+
+    X_train = data["train"]["X"]
+    y_train = data["train"]["y"]
+    X_test = data["test"]["X"]
+    y_test = data["test"]["y"]
+
+    results = []
+    for model in models:
+        t0 = time()
+        CNN = model["model"]
+        new_predictions = CNN.predict(X_test)
+        maxima = np.argmax(new_predictions, axis = 1)
+        expected = np.argmax(y_test, axis = 1)
+        correct = (maxima == expected).astype(np.int64)
+        results.append(np.mean(correct))
+        print(time() - t0)
+
+    return results
+
+def latex_accuracies(models, results):
+    print(results)
+    for n,(model, result) in enumerate(zip(models, results)):
+        pass
+
 
 if __name__ == "__main__":
 
@@ -46,8 +143,7 @@ if __name__ == "__main__":
 
     data = preprocess.read_data()
     data = preprocess.one_hot(data)
-    data = preprocess.combine(data)
-    data = preprocess.reshape_4D(data, labels = [config.gs_label])
+    data = preprocess.reshape_4D(data)
 
     params = {"kernel_size"     :   config.gs_kernel_size,
               "activation_hid"  :   config.gs_activation_hid,
@@ -58,15 +154,16 @@ if __name__ == "__main__":
               "epochs"          :   config.gs_epochs,
               "batch_size"      :   config.gs_batch_size}
 
-    scan = talos.Scan(data[config.gs_label]["X"], data[config.gs_label]["y"],
-                      model = grid_search, params = params,
-                      experiment_name = config.gs_filename)
-
-    scan.x = scan.x.reshape(scan.x.shape[0], scan.x.shape[1]*scan.x.shape[2])
-    scan.y = scan.y.squeeze()
-
-    talos.Deploy(scan, config.gs_deploy_name, metric = "categorical_accuracy")
-
-    restored = talos.Restore(f"{config.gs_deploy_name}.zip")
+    msg = "Requires cmdline arg 'load' or 'save'"
+    if len(sys.argv) == 2:
+        if sys.argv[1].lower() == "load":
+            models = load_grid(config.gs_directory)
+            grid_accuracies(models, data)
+        elif sys.argv[1].lower() == "save":
+            grid_search(data, params)
+        else:
+            raise KeyError(msg)
+    else:
+        raise KeyError(msg)
 
     print(f"Time Elapsed: {time() - t0} seconds")

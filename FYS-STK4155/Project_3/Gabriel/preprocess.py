@@ -2,6 +2,7 @@
 import warnings
 warnings.simplefilter(action = 'ignore', category = FutureWarning)
 
+import matplotlib.pyplot as plt
 import numpy as np
 import config
 
@@ -37,6 +38,7 @@ def reshape_4D(data, labels = config.files_labels):
         step = data[key]["X"]
         shape = config.input_shape
         data[key]["X"] = step.reshape((step.shape[0], shape[0], shape[1], shape[2]))
+        data[key]["X"] = np.swapaxes(data[key]["X"], 1, 2)
     return data
 
 def scale(data):
@@ -79,9 +81,15 @@ def combine(data):
     data = {config.gs_label:{"X":X, "y":y}, "layers_out":data["layers_out"]}
     return data
 
+def sample_datapoints(data):
+    pass
+
 if __name__ == "__main__":
     data = read_data()
-    data = one_hot(data)
-    data = scale(data)
+    # data = one_hot(data)
+    # data = scale(data)
     data = reshape_4D(data)
-    print(data)
+    for i in range(47):
+        idx = np.where(data["train"]["y"] == i)[0][0]
+        img = plt.imshow(data["train"]["X"][idx].squeeze())
+        plt.show()

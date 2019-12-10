@@ -1,0 +1,8 @@
+kernel_size	3
+activation_hid	relu
+activation_out	softmax
+layers	[100, 66]
+layers_out	47
+learning_rate	0.01
+epochs	15
+batch_size	64
