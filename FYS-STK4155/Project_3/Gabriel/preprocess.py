@@ -86,10 +86,10 @@ def sample_datapoints(data):
 
 if __name__ == "__main__":
     data = read_data()
-    # data = one_hot(data)
-    # data = scale(data)
+    data = one_hot(data)
+    data = scale(data)
     data = reshape_4D(data)
-    for i in range(47):
-        idx = np.where(data["train"]["y"] == i)[0][0]
-        img = plt.imshow(data["train"]["X"][idx].squeeze())
-        plt.show()
+    # for i in range(47):
+    #     idx = np.where(data["train"]["y"] == i)[0][0]
+    #     img = plt.imshow(data["train"]["X"][idx].squeeze())
+    #     plt.show()
