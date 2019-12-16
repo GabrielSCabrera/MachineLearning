@@ -109,7 +109,7 @@ def load_grid(results_saved = True, subset = None):
         weights_savename = f"{config.gs_weights_name}{i:04d}.h5"
         config_savename = f"{config.gs_config_name}{i:04d}.json"
         metadata_savename = f"{config.gs_metadata_name}{i:04d}"
-        results_savename = f"{config.gs_results_name}{i:04d}"
+        results_savename = f"{config.gs_results_name}{i+1:04d}"
         with open(directory + config_savename) as infile:
             model_config = infile.read()
         with open(directory + metadata_savename) as infile:
@@ -150,7 +150,7 @@ def grid_accuracies(models, data):
 def save_accuracies(models):
     for model in models:
         results_savename = f"{config.gs_results_name}{model['ID']:04d}"
-        with open(directory + results_savename, "w+") as outfile:
+        with open(config.gs_directory + results_savename, "w+") as outfile:
             outfile.write(str(model["result"]))
 
 if __name__ == "__main__":

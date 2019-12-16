@@ -698,7 +698,109 @@
 	 
 	\subsection{Group LASSO}
 	
-	Sometimes predictors belong to the same group
-
+	Suppose that $p$ predictors are grouped into $L$ groups, group LASSO minimizes the following:
+	
+	\begin{align*}
+	\hat{\beta} (\lambda) &= \text{argmin}_\beta \left\lbrace || (y - \beta_0 \vec{1} - \sum_{\ell=1}^L X_\ell \beta_\ell ||_2^2 \right. \\ & \left.+ \lambda \sum_{\ell=1}^L \sqrt{p_\ell} ||\beta_j ||_2 \right\rbrace
+	\end{align*}
+	
+	Sparsity is encouraged at group level
+	
+	\subsection{Non-Negative Garrote}
+	
+	The origin of LASSO, we minimize the following:
+	
+	\begin{align*}
+	\hat{\beta}_\textsc{garrote} (\lambda) &= \\ &\text{argmin}_\beta \left\lbrace \sum_{i=1}^N (y_i - \beta_0 - \sum_{j=1}^p c_j \beta_j x_{ij} )^2 \right\rbrace
+	\end{align*}
+	
+	Subject to $c_j \geq 0$ and $\sum_j c_j \leq t$.
+	
+	\subsection{The Oracle Property}
+	
+	Let:
+	
+	\begin{itemize}
+	\item $\mathcal{A} := \lbrace j : \beta_j \neq 0 \rbrace$ be the set of true relevant coefficents. 
+	\item $\delta$ be a fitting procedure (e.g. LASSO, non-negative garrote, ...)
+	\item $\hat{\beta} (\delta)$ be the coefficient estimator for the procedure $\delta$
+	\end{itemize}
+	
+	We would like that $\delta$:
+	
+	\begin{enumerate}
+	\item Identifies the right subset model $\lbrace j : \hat{\beta} (\delta) \neq 0 \rbrace = \mathcal{A}$
+	\item Has the optimal estimation rate $\sqrt{n} (\hat{\beta} (\delta)_\mathcal{A} - \beta_\mathcal{A}) \overset{d}{\to} N (0, \Sigma)$ where $\Sigma$ is the covariance matrix for the true subset model
+	\end{enumerate}		
+	
+	If $\delta$ asymptotically satisfies these conditions, it is defined an \textit{oracle procedure}.
+	
+	\subsection{Adaptive LASSO}
+	
+		
+	\begin{align*}
+	\hat{\beta}_\textsc{weight} (\lambda) &= \\ &\text{argmin}_\beta \left\lbrace \sum_{i=1}^N (y_i - \beta_0 - \sum_{j=1}^p c_j \beta_j x_{ij} )^2 + \sum_{j=1}^p w_j | \beta_j | \right\rbrace
+	\end{align*}
+	
+	In which $\hat{w}_j = \frac{1}{|\hat{beta}_\textsc{ols}|^\gamma}$
+	
+	\textbf{Notes}:
+	\begin{itemize}
+	\item Enjoys the oracle properties
+	\item When $\gamma = 1$ it is very closely related to the non-negative garrote
+	\item Relies on $\hat{\beta}_j^\textsc{ols} \to $ sometimes LASSO used in a first step
+	\item 2-D tuning parameter
+	\end{itemize}
+	
+	\section{Lecture 5}
+	
+	\subsection{1-D Kernel Smoothers}
+	
+	KNN has drawbacks; ugly discontinuities and the same weight to all points regardless of their distances to $x$.
+	
+	We can remedy this by weighing the effect of each point based on its distance:
+	
+	\begin{equation}
+	\hat{f}(x_0) = \frac{\sum_{i=1}^N K(x_o, x_i) y_i}{\sum_{i=1}^N K (x_0, x_i)}
+	\end{equation}
+	
+	Where:
+	
+	\begin{equation}
+	K_\lambda (x_0, x) = D \left( \frac{|x - x_0|}{\lambda} \right)
+	\end{equation}
+	
+	$D$ is called the \textit{kernel} and $\lambda$ is the \textit{bandwidth} or \textit{smoothing parameter}.
+	
+	$D$ must be symmetric around $x_0$, and go off smoothly as a function of distance; here are some common choices:
+	
+	\begin{tabular}{l c c}
+	\textbf{Nucleus} & $D(t)$ & \textbf{Support} \\
+	\hline
+	Normal & $\frac{1}{\sqrt{2 \pi}} \exp ( -\frac{1}{2} t^2 )$ & $\mathbb{R}$ \\
+	Rectangular & $\frac{1}{2}$ & $(-1,1)$ \\
+	Epanechnikov & $\frac{3}{4} (1-t^2)$ & $(-1,1)$ \\
+	Biquadratic & $\frac{15}{16} (1-t^2)^2$ & $(-1,1)$ \\
+	Tricubic & $\frac{70}{81} (1-|t|^3)^3$ & $(-1,1)$ 
+	\end{tabular}
+	
+	\subsubsection{Choice of Bandwidth $\lambda$}
+	
+	$\lambda$ controls how large an interval is considered around $x_0$.  
+	
+	For \textit{Epanechnikov}, \textit{biquadratic}, and \textit{tricubic} kernels, the radius of the support.
+	
+	For \textit{Gaussian} kernel, uses the standard deviation.
+	
+	Larger values imply lower variance but higher bias
+	
+	\begin{itemize}
+	\item $\lambda$ small $\implies$ $\hat{f}(x_0)$ based on a few points $\to$ $y_i$'s closer to $y_0$
+	\item $\lambda$ large $\implies$ more points $\implies$ stronger effect of averaging
+	\end{itemize}
+	
+	Alternatively, we can adapt to the local density (fix $k$ as in KNN), we can express it by substituting $\lambda$ with $h_\lambda (x_0)$.  Finally, we can keep the bias constant, while the variance is inverse proportional to the local density.
+	
+	
 	
 \end{document}

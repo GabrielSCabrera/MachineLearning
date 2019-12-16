@@ -1,8 +1,16 @@
+import logging
+import os
+
 # Suppressing FutureWarnings
 import warnings
 warnings.simplefilter(action = 'ignore', category = FutureWarning)
 
-from keras.layers import Dense, Conv2D, Flatten
+# Disable tensorflow warnings
+logging.disable(logging.WARNING)
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+import tensorflow as tf
+
+from keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
 from keras.models import Sequential, load_model
 from keras.optimizers import SGD
 import multiprocessing
@@ -18,10 +26,13 @@ def create_CNN(data):
         given in 'config.py'
     """
     CNN = Sequential()
+
     for layer in config.layers:
         CNN.add(Conv2D(layer, kernel_size = config.kernel_size,
                        activation = config.activation_hid,
                        input_shape = config.input_shape))
+        CNN.add(MaxPooling2D(pool_size = (2,2)))
+
     CNN.add(Flatten())
     CNN.add(Dense(data["layers_out"], activation = config.activation_out))
     return CNN

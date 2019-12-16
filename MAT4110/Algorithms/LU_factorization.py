@@ -6,25 +6,23 @@ def LU_decompose(A):
         shape (N,N).  It should only contain real numbers.
     """
     if A.ndim != 2 or A.shape[0] != A.shape[1]:
-        raise ValueError("LU Decomposition only valid for an NxN matrix!")
+        raise ValueError(LU_decompose.__doc__)
 
     # Matrix Size
     N = A.shape[0]
 
-    A0 = A.copy()
-
     # Initializing Matrices L and U
     L,U = np.zeros((N,N)), np.zeros((N,N))
 
-    # Initial Conditions
-    L[:,0] = A[:,0]/A[0,0]
-    U[0] = A[0]
-    for i in range(1, N):
-        A = A - L[:,i-1,None] @ U[i-1,None]
+    # Algorithm
+    for i in range(N):
         L[:,i] = A[:,i]/A[i,i]
         U[i] = A[i]
+        A = A - L[:,i,None] @ U[i,None]
 
-    print(f"(1/3){L*3}\n(1/3){U*3}")
+    return L, U
 
-A = np.array([[3,4],[5,6]])
-LU_decompose(A)
+if __name__ == "__main__":
+    A = np.array([[3,4],[5,6]])
+    L,U = LU_decompose(A)
+    print(f"LU == A is {np.all(np.isclose(L @ U, A))}")

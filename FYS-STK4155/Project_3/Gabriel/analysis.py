@@ -21,7 +21,7 @@ def tex_table_accuracies(sorted_models):
 
     for n,model in enumerate(sorted_models):
         metadata = model['metadata']
-        result = f"{model['result']:.3f}"
+        result = f"{model['result']:.4f}"
         out += (f"{result} & {metadata['activation_hid']} "
                 f"& {metadata['learning_rate']} & {metadata['batch_size']} "
                 f"& {metadata['kernel_size']} ")
@@ -50,4 +50,5 @@ if __name__ == "__main__":
     sorted_models = sort_by_accuracy(models)
     tex_table = tex_table_accuracies(sorted_models)
     best_model = sorted_models[0]
-    best_model = model_creator.train_CNN_continue(data, best_model, epochs = 1)
+    # best_model = model_creator.train_CNN_continue(data, best_model, epochs = 1)
+    print(tex_table)
