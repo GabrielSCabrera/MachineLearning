@@ -9,5 +9,5 @@ $ python3 main.py -cm -gs -em
 ``` 
 If the models are already saved, you can simply evaluate them using:
 ```
-$ python3 main.py -cm -em
+$ python3 main.py -gs -em
 ```
