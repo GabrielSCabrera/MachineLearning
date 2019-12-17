@@ -34,6 +34,7 @@ def SVD_decompose(A):
     return U1,S1,V1
 
 if __name__ == "__main__":
-    A = np.array([[3,2,2],[2,3,-2]])
+    A = np.array([[1,1],[2,2],[2,2]])
     U,S,V = SVD_decompose(A)
+    print(U @ S @ V.T, A)
     print(f"UΣVᵀ == A is {np.all(np.isclose(U @ S @ V.T, A))}")
