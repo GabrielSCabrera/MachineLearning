@@ -1,8 +1,0 @@
-Tic-Tac-Toe Endgame Data Set: https://archive.ics.uci.edu/ml/datasets/Tic-Tac-Toe+Endgame
-Poker Hand Data Set: https://archive.ics.uci.edu/ml/datasets/Poker+Hand
-HTRU2 Data Set: https://archive.ics.uci.edu/ml/datasets/HTRU2
-HIGGS Data Set: https://archive.ics.uci.edu/ml/datasets/HIGGS
-Ionosphere Data Set: https://archive.ics.uci.edu/ml/datasets/Ionosphere
-HEPMASS Data Set: https://archive.ics.uci.edu/ml/datasets/HEPMASS
-Low Resolution Spectrometer Data Set: https://archive.ics.uci.edu/ml/datasets/Low+Resolution+Spectrometer
-MAGIC Gamma Telescope Data Set: https://archive.ics.uci.edu/ml/datasets/MAGIC+Gamma+Telescope
